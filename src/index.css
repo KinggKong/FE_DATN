@@ -1,0 +1,54 @@
+@import url("https://fonts.googleapis.com/css2? family=Poppins&family=Monoton:wght@200;300;400; 500;600;700;800&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.sidebar {
+  color: #fff;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  padding: 10px;
+}
+
+.logo-icon {
+  width: 90px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5 rem;
+  border-radius: 50%;
+  padding-top: 30px;
+  border-radius: 4%;
+}
+
+.menu-bar {
+  /* height: 88vh; */
+  overflow-y: auto; /* Enables scrolling when content exceeds the height */
+  max-height: 155vh;
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  font-size: 1rem;
+  position: relative;
+}
+.toggle-theme-btn {
+  position: relative;
+  bottom: 30px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  font-size: 1rem;
+  margin-top: 2rem;
+}
+.toggle {
+  margin-left: 15px;
+}
