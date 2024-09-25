@@ -33,14 +33,8 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
         keyboard={false}
         maskClosable={false}
       >
-        <input className="w-full"></input>
-        
-         <input
-          className="w-full mt-4"
-          placeholder={`Nhập tên ${title}`}
-          value={ten}
-          onChange={(e) => setTen(e.target.value)}
-        />
+        <input onChange={(e)=> setNewColorName(e.target.value)} className="w-full border rounded-sm h-8 p-4" placeholder="Nhập vào tên màu sắc"></input>
+       
       </Modal>
     </>
   );
