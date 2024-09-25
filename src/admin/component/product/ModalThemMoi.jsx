@@ -1,4 +1,5 @@
 import { Modal } from "antd";
+import { ExclamationCircleFilled } from "@ant-design/icons";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { useState } from "react";
 
@@ -35,6 +36,7 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
         maskClosable={false}
       > 
         <input onChange={(e)=> setNewColorName(e.target.value)} className="w-full border rounded-sm h-8 p-4" placeholder="Nhập vào tên màu sắc"></input>
+
       </Modal>
     </>
   );
