@@ -5,6 +5,7 @@ import {
   UserOutlined,
   SettingOutlined,
   ProductOutlined,
+  BgColorsOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { FaEye } from "react-icons/fa6";
@@ -18,6 +19,8 @@ import { TbBrand4Chan } from "react-icons/tb";
 import { TbBrandDenodo } from "react-icons/tb";
 import { SlSizeFullscreen } from "react-icons/sl";
 import { LiaShoePrintsSolid } from "react-icons/lia";
+import { FaRegUser } from "react-icons/fa";
+import { FaUserCircle } from "react-icons/fa";
 
 const MenuList = ({ darkTheme }) => {
   return (
@@ -32,7 +35,7 @@ const MenuList = ({ darkTheme }) => {
         </Menu.Item>
 
         <Menu.Item key="activity" icon={<MdLocalShipping />}>
-          Bán hàng
+          <Link to={"banhang"}>Bán hàng</Link>
         </Menu.Item>
 
         <Menu.SubMenu
@@ -57,10 +60,13 @@ const MenuList = ({ darkTheme }) => {
             <Menu.Item key="sub1-t5" icon={<SlSizeFullscreen />}>
               <Link to={"kichthuoc"}>Kích cỡ</Link>
             </Menu.Item>
-            <Menu.Item key="sub1-t6" icon={<MdCategory />}>
+            <Menu.Item key="sub1-t6" icon={<BgColorsOutlined />}>
+              <Link to={"mausac"}>Màu sắc</Link>
+            </Menu.Item>
+            <Menu.Item key="sub1-t7" icon={<MdCategory />}>
               <Link to={"danhmuc"}>Danh mục</Link>
             </Menu.Item>
-            <Menu.Item key="sub1-t7" icon={<TbBrand4Chan />}>
+            <Menu.Item key="sub1-t8" icon={<TbBrand4Chan />}>
               <Link to={"thuonghieu"}>Thương hiệu</Link>
             </Menu.Item>
           </Menu.SubMenu>
@@ -71,20 +77,20 @@ const MenuList = ({ darkTheme }) => {
           icon={<UserOutlined />}
           title="Quản lý tài khoản"
         >
-          <Menu.Item key="sub2-t1">
-            <Link to={"taisandat"}>Tài sản đất</Link>
+          <Menu.Item key="sub2-t1" icon={<FaRegUser />}>
+            <Link to={"nhanvien"}>Nhân Viên</Link>
           </Menu.Item>
-          <Menu.Item key="sub2-t2">
-            <Link to={"taisannha"}>Tài sản nhà</Link>
+          <Menu.Item key="sub2-t2" icon={<FaUserCircle />}>
+            <Link to={"khachhang"}>Khách hàng</Link>
           </Menu.Item>
         </Menu.SubMenu>
 
         <Menu.Item key="progress" icon={<AreaChartOutlined />}>
-          Thống kê
+          <Link to={"thongke"}>Thống kê</Link>
         </Menu.Item>
 
         <Menu.Item key="discount" icon={<MdDiscount />}>
-          Giảm giá
+          <Link to={"giamgia"}>Giảm giá</Link>
         </Menu.Item>
 
         <Menu.Item key="setting" icon={<SettingOutlined />}>

@@ -5,6 +5,7 @@ import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
 import axios from "axios";
 import ModalThemMoi from "../ModalThemMoi";
+import TimKiem from "../TimKiem";
 
 const TableKichThuoc = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -16,6 +17,7 @@ const TableKichThuoc = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [valueSearch, setValueSearch] = useState();
 
   const handleEdit = () => {};
 
@@ -54,6 +56,7 @@ const TableKichThuoc = () => {
         setTotalItems(response.data.totalPassengers);
       });
   };
+
 
   useEffect(() => {
     getData(currentPage, pageSize);
@@ -112,6 +115,12 @@ const TableKichThuoc = () => {
 
   return (
     <>
+      <TimKiem
+        title={"Kích cỡ"}
+        placeholder={"Nhập vào kích cỡ của giày mà bạn muốn tìm !"}
+        valueSearch={setValueSearch}
+        value={valueSearch}
+      />
       <Flex gap="middle" className="mt-4" vertical>
         <Flex align="center" gap="middle">
           <Button
