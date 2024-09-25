@@ -3,11 +3,11 @@ import { ExclamationCircleFilled } from "@ant-design/icons";
 import { useState } from "react";
 
 const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
-     const [ten, setTen] = useState("");
-     const onSubmit = () => {
-        const newItems = {ten: ten};
-        handleSubmit(newItems);
-     };
+  const [newColorName,setNewColorName] = useState();
+
+  const handleConfirmAdd = () => {
+    handleSubmit(newColorName);
+  };
   return (
     <>
       <Modal
@@ -22,7 +22,7 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
         }
         
         okType="danger"
-        onOk={onSubmit}
+        onOk={handleConfirmAdd}
         onCancel={handleClose}
         footer={(_, { OkBtn, CancelBtn }) => (
           <>
