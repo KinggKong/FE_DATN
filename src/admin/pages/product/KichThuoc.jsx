@@ -1,4 +1,4 @@
-import React from "react";
+
 import TableKichThuoc from "../../component/product/kichthuoc/TableKichThuoc";
 
 const KichThuoc = () => {

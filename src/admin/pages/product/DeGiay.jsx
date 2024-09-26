@@ -1,9 +1,4 @@
-import React from 'react'
-import { Space, Table, Tag } from 'antd';
-
-
 import TimKiem from '../../component/product/TimKiem';
-import ModalThemMoi from '../../component/product/ModalThemMoi';
 import TableDeGiay from '../../component/product/degiay/TableDeGiay';
 import { useState } from 'react';
 

@@ -1,9 +1,9 @@
-import React from 'react'
+import TableDanhMuc from "../../component/product/category/TableDanhMuc"
 
 const DanhMuc = () => {
   return (
     <div>
-      Đây là trang danh mục
+      <TableDanhMuc/>
     </div>
   )
 }
