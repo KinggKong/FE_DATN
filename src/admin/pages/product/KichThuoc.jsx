@@ -1,5 +1,7 @@
-import React from "react";
-import TableKichThuoc from "../../component/product/kichthuoc/TableKichThuoc.jsx";
+
+
+import TableKichThuoc from "../../component/product/kichthuoc/TableKichThuoc";
+
 
 const KichThuoc = () => {
   return (

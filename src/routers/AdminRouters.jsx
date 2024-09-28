@@ -1,4 +1,3 @@
-import React from "react";
 import KichThuoc from "../admin/pages/product/KichThuoc";
 import Admin from "../admin/pages/Admin";
 import ChatLieu from "../admin/pages/product/ChatLieu";
