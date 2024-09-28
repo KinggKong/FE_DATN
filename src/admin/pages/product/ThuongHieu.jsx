@@ -1,9 +1,9 @@
-import React from 'react'
+import TableThuongHieu from "../../component/product/brand/TableThuongHieu"
 
 const ThuongHieu = () => {
   return (
     <div>
-        Đây là trang thương hiệu
+       <TableThuongHieu/>
     </div>
   )
 }

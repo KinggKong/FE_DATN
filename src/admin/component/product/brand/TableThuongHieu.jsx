@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react";
-import { Button, Flex, Table, Space, notification } from "antd";
+import { useCallback, useEffect, useState } from "react";
+import { Button, Flex, Table, Space, notification, Spin} from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
 import ModalThemMoi from "../ModalThemMoi";
-import TimKiem from "../TimKiem";
 import {
-  deleteMauSacApi,
-  getAllMauSacApi,
-  createMauSacApi,
-  updateMauSacApi,
-} from "../../../../api/MauSacApi";
-import ModalEdit from "../ModalEdit";
+  deleteThuongHieuApi,
+  getAllThuongHieuApi,
+  createThuongHieuApi,
+  updateThuongHieuApi,
+} from "../../../../api/ThuongHieuService";
+import ModalEditBrand from "./ModalEditBrand";
+import TimKiemBrand from "./TimKiemBrand";
 
-const TableMauSac = () => {
+const TableThuongHieu = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalAddOpen, setIsModalAddOpen] = useState(false);
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
@@ -22,9 +22,46 @@ const TableMauSac = () => {
   const [dataSource, setDataSource] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [valueSearch, setValueSearch] = useState();
- 
+  const [loading, setLoading] = useState(false);
+
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {
+        pageNumber: currentPage - 1,
+        pageSize,
+        tenMau: valueSearch,
+      };
+      const res = await getAllThuongHieuApi(params);
+      if (res && res.data) {
+        const dataWithKey = res.data.content.map((item) => ({
+          ...item,
+          key: item.id,
+        }));
+        setDataSource(dataWithKey);
+        setTotalItems(res.data.totalElements);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to fetch data",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, pageSize, valueSearch]);
+
+
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+
   const handleDelete = (record) => {
     setDeletingItem(record);
     setIsModalOpen(true);
@@ -32,21 +69,21 @@ const TableMauSac = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      await deleteMauSacApi(itemDelete.id);
+      await deleteThuongHieuApi(itemDelete.id);
       notification.success({
         duration: 4,
         pauseOnHover: false,
         message: "Success",
         showProgress: true,
-        description: `Deleted ${itemDelete.tenMau} successfully!`,
+        description: `Deleted ${itemDelete.tenThuongHieu} successfully!`,
       });
       setIsModalOpen(false);
       setDeletingItem(null);
+      await fetchData();
       setCurrentPage(1);
     } catch (error) {
       console.error("Failed to delete item", error);
     }
-
   };
 
   const handleEdit = (record) => {
@@ -54,16 +91,16 @@ const TableMauSac = () => {
     setIsModalEditOpen(true);
   };
 
-  const handleConfirmEdit = async (id, updateMauSac) => {
+  const handleConfirmEdit = async (id, updateThuongHieu) => {
     try {
-      console.log("Dữ liệu gửi đi:", updateMauSac); // Kiểm tra dữ liệ
-      await updateMauSacApi(id, updateMauSac);
+      console.log("Dữ liệu gửi đi:", updateThuongHieu); 
+      await updateThuongHieuApi(id, updateThuongHieu);
       notification.success({
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
         message: "Success",
-        description: `Cập nhật màu sắc ${updateMauSac.tenMau} thành công!`,
+        description: `Cập nhật thương hiệu ${updateThuongHieu.tenThuongHieu} thành công!`,
       });
       setIsModalEditOpen(false);
       setCurrentPage(1);
@@ -78,54 +115,38 @@ const TableMauSac = () => {
 
   const handleConfirmAdd = async (newColorName) => {
     try {
-      await createMauSacApi({ tenMau: newColorName });
+      await createThuongHieuApi({ tenThuongHieu: newColorName });
       notification.success({
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
         message: "Success",
-        description: `Thêm màu sắc ${newColorName} thành công!`,
+        description: `Thêm mới thương hiệu ${newColorName} thành công!`,
       });
       setIsModalAddOpen(false);
       setCurrentPage(1);
+      await fetchData();
     } catch (error) {
       console.error("Failed to create new color", error);
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const params = {
-        pageNumber: currentPage - 1,
-        pageSize,
-        tenMau: valueSearch,
-      };
-      const res = await getAllMauSacApi(params);
-      if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
-          ...item,
-          key: item.id,
-        }));
-        setDataSource(dataWithKey);
-        setTotalItems(res.data.totalElements);
-      }
-    };
-    fetchData();
-  }, [currentPage, pageSize, valueSearch]);
 
   const columns = [
     {
       title: "STT",
       dataIndex: "id",
+      key: "id",
     },
     {
-      title: "Màu sắc",
-      dataIndex: "tenMau",
+      title: "Thương Hiệu",
+      dataIndex: "tenThuongHieu",
+      key: "tenThuongHieu",
       showSorterTooltip: false,
     },
     {
       title: "Ngày tạo",
-      dataIndex: "created_at",
+      dataIndex: "createdAt",
     },
     {
       title: "Thao tác",
@@ -144,11 +165,11 @@ const TableMauSac = () => {
   ];
 
   return (
-    <>
-      <TimKiem
-        title={"Màu sắc"}
-        placeholder={"Nhập vào màu của giày mà bạn muốn tìm !"}
-        valueSearch={setValueSearch}
+    <Spin spinning={loading}>
+      <TimKiemBrand
+        title={"Thương hiệu"}
+        placeholder={"Nhập vào thương hiệu của giày mà bạn muốn tìm !"}
+        values={setValueSearch}
         handleAddOpen={handleAdd}
       />
       <Flex gap="middle" className="mt-4" vertical>
@@ -160,7 +181,7 @@ const TableMauSac = () => {
             pageSize: pageSize,
             total: totalItems,
             showSizeChanger: true,
-            pageSizeOptions: ["10", "20", "50", "100"],
+            pageSizeOptions: ["5","10", "20", "50", "100"],
             onChange: (page, pageSize) => {
               setCurrentPage(page);
               setPageSize(pageSize);
@@ -171,24 +192,24 @@ const TableMauSac = () => {
       <ModalConfirm
         isOpen={isModalOpen}
         handleClose={() => setIsModalOpen(false)}
-        title={"Màu sắc"}
+        title={"Thương hiệu"}
         handleConfirm={handleConfirmDelete}
       />
       <ModalThemMoi
         isOpen={isModalAddOpen}
         handleClose={() => setIsModalAddOpen(false)}
-        title={"Màu sắc"}
+        title={"Thương hiệu"}
         handleSubmit={handleConfirmAdd}
       />
-      <ModalEdit
-        title={"Màu sắc"}
+      <ModalEditBrand
+        title={"Thương hiệu"}
         isOpen={isModalEditOpen}
         handleClose={() => setIsModalEditOpen(false)}
-        mausac={itemEdit}
+        thuonghieu={itemEdit}
         handleSubmit={handleConfirmEdit}
       />
-    </>
+    </Spin>
   );
 };
 
-export default TableMauSac;
+export default TableThuongHieu;

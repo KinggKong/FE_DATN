@@ -1,4 +1,3 @@
-import React from "react";
 import HomePage from "../customer/component/pages/HomePage";
 import TrangChu from "../customer/component/product/TrangChu";
 import FilterProduct from "../customer/component/product/FilterProduct";
