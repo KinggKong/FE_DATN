@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { Button, Flex, Table, Space, notification } from "antd";
 import { FaEdit } from "react-icons/fa";
@@ -7,11 +6,11 @@ import ModalConfirm from "../ModalConfirm";
 import ModalThemMoi from "../ModalThemMoi";
 import TimKiem from "../TimKiem";
 import {
-  deleteSizeApi,
-  getAllSizeApi,
-  createSizeApi,
-  updateSizeApi,
-} from "../../../../api/SizeApi";
+  deleteKichThuocApi,
+  getAllKichThuocApi,
+  createKichThuocApi,
+  updateKichThuocApi,
+} from "../../../../api/KichThuocApi"; // Cập nhật API import cho KichThuoc
 import ModalEdit from "../ModalEdit";
 
 const TableKichThuoc = () => {
@@ -33,9 +32,9 @@ const TableKichThuoc = () => {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenSize: valueSearch,
+        tenKichThuoc: valueSearch, // Cập nhật tên tham số tìm kiếm
       };
-      const res = await getAllSizeApi(params);
+      const res = await getAllKichThuocApi(params); // Cập nhật API gọi cho KichThuoc
       if (res && res.data) {
         const dataWithKey = res.data.content.map((item) => ({
           ...item,
@@ -62,13 +61,13 @@ const TableKichThuoc = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      await deleteSizeApi(itemDelete.id);
+      await deleteKichThuocApi(itemDelete.id); // Cập nhật API gọi cho KichThuoc
       notification.success({
         duration: 4,
         pauseOnHover: false,
         message: "Success",
         showProgress: true,
-        description: `Deleted size ${itemDelete.tenSize} successfully!`,
+        description: `Deleted size ${itemDelete.tenKichThuoc} successfully!`, // Cập nhật tên kích thước
       });
       setIsModalOpen(false);
       setDeletingItem(null);
@@ -84,16 +83,16 @@ const TableKichThuoc = () => {
     setIsModalEditOpen(true);
   };
 
-  const handleConfirmEdit = async (id, updateSize) => {
+  const handleConfirmEdit = async (id, updateKichThuoc) => { // Cập nhật tên tham số
     try {
-      console.log("Dữ liệu gửi đi:", updateSize);
-      await updateSizeApi(id, updateSize);
+      console.log("Dữ liệu gửi đi:", updateKichThuoc);
+      await updateKichThuocApi(id, updateKichThuoc); // Cập nhật API gọi cho KichThuoc
       notification.success({
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
         message: "Success",
-        description: `Cập nhật kích thước ${updateSize.tenSize} thành công!`,
+        description: `Cập nhật kích thước ${updateKichThuoc.tenKichThuoc} thành công!`, // Cập nhật tên kích thước
       });
       setIsModalEditOpen(false);
       setCurrentPage(1);
@@ -107,15 +106,15 @@ const TableKichThuoc = () => {
     setIsModalAddOpen(true);
   };
 
-  const handleConfirmAdd = async (newSizeName) => {
+  const handleConfirmAdd = async (newKichThuocName) => { // Cập nhật tên tham số
     try {
-      await createSizeApi({ tenSize: newSizeName });
+      await createKichThuocApi({ tenKichThuoc: newKichThuocName }); // Cập nhật API gọi cho KichThuoc
       notification.success({
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
         message: "Success",
-        description: `Thêm kích thước ${newSizeName} thành công!`,
+        description: `Thêm kích thước ${newKichThuocName} thành công!`, // Cập nhật tên kích thước
       });
       setIsModalAddOpen(false);
       setCurrentPage(1);
@@ -136,7 +135,7 @@ const TableKichThuoc = () => {
     },
     {
       title: "Kích thước",
-      dataIndex: "tenSize",
+      dataIndex: "tenKichThuoc", // Cập nhật tên trường
       showSorterTooltip: false,
     },
     {
