@@ -96,7 +96,7 @@ const MenuList = ({ darkTheme }) => {
         <Menu.Item key="setting" icon={<SettingOutlined />}>
           Cài đặt
         </Menu.Item>
-        <Menu.Item key="payment" icon={<IoExitOutline />}>
+        <Menu.Item key="exit" icon={<IoExitOutline />}>
           Thoát
         </Menu.Item>
       </Menu>

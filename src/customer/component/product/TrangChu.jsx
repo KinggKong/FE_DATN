@@ -75,25 +75,6 @@ const TrangChu = () => {
         title={" Top bán chạy"}
         description={"Top sản phẩm bán chạy nhất"}
       />
-      {/* 
-      <div className="mx-auto flex w-[1300px]  bg-slate-400 flex-wrap justify-around">
-        <CardItem />
-        <CardItem />
-        <CardItem />
-        <CardItem />
-      </div>
-      <div className="mx-auto w-[1300px]   flex bg-slate-400 flex-wrap justify-around">
-        <CardItem />
-        <CardItem />
-        <CardItem />
-        <CardItem />
-      </div>
-      <div className="mx-auto  w-[1300px] flex bg-slate-400 flex-wrap justify-around">
-        <CardItem />
-        <CardItem />
-        <CardItem />
-        <CardItem />
-      </div> */}
 
       <div className="mx-auto w-[1300px] flex-wrap flex justify-around">
         {fake_product.map((product) => (
