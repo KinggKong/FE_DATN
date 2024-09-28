@@ -1,80 +1,147 @@
-import { useEffect, useState } from "react";
-import { Button, Flex, Table, Space } from "antd";
+
+import { useEffect, useState, useCallback } from "react";
+import { Button, Flex, Table, Space, notification } from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
-import axios from "axios";
 import ModalThemMoi from "../ModalThemMoi";
 import TimKiem from "../TimKiem";
+import {
+  deleteSizeApi,
+  getAllSizeApi,
+  createSizeApi,
+  updateSizeApi,
+} from "../../../../api/SizeApi";
+import ModalEdit from "../ModalEdit";
 
 const TableKichThuoc = () => {
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalAddOpen, setIsModalAddOpen] = useState(false);
+  const [isModalEditOpen, setIsModalEditOpen] = useState(false);
   const [itemDelete, setDeletingItem] = useState(null);
+  const [itemEdit, setEditItem] = useState(null);
   const [dataSource, setDataSource] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [valueSearch, setValueSearch] = useState();
+  const [loading, setLoading] = useState(false);
 
-  const handleEdit = () => {};
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {
+        pageNumber: currentPage - 1,
+        pageSize,
+        tenSize: valueSearch,
+      };
+      const res = await getAllSizeApi(params);
+      if (res && res.data) {
+        const dataWithKey = res.data.content.map((item) => ({
+          ...item,
+          key: item.id,
+        }));
+        setDataSource(dataWithKey);
+        setTotalItems(res.data.totalElements);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to fetch data",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, pageSize, valueSearch]);
 
   const handleDelete = (record) => {
-    console.log(record);
     setDeletingItem(record);
     setIsModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteSizeApi(itemDelete.id);
+      notification.success({
+        duration: 4,
+        pauseOnHover: false,
+        message: "Success",
+        showProgress: true,
+        description: `Deleted size ${itemDelete.tenSize} successfully!`,
+      });
+      setIsModalOpen(false);
+      setDeletingItem(null);
+      setCurrentPage(1);
+      await fetchData(); // Gọi fetchData sau khi xóa thành công
+    } catch (error) {
+      console.error("Failed to delete item", error);
+    }
+  };
+
+  const handleEdit = (record) => {
+    setEditItem(record);
+    setIsModalEditOpen(true);
+  };
+
+  const handleConfirmEdit = async (id, updateSize) => {
+    try {
+      console.log("Dữ liệu gửi đi:", updateSize);
+      await updateSizeApi(id, updateSize);
+      notification.success({
+        duration: 4,
+        pauseOnHover: false,
+        showProgress: true,
+        message: "Success",
+        description: `Cập nhật kích thước ${updateSize.tenSize} thành công!`,
+      });
+      setIsModalEditOpen(false);
+      setCurrentPage(1);
+      await fetchData(); // Gọi fetchData sau khi cập nhật thành công
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleAdd = () => {
     setIsModalAddOpen(true);
   };
 
-  const handleConfirmAdd = () => {
-    setIsModalAddOpen(false);
-  };
-
-  const handleConfirmDelete = () => {
-    // Thực hiện xóa ở đây
-    console.log("da xoa phan tu", itemDelete);
-    setIsModalOpen(false); // Đóng modal
-    setDeletingItem(null); // Reset lại trạng thái
-  };
-
-  const getData = (page, pageSize) => {
-    axios
-      .get(
-        `https://api.instantwebtools.net/v1/passenger?page=${page}&size=${pageSize}`
-      )
-      .then(function (response) {
-        const dataWithKey = response.data.data.map((item) => ({
-          ...item,
-          key: item._id,
-        }));
-        setDataSource(dataWithKey);
-        setTotalItems(response.data.totalPassengers);
+  const handleConfirmAdd = async (newSizeName) => {
+    try {
+      await createSizeApi({ tenSize: newSizeName });
+      notification.success({
+        duration: 4,
+        pauseOnHover: false,
+        showProgress: true,
+        message: "Success",
+        description: `Thêm kích thước ${newSizeName} thành công!`,
       });
+      setIsModalAddOpen(false);
+      setCurrentPage(1);
+      await fetchData(); // Gọi fetchData sau khi thêm thành công
+    } catch (error) {
+      console.error("Failed to create new size", error);
+    }
   };
-
 
   useEffect(() => {
-    getData(currentPage, pageSize);
-  }, [currentPage, pageSize]);
+    fetchData(); // Gọi fetchData mỗi khi currentPage, pageSize, hoặc valueSearch thay đổi
+  }, [fetchData]);
 
   const columns = [
     {
       title: "STT",
-      dataIndex: "_id",
+      dataIndex: "id",
     },
     {
       title: "Kích thước",
-      dataIndex: "name",
+      dataIndex: "tenSize",
       showSorterTooltip: false,
     },
     {
       title: "Ngày tạo",
-      dataIndex: "trips",
+      dataIndex: "created_at",
     },
     {
       title: "Thao tác",
@@ -92,50 +159,16 @@ const TableKichThuoc = () => {
     },
   ];
 
-  const start = () => {
-    setLoading(true);
-    // ajax request after empty completing
-    setTimeout(() => {
-      setSelectedRowKeys([]);
-      setLoading(false);
-    }, 1000);
-  };
-
-  const onSelectChange = (newSelectedRowKeys) => {
-    console.log("selectedRowKeys changed: ", newSelectedRowKeys);
-    setSelectedRowKeys(newSelectedRowKeys);
-  };
-
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: onSelectChange,
-  };
-
-  const hasSelected = selectedRowKeys.length > 0;
-
   return (
     <>
       <TimKiem
-        title={"Kích cỡ"}
-        placeholder={"Nhập vào kích cỡ của giày mà bạn muốn tìm !"}
+        title={"Kích thước"}
+        placeholder={"Nhập vào kích thước mà bạn muốn tìm!"}
         valueSearch={setValueSearch}
-        value={valueSearch}
+        handleAddOpen={handleAdd}
       />
       <Flex gap="middle" className="mt-4" vertical>
-        <Flex align="center" gap="middle">
-          <Button
-            type="primary"
-            onClick={start}
-            disabled={!hasSelected}
-            loading={loading}
-          >
-            Xóa
-          </Button>
-          {hasSelected ? `Selected ${selectedRowKeys.length} items` : null}
-        </Flex>
-
         <Table
-          rowSelection={rowSelection}
           columns={columns}
           dataSource={dataSource}
           pagination={{
@@ -149,19 +182,27 @@ const TableKichThuoc = () => {
               setPageSize(pageSize);
             },
           }}
+          loading={loading}
         />
       </Flex>
       <ModalConfirm
         isOpen={isModalOpen}
         handleClose={() => setIsModalOpen(false)}
-        title={"kích thước"}
+        title={"Kích thước"}
         handleConfirm={handleConfirmDelete}
       />
       <ModalThemMoi
         isOpen={isModalAddOpen}
         handleClose={() => setIsModalAddOpen(false)}
-        title={"kích thước"}
+        title={"Kích thước"}
         handleSubmit={handleConfirmAdd}
+      />
+      <ModalEdit
+        title={"Kích thước"}
+        isOpen={isModalEditOpen}
+        handleClose={() => setIsModalEditOpen(false)}
+        size={itemEdit}
+        handleSubmit={handleConfirmEdit}
       />
     </>
   );
