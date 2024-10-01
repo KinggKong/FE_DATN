@@ -3,17 +3,12 @@ import { Button, Flex, Table, Space, notification, Spin } from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
-import ModalThemMoi from "../ModalThemMoi";
+import ModalThemMoiSanPham from "./ModalThemMoiSanPham";
 import TimKiem from "../TimKiem";
-import {
-  deleteMauSacApi,
-  getAllMauSacApi,
-  createMauSacApi,
-  updateMauSacApi,
-} from "../../../../api/MauSacApi";
+import { getAllSanPhamApi,deleteSanPhamApi } from "../../../../api/SanPhamApi";
 import ModalEdit from "../ModalEdit";
 
-const TableMauSac = () => {
+const TableSanPham = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalAddOpen, setIsModalAddOpen] = useState(false);
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
@@ -32,9 +27,9 @@ const TableMauSac = () => {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenMau: valueSearch,
+        // tenMau: valueSearch,
       };
-      const res = await getAllMauSacApi(params);
+      const res = await getAllSanPhamApi(params);
       if (res && res.data) {
         const dataWithKey = res.data.content.map((item) => ({
           ...item,
@@ -163,9 +158,29 @@ const TableMauSac = () => {
       dataIndex: "id",
     },
     {
-      title: "Màu sắc",
-      dataIndex: "tenMau",
+      title: "Tên giày",
+      dataIndex: "tenSanPham",
       showSorterTooltip: false,
+    },
+    {
+      title: "Danh mục",
+      dataIndex: ["danhMuc", "tenDanhMuc"],
+    },
+    {
+      title: "Thương hiệu",
+      dataIndex: ["thuongHieu", "tenThuongHieu"],
+    },
+    {
+      title: "Chất liệu vải",
+      dataIndex: ["chatLieuVai", "tenChatLieuVai"],
+    },
+    {
+      title: "Chất liệu đế",
+      dataIndex: ["chatLieuDe", "tenChatLieu"],
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "trangThai",
     },
     {
       title: "Ngày tạo",
@@ -190,8 +205,8 @@ const TableMauSac = () => {
   return (
     <Spin spinning={loading} tip="Loading...">
       <TimKiem
-        title={"Màu sắc"}
-        placeholder={"Nhập vào màu của giày mà bạn muốn tìm !"}
+        title={"Sản Phẩm"}
+        placeholder={"Nhập vào tên của giày mà bạn muốn tìm !"}
         valueSearch={setValueSearch}
         handleAddOpen={handleAdd}
       />
@@ -218,10 +233,10 @@ const TableMauSac = () => {
         title={"Màu sắc"}
         handleConfirm={handleConfirmDelete}
       />
-      <ModalThemMoi
+      <ModalThemMoiSanPham
         isOpen={isModalAddOpen}
         handleClose={() => setIsModalAddOpen(false)}
-        title={"Màu sắc"}
+        title={"sản phẩm"}
         handleSubmit={handleConfirmAdd}
       />
       <ModalEdit
@@ -235,4 +250,4 @@ const TableMauSac = () => {
   );
 };
 
-export default TableMauSac;
+export default TableSanPham;
