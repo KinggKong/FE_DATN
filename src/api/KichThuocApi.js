@@ -24,5 +24,10 @@ const updateKichThuocApi = (id, updateKichThuoc) => {
   return axiosClient.put(url, updateKichThuoc);
 };
 
+const getKichThuocByIdApi = (id) => {
+  const url = `/api/v1/kichthuocs/${id}`;
+  return axiosClient.get(url);
+};
+
 // Xuất các hàm API để sử dụng trong ứng dụng
-export { getAllKichThuocApi, deleteKichThuocApi, createKichThuocApi, updateKichThuocApi };
+export { getAllKichThuocApi, deleteKichThuocApi, createKichThuocApi, updateKichThuocApi, getKichThuocByIdApi };

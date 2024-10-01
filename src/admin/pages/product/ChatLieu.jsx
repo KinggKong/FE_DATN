@@ -1,11 +1,11 @@
-import React from 'react'
+import TableChatLieuVai from "../../component/product/chatlieuvai/TableChatLieuVai";
 
 const ChatLieu = () => {
   return (
     <div>
-      Trang quản lý chất liệu giày
+      <TableChatLieuVai />
     </div>
-  )
-}
+  );
+};
 
-export default ChatLieu
+export default ChatLieu;

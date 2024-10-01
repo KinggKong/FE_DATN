@@ -1,5 +1,3 @@
-
-
 import { useEffect, useState, useCallback } from "react";
 import { Button, Flex, Table, Space, notification } from "antd";
 import { FaEdit } from "react-icons/fa";
@@ -8,14 +6,14 @@ import ModalConfirm from "../ModalConfirm";
 import ModalThemMoi from "../ModalThemMoi";
 import TimKiem from "../TimKiem";
 import {
-  deleteKichThuocApi,
-  getAllKichThuocApi,
-  createKichThuocApi,
-  updateKichThuocApi,
-} from "../../../../api/KichThuocApi"; // Cập nhật API import cho KichThuoc
-import ModalEdit from "../ModalEdit1";
+  deleteChatLieuVaiApi,
+  getAllChatLieuVaiApi,
+  createChatLieuVaiApi,
+  updateChatLieuVaiApi,
+} from "../../../../api/ChatLieuVaiApi"; // Cập nhật API import cho ChatLieuVai
+import ModalEdit2 from "../ModalEdit2"; // Import modal edit mới
 
-const TableKichThuoc = () => {
+const TableChatLieuVai = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalAddOpen, setIsModalAddOpen] = useState(false);
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
@@ -34,9 +32,9 @@ const TableKichThuoc = () => {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenKichThuoc: valueSearch, // Cập nhật tên tham số tìm kiếm
+        tenChatLieuVai: valueSearch, // Cập nhật tên tham số tìm kiếm
       };
-      const res = await getAllKichThuocApi(params); // Cập nhật API gọi cho KichThuoc
+      const res = await getAllChatLieuVaiApi(params); // Cập nhật API gọi cho ChatLieuVai
       if (res && res.data) {
         const dataWithKey = res.data.content.map((item) => ({
           ...item,
@@ -63,13 +61,13 @@ const TableKichThuoc = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      await deleteKichThuocApi(itemDelete.id); // Cập nhật API gọi cho KichThuoc
+      await deleteChatLieuVaiApi(itemDelete.id); // Cập nhật API gọi cho ChatLieuVai
       notification.success({
         duration: 4,
         pauseOnHover: false,
         message: "Success",
         showProgress: true,
-        description: `Deleted size ${itemDelete.tenKichThuoc} successfully!`, // Cập nhật tên kích thước
+        description: `Deleted material ${itemDelete.tenChatLieuVai} successfully!`, // Cập nhật tên chất liệu vải
       });
       setIsModalOpen(false);
       setDeletingItem(null);
@@ -80,21 +78,21 @@ const TableKichThuoc = () => {
     }
   };
 
-  const handleEdit1 = (record) => {
+  const handleEdit = (record) => {
     setEditItem(record);
     setIsModalEditOpen(true);
   };
 
-  const handleConfirmEdit = async (id, updateKichThuoc) => { // Cập nhật tên tham số
+  const handleConfirmEdit = async (id, updateChatLieuVai) => {
     try {
-      console.log("Dữ liệu gửi đi:", updateKichThuoc);
-      await updateKichThuocApi(id, updateKichThuoc); // Cập nhật API gọi cho KichThuoc
+      console.log("Dữ liệu gửi đi:", updateChatLieuVai);
+      await updateChatLieuVaiApi(id, updateChatLieuVai); // Cập nhật API gọi cho ChatLieuVai
       notification.success({
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
         message: "Success",
-        description: `Cập nhật kích thước ${updateKichThuoc.tenKichThuoc} thành công!`, // Cập nhật tên kích thước
+        description: `Cập nhật chất liệu vải ${updateChatLieuVai.tenChatLieuVai} thành công!`, // Cập nhật tên chất liệu vải
       });
       setIsModalEditOpen(false);
       setCurrentPage(1);
@@ -108,21 +106,21 @@ const TableKichThuoc = () => {
     setIsModalAddOpen(true);
   };
 
-  const handleConfirmAdd = async (newKichThuocName) => { // Cập nhật tên tham số
+  const handleConfirmAdd = async (newChatLieuName) => {
     try {
-      await createKichThuocApi({ tenKichThuoc: newKichThuocName }); // Cập nhật API gọi cho KichThuoc
+      await createChatLieuVaiApi({ tenChatLieuVai: newChatLieuName }); // Cập nhật API gọi cho ChatLieuVai
       notification.success({
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
         message: "Success",
-        description: `Thêm kích thước ${newKichThuocName} thành công!`, // Cập nhật tên kích thước
+        description: `Thêm chất liệu vải ${newChatLieuName} thành công!`, // Cập nhật tên chất liệu vải
       });
       setIsModalAddOpen(false);
       setCurrentPage(1);
       await fetchData(); // Gọi fetchData sau khi thêm thành công
     } catch (error) {
-      console.error("Failed to create new size", error);
+      console.error("Failed to create new material", error);
     }
   };
 
@@ -137,9 +135,9 @@ const TableKichThuoc = () => {
       key: "id", // Thêm key cho mỗi cột
     },
     {
-      title: "Kích thước",
-      dataIndex: "tenKichThuoc", // Cập nhật tên trường
-      key: "tenKichThuoc", // Thêm key cho mỗi cột
+      title: "Chất liệu vải",
+      dataIndex: "tenChatLieuVai", // Cập nhật tên trường
+      key: "tenChatLieuVai", // Thêm key cho mỗi cột
       showSorterTooltip: false,
     },
     {
@@ -153,7 +151,7 @@ const TableKichThuoc = () => {
       key: "thaotac", // Thêm key cho mỗi cột
       render: (_, record) => (
         <Space size="middle">
-          <Button type="link" onClick={() => handleEdit1(record)}>
+          <Button type="link" onClick={() => handleEdit(record)}>
             <FaEdit className="size-5" />
           </Button>
           <Button type="link" danger onClick={() => handleDelete(record)}>
@@ -167,8 +165,8 @@ const TableKichThuoc = () => {
   return (
     <>
       <TimKiem
-        title={"Kích thước"}
-        placeholder={"Nhập vào kích thước mà bạn muốn tìm!"}
+        title={"Chất liệu vải"}
+        placeholder={"Nhập vào chất liệu vải mà bạn muốn tìm!"}
         valueSearch={setValueSearch}
         handleAddOpen={handleAdd}
       />
@@ -193,24 +191,24 @@ const TableKichThuoc = () => {
       <ModalConfirm
         isOpen={isModalOpen}
         handleClose={() => setIsModalOpen(false)}
-        title={"Kích thước"}
+        title={"Chất liệu vải"}
         handleConfirm={handleConfirmDelete}
       />
       <ModalThemMoi
         isOpen={isModalAddOpen}
         handleClose={() => setIsModalAddOpen(false)}
-        title={"Kích thước"}
+        title={"Chất liệu vải"}
         handleSubmit={handleConfirmAdd}
       />
-      <ModalEdit
-        title={"Kích thước"}
+      <ModalEdit2
+        title={"Chất liệu vải"}
         isOpen={isModalEditOpen}
         handleClose={() => setIsModalEditOpen(false)}
-        kichthuoc={itemEdit} // Đổi tên từ size thành kichthuoc
+        chatLieu={itemEdit} // Đổi tên từ kích thước thành chatLieu
         handleSubmit={handleConfirmEdit}
       />
     </>
   );
 };
 
-export default TableKichThuoc;
+export default TableChatLieuVai;

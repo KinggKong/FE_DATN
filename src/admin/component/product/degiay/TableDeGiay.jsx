@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Flex, Table, Space } from "antd";
+import { Button, Flex, Table, Space, notification } from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
@@ -7,10 +7,16 @@ import axios from "axios";
 import ModalThemMoi from "../ModalThemMoi";
 import { CgAdd } from "react-icons/cg";
 import ModalSua from "../ModalSua";
+
+import {
+    getAllChatLieuDeApi,
+    deleteChatLieuDeApi,
+    createChatLieuDeApi,
+    updateChatLieuDeApi,
+} from "../../../../api/ChatLieuDeApi";
 import TimKiem from "../TimKiem";
 
-
-const TableDeGiay = ({ searchTerm }) => {
+const TableDeGiay = () => {
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,14 +28,14 @@ const TableDeGiay = ({ searchTerm }) => {
     const [totalItems, setTotalItems] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-   
+    const [valueSearch, setValueSearch] = useState();
 
-    
+
     const handleEdit = (record) => {
         setUpdateItem(record);
         console.log(record);
         setIsModalUpdateOpen(true);
-     };
+    };
 
     const handleDelete = (record) => {
         console.log(record);
@@ -41,74 +47,91 @@ const TableDeGiay = ({ searchTerm }) => {
         setIsModalAddOpen(true);
     };
 
-    const handleConfirmAdd = (newItem) => {
-        const dataToSend = {
-            tenChatLieu: newItem.ten,
-            trangThai: 1
-        }
-        axios.post("http://localhost:8080/api/v1/chatlieudes", dataToSend)
-        .then(response => {
-            
-            setIsModalAddOpen(false); // Đóng modal sau khi thêm thành công
-            getData(currentPage, pageSize); // Tải lại danh sách với dữ liệu mới
-        })
-        .catch(error => {
-            console.error("Error adding new item: ", error);
-        });
-       
-    };
-
-    const handleConfirmUpdate = (updatedItem) => {
-        const dataToSend = {
-            tenChatLieu: updatedItem.ten,
-            trangThai: 1
-        }
-        axios.put(`http://localhost:8080/api/v1/chatlieudes/${itemUpdate.id}`, dataToSend)
-        .then(response => {
-            setIsModalUpdateOpen(false); // Đóng modal sau khi thêm thành công
-            getData(currentPage, pageSize); // Tải lại danh sách với dữ liệu mới
-        })
-        .catch(error => {
-            console.error("Error updating item: ", error);
-        });
-    };
-    const handleConfirmDelete = () => {
-        axios.delete(`http://localhost:8080/api/v1/chatlieudes/${itemDelete.id}`)
-        .then (response => {
-            getData(currentPage, pageSize); // Tải lại danh sách với dữ liệu mới
-            setIsModalOpen(false); // Đóng modal
-            setDeletingItem(null); // Reset lại trạng thái
-        })
-        .catch(error => {
-            console.error("Error deleting item: ", error);
-        });
-        // Thực hiện xóa ở đây
-        console.log("da xoa phan tu", itemDelete);
-      
-    };
-
-    const getData = (page, pageSize) => {
-        axios
-            .get(
-                `http://localhost:8080/api/v1/chatlieudes?page=${page}&size=${pageSize}&search=${searchTerm}`
-            )
-            .then(function (response) {
-                const dataWithKey = response.data.data.map((item) => ({
-                    ...item,
-                    key: item._id,
-                }));
-                setDataSource(dataWithKey);
-                setTotalItems(response.data.totalPassengers);
+    const handleConfirmAdd = async (newItem) => {
+        try {
+            await createChatLieuDeApi({ tenChatLieu: newItem, trangThai: 1 });
+            notification.success({
+                duration: 4,
+                pauseOnHover: false,
+                message: "Success",
+                showProgress: true,
+                description: `Thêm thành cong!`,
             });
+            setIsModalAddOpen(false);
+            setCurrentPage(1);
+            await fetchData();
+        } catch (error) {
+            console.error("Failed to create item", error);
+        }
+
+    }
+
+
+
+    const handleConfirmUpdate = async (id, itemUpdate) => {
+        try {
+            await updateChatLieuDeApi(id, itemUpdate);
+            notification.success({
+                duration: 4,
+                pauseOnHover: false,
+                message: "Success",
+                showProgress: true,
+                description: `Cập nhật thành công chất liệu ${itemUpdate.tenChatLieu}!`,
+            });
+            setIsModalUpdateOpen(false);
+            setCurrentPage(1);
+            await fetchData();
+
+        } catch
+        (error) {
+            console.error("Failed to update item", error);
+        };
+    }
+    const handleConfirmDelete = async () => {
+        try {
+            await deleteChatLieuDeApi(itemDelete.id);
+            notification.success({
+                duration: 4,
+                pauseOnHover: false,
+                message: "Success",
+                showProgress: true,
+                description: `Xóa thành công chất liệu ${itemDelete.tenChatLieu}!`,
+            });
+            setIsModalOpen(false);
+            setDeletingItem(null);
+            setCurrentPage(1);
+            await fetchData();
+        } catch (error) {
+            console.error("Failed to delete item", error);
+        }
+
     };
 
+
+    const fetchData = async () => {
+        const params = {
+            pageNumber: currentPage - 1,
+            pageSize,
+            tenChatLieuDe: valueSearch,
+        };
+
+        const res = await getAllChatLieuDeApi(params);
+        if (res && res.data) {
+            const dataWithKey = res.data.content.map((item) => ({
+                ...item,
+                key: item.id,
+            }));
+
+            setDataSource(dataWithKey);
+            setTotalItems(res.data.totalElements);
+        }
+    };
     useEffect(() => {
-        getData(currentPage, pageSize, searchTerm); // Gọi hàm getData với searchTerm
-    }, [currentPage, pageSize, searchTerm]);
-    
-    // useEffect(() => {
-    //     getData(currentPage, pageSize);
-    // }, [currentPage, pageSize]);
+
+        fetchData();
+    }, [fetchData]);
+
+
 
     const columns = [
         {
@@ -154,38 +177,26 @@ const TableDeGiay = ({ searchTerm }) => {
         setSelectedRowKeys(newSelectedRowKeys);
     };
 
-    const rowSelection = {
-        selectedRowKeys,
-        onChange: onSelectChange,
-    };
+    // const rowSelection = {
+    //     selectedRowKeys,
+    //     onChange: onSelectChange,
+    // };
 
-    const hasSelected = selectedRowKeys.length > 0;
+    // const hasSelected = selectedRowKeys.length > 0;
 
     return (
         <>
+            <TimKiem
+                title={"Chất liệu đế"}
+                placeholder={"Nhập vào chất liệu đế của giày mà bạn muốn tìm !"}
+                valueSearch={setValueSearch}
+                handleAddOpen={handleAdd}
+            />
             <Flex gap="middle" className="mt-4" vertical>
-                <Flex align="center" gap="middle">
-                    <Button
-                        type="primary"
-                        onClick={start}
-                        disabled={!hasSelected}
-                        loading={loading}
-                    >
-                        Xóa
-                    </Button>
-                    {hasSelected ? `Selected ${selectedRowKeys.length} items` : null}
 
-                    <button
-                        onClick={handleAdd}
-                        className="w-40 flex items-center justify-center
-         px-3 py-2 text-slate-700 rounded-lg hover:bg-yellow-400 hover:text-slate-900 bg-green-600 text-white"
-                    >
-                        <CgAdd className="mr-2" /> <span>Thêm mới</span>
-                    </button>
-                </Flex>
 
                 <Table
-                    rowSelection={rowSelection}
+
                     columns={columns}
                     dataSource={dataSource}
                     pagination={{
@@ -201,7 +212,7 @@ const TableDeGiay = ({ searchTerm }) => {
                     }}
                 />
             </Flex>
-            
+
             <ModalConfirm
                 isOpen={isModalOpen}
                 handleClose={() => setIsModalOpen(false)}

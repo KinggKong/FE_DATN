@@ -21,4 +21,8 @@ const updateMauSacApi = (id,updateMauSac) => {
   return axiosClient.put(url, updateMauSac);
 };
 
-export { getAllMauSacApi, deleteMauSacApi, createMauSacApi, updateMauSacApi };
+const getMauSacByIdApi = (id) => {
+  const url = `/api/v1/mausacs/${id}`;
+  return axiosClient.get(url);
+};
+export { getAllMauSacApi, deleteMauSacApi, createMauSacApi, updateMauSacApi, getMauSacByIdApi };
