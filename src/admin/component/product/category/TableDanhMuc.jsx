@@ -1,19 +1,19 @@
-import { useEffect, useState, useCallback } from "react";
-import { Button, Flex, Table, Space, notification } from "antd";
+import { useCallback, useEffect, useState } from "react";
+import { Button, Flex, Table, Space, notification, Spin } from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
 import ModalThemMoi from "../ModalThemMoi";
-import TimKiem from "../TimKiem";
 import {
-  deleteKichThuocApi,
-  getAllKichThuocApi,
-  createKichThuocApi,
-  updateKichThuocApi,
-} from "../../../../api/KichThuocApi"; // Cập nhật API import cho KichThuoc
-import ModalEdit from "../ModalEdit";
+  deleteDanhMucApi,
+  getAllDanhMucApi,
+  createDanhMucApi,
+  updateDanhMucApi,
+} from "../../../../api/DanhMucService";
+import ModalEditCategory from "./ModalEditCAtegory";
+import TimKiemCategory from "./TimKiemCategory";
 
-const TableKichThuoc = () => {
+const TableDanhMuc = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalAddOpen, setIsModalAddOpen] = useState(false);
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
@@ -22,9 +22,10 @@ const TableKichThuoc = () => {
   const [dataSource, setDataSource] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [valueSearch, setValueSearch] = useState();
   const [loading, setLoading] = useState(false);
+
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -32,9 +33,9 @@ const TableKichThuoc = () => {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenKichThuoc: valueSearch, // Cập nhật tên tham số tìm kiếm
+        tenMau: valueSearch,
       };
-      const res = await getAllKichThuocApi(params); // Cập nhật API gọi cho KichThuoc
+      const res = await getAllDanhMucApi(params);
       if (res && res.data) {
         const dataWithKey = res.data.content.map((item) => ({
           ...item,
@@ -54,6 +55,12 @@ const TableKichThuoc = () => {
     }
   }, [currentPage, pageSize, valueSearch]);
 
+
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+ 
   const handleDelete = (record) => {
     setDeletingItem(record);
     setIsModalOpen(true);
@@ -61,18 +68,18 @@ const TableKichThuoc = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      await deleteKichThuocApi(itemDelete.id); // Cập nhật API gọi cho KichThuoc
+      await deleteDanhMucApi(itemDelete.id);
       notification.success({
         duration: 4,
         pauseOnHover: false,
         message: "Success",
         showProgress: true,
-        description: `Deleted size ${itemDelete.tenKichThuoc} successfully!`, // Cập nhật tên kích thước
+        description: `Deleted ${itemDelete.tenDanhMuc} successfully!`,
       });
       setIsModalOpen(false);
       setDeletingItem(null);
+      await fetchData();
       setCurrentPage(1);
-      await fetchData(); // Gọi fetchData sau khi xóa thành công
     } catch (error) {
       console.error("Failed to delete item", error);
     }
@@ -83,20 +90,19 @@ const TableKichThuoc = () => {
     setIsModalEditOpen(true);
   };
 
-  const handleConfirmEdit = async (id, updateKichThuoc) => { // Cập nhật tên tham số
+  const handleConfirmEdit = async (id, updateDanhMuc) => {
     try {
-      console.log("Dữ liệu gửi đi:", updateKichThuoc);
-      await updateKichThuocApi(id, updateKichThuoc); // Cập nhật API gọi cho KichThuoc
+      console.log("Dữ liệu gửi đi:", updateDanhMuc); 
+      await updateDanhMucApi(id, updateDanhMuc);
       notification.success({
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
         message: "Success",
-        description: `Cập nhật kích thước ${updateKichThuoc.tenKichThuoc} thành công!`, // Cập nhật tên kích thước
+        description: `Cập nhật danh muc ${updateDanhMuc.tenDanhMuc} thành công!`,
       });
       setIsModalEditOpen(false);
       setCurrentPage(1);
-      await fetchData(); // Gọi fetchData sau khi cập nhật thành công
     } catch (error) {
       console.log(error);
     }
@@ -106,41 +112,40 @@ const TableKichThuoc = () => {
     setIsModalAddOpen(true);
   };
 
-  const handleConfirmAdd = async (newKichThuocName) => { // Cập nhật tên tham số
+  const handleConfirmAdd = async (newColorName) => {
     try {
-      await createKichThuocApi({ tenKichThuoc: newKichThuocName }); // Cập nhật API gọi cho KichThuoc
+      await createDanhMucApi({ tenDanhMuc: newColorName });
       notification.success({
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
         message: "Success",
-        description: `Thêm kích thước ${newKichThuocName} thành công!`, // Cập nhật tên kích thước
+        description: `Thêm mới Danh mục ${newColorName} thành công!`,
       });
       setIsModalAddOpen(false);
+      await fetchData();
       setCurrentPage(1);
-      await fetchData(); // Gọi fetchData sau khi thêm thành công
     } catch (error) {
-      console.error("Failed to create new size", error);
+      console.error("Failed to create new color", error);
     }
   };
 
-  useEffect(() => {
-    fetchData(); // Gọi fetchData mỗi khi currentPage, pageSize, hoặc valueSearch thay đổi
-  }, [fetchData]);
 
   const columns = [
     {
       title: "STT",
       dataIndex: "id",
+      key: "id",
     },
     {
-      title: "Kích thước",
-      dataIndex: "tenKichThuoc", // Cập nhật tên trường
+      title: "Danh mục",
+      dataIndex: "tenDanhMuc",
+      key: "tenDanhMuc",
       showSorterTooltip: false,
     },
     {
       title: "Ngày tạo",
-      dataIndex: "created_at",
+      dataIndex: "createdAt",
     },
     {
       title: "Thao tác",
@@ -159,11 +164,11 @@ const TableKichThuoc = () => {
   ];
 
   return (
-    <>
-      <TimKiem
-        title={"Kích thước"}
-        placeholder={"Nhập vào kích thước mà bạn muốn tìm!"}
-        valueSearch={setValueSearch}
+    <Spin spinning={loading}>
+      <TimKiemCategory
+        title={"Danh mục"}
+        placeholder={"Nhập vào Danh mục của giày mà bạn muốn tìm !"}
+        values={setValueSearch}
         handleAddOpen={handleAdd}
       />
       <Flex gap="middle" className="mt-4" vertical>
@@ -175,36 +180,38 @@ const TableKichThuoc = () => {
             pageSize: pageSize,
             total: totalItems,
             showSizeChanger: true,
-            pageSizeOptions: ["10", "20", "50", "100"],
+            pageSizeOptions: ["5","10", "20", "50", "100"],
             onChange: (page, pageSize) => {
               setCurrentPage(page);
               setPageSize(pageSize);
             },
           }}
-          loading={loading}
         />
       </Flex>
       <ModalConfirm
         isOpen={isModalOpen}
         handleClose={() => setIsModalOpen(false)}
-        title={"Kích thước"}
+        title={"Danh mục"}
         handleConfirm={handleConfirmDelete}
       />
       <ModalThemMoi
         isOpen={isModalAddOpen}
         handleClose={() => setIsModalAddOpen(false)}
-        title={"Kích thước"}
+        title={"Danh mục"}
         handleSubmit={handleConfirmAdd}
       />
-      <ModalEdit
-        title={"Kích thước"}
+      <ModalEditCategory
+        title={"Danh mục"}
         isOpen={isModalEditOpen}
         handleClose={() => setIsModalEditOpen(false)}
-        size={itemEdit}
+        danhmuc={itemEdit}
         handleSubmit={handleConfirmEdit}
       />
-    </>
+      
+    </Spin>
+    
   );
 };
 
-export default TableKichThuoc;
+export default TableDanhMuc;
+;

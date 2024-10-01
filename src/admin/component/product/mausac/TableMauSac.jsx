@@ -169,7 +169,7 @@ const TableMauSac = () => {
     },
     {
       title: "Ngày tạo",
-      dataIndex: "created_at",
+      dataIndex: "createdAt",
     },
     {
       title: "Thao tác",
