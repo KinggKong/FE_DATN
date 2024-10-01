@@ -8,13 +8,14 @@ const ModalSua = ({ isOpen, handleClose, title, handleSubmit, initialData }) => 
     // Sử dụng useEffect để cập nhật giá trị khi có dữ liệu ban đầu
     useEffect(() => {
         if (initialData) {
-            setTen(initialData.tenChatLieu); // Giả sử `initialData` chứa thuộc tính `ten`
+            setTen(initialData.tenChatLieu); 
         }
     }, [initialData]);
 
     const onSubmit = () => {
-        const updatedItem = { ten: ten };
-        handleSubmit(updatedItem);
+        const updatedItem = { tenChatLieu: ten };
+        const id = initialData.id;
+        handleSubmit(id,updatedItem);
     };
 
     return (
