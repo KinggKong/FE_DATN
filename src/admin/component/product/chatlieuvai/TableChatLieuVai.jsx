@@ -11,7 +11,7 @@ import {
   createChatLieuVaiApi,
   updateChatLieuVaiApi,
 } from "../../../../api/ChatLieuVaiApi"; // Cập nhật API import cho ChatLieuVai
-import ModalEdit from "../ModalEdit";
+import ModalEdit2 from "../ModalEdit2"; // Import modal edit mới
 
 const TableChatLieuVai = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,7 +23,7 @@ const TableChatLieuVai = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [valueSearch, setValueSearch] = useState();
+  const [valueSearch, setValueSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -32,7 +32,7 @@ const TableChatLieuVai = () => {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenChatLieu: valueSearch, // Cập nhật tên tham số tìm kiếm
+        tenChatLieuVai: valueSearch, // Cập nhật tên tham số tìm kiếm
       };
       const res = await getAllChatLieuVaiApi(params); // Cập nhật API gọi cho ChatLieuVai
       if (res && res.data) {
@@ -67,7 +67,7 @@ const TableChatLieuVai = () => {
         pauseOnHover: false,
         message: "Success",
         showProgress: true,
-        description: `Deleted fabric material ${itemDelete.tenChatLieu} successfully!`, // Cập nhật tên chất liệu
+        description: `Deleted material ${itemDelete.tenChatLieuVai} successfully!`, // Cập nhật tên chất liệu vải
       });
       setIsModalOpen(false);
       setDeletingItem(null);
@@ -83,16 +83,16 @@ const TableChatLieuVai = () => {
     setIsModalEditOpen(true);
   };
 
-  const handleConfirmEdit = async (id, updateChatLieu) => { // Cập nhật tên tham số
+  const handleConfirmEdit = async (id, updateChatLieuVai) => {
     try {
-      console.log("Dữ liệu gửi đi:", updateChatLieu);
-      await updateChatLieuVaiApi(id, updateChatLieu); // Cập nhật API gọi cho ChatLieuVai
+      console.log("Dữ liệu gửi đi:", updateChatLieuVai);
+      await updateChatLieuVaiApi(id, updateChatLieuVai); // Cập nhật API gọi cho ChatLieuVai
       notification.success({
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
         message: "Success",
-        description: `Cập nhật chất liệu ${updateChatLieu.tenChatLieu} thành công!`, // Cập nhật tên chất liệu
+        description: `Cập nhật chất liệu vải ${updateChatLieuVai.tenChatLieuVai} thành công!`, // Cập nhật tên chất liệu vải
       });
       setIsModalEditOpen(false);
       setCurrentPage(1);
@@ -106,21 +106,21 @@ const TableChatLieuVai = () => {
     setIsModalAddOpen(true);
   };
 
-  const handleConfirmAdd = async (newChatLieuName) => { // Cập nhật tên tham số
+  const handleConfirmAdd = async (newChatLieuName) => {
     try {
-      await createChatLieuVaiApi({ tenChatLieu: newChatLieuName }); // Cập nhật API gọi cho ChatLieuVai
+      await createChatLieuVaiApi({ tenChatLieuVai: newChatLieuName }); // Cập nhật API gọi cho ChatLieuVai
       notification.success({
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
         message: "Success",
-        description: `Thêm chất liệu ${newChatLieuName} thành công!`, // Cập nhật tên chất liệu
+        description: `Thêm chất liệu vải ${newChatLieuName} thành công!`, // Cập nhật tên chất liệu vải
       });
       setIsModalAddOpen(false);
       setCurrentPage(1);
       await fetchData(); // Gọi fetchData sau khi thêm thành công
     } catch (error) {
-      console.error("Failed to create new fabric material", error);
+      console.error("Failed to create new material", error);
     }
   };
 
@@ -132,19 +132,23 @@ const TableChatLieuVai = () => {
     {
       title: "STT",
       dataIndex: "id",
+      key: "id", // Thêm key cho mỗi cột
     },
     {
-      title: "Chất liệu vải", // Cập nhật tiêu đề cột
+      title: "Chất liệu vải",
       dataIndex: "tenChatLieuVai", // Cập nhật tên trường
+      key: "tenChatLieuVai", // Thêm key cho mỗi cột
       showSorterTooltip: false,
     },
     {
       title: "Ngày tạo",
-      dataIndex: "created_at",
+      dataIndex: "createdAt",
+      key: "createdAt", // Thêm key cho mỗi cột
     },
     {
       title: "Thao tác",
       dataIndex: "thaotac",
+      key: "thaotac", // Thêm key cho mỗi cột
       render: (_, record) => (
         <Space size="middle">
           <Button type="link" onClick={() => handleEdit(record)}>
@@ -161,8 +165,8 @@ const TableChatLieuVai = () => {
   return (
     <>
       <TimKiem
-        title={"Chất liệu vải"} // Cập nhật tiêu đề
-        placeholder={"Nhập vào chất liệu mà bạn muốn tìm!"} // Cập nhật placeholder
+        title={"Chất liệu vải"}
+        placeholder={"Nhập vào chất liệu vải mà bạn muốn tìm!"}
         valueSearch={setValueSearch}
         handleAddOpen={handleAdd}
       />
@@ -187,20 +191,20 @@ const TableChatLieuVai = () => {
       <ModalConfirm
         isOpen={isModalOpen}
         handleClose={() => setIsModalOpen(false)}
-        title={"Chất liệu vải"} // Cập nhật tiêu đề
+        title={"Chất liệu vải"}
         handleConfirm={handleConfirmDelete}
       />
       <ModalThemMoi
         isOpen={isModalAddOpen}
         handleClose={() => setIsModalAddOpen(false)}
-        title={"Chất liệu vải"} // Cập nhật tiêu đề
+        title={"Chất liệu vải"}
         handleSubmit={handleConfirmAdd}
       />
-      <ModalEdit
-        title={"Chất liệu vải"} // Cập nhật tiêu đề
+      <ModalEdit2
+        title={"Chất liệu vải"}
         isOpen={isModalEditOpen}
         handleClose={() => setIsModalEditOpen(false)}
-        size={itemEdit}
+        chatLieu={itemEdit} // Đổi tên từ kích thước thành chatLieu
         handleSubmit={handleConfirmEdit}
       />
     </>
