@@ -173,6 +173,10 @@ const TableVoucher = () => {
       dataIndex: "maVoucher",
     },
     {
+      title: "Hình thức giảm",
+      dataIndex: "hinhThucGiam", 
+    },
+    {
       title: "Giá trị giảm", 
       dataIndex: "giaTriGiam", 
     },
@@ -202,10 +206,6 @@ const TableVoucher = () => {
       title: "Trạng thái",
       dataIndex: "trangThai",
       render: (text) => (text === 1 ? "Hoạt động" : "Không hoạt động"),
-    },
-    {
-      title: "Hình thức giảm",
-      dataIndex: "hinhThucGiam", 
     },
     {
       title: "Thao tác",

@@ -1,4 +1,4 @@
-import { Modal, Row, Col, Input, DatePicker, Select } from "antd";
+import { Modal, Row, Col, Input, DatePicker, Select, notification } from "antd";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { useState } from "react";
 
@@ -15,6 +15,24 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
   const [giaTriGiamToiDa, setGiaTriGiamToiDa] = useState(null);
 
   const handleConfirmAdd = () => {
+    // Kiểm tra các giá trị
+    if (giaTriGiam <= 0 || soLuong <= 0 || giaTriDonHangToiThieu <= 0 || giaTriGiamToiDa <= 0) {
+      notification.error({
+        message: "Lỗi",
+        description: "Tất cả các giá trị phải lớn hơn 0!",
+      });
+      return;
+    }
+
+   // Kiểm tra ngày bắt đầu và ngày kết thúc
+   if (ngayBatDau && ngayKetThuc && new Date(ngayKetThuc) < new Date(ngayBatDau)) {
+    notification.error({
+      message: "Lỗi",
+      description: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu!",
+    });
+    return;
+    }
+
     const newVoucher = {
       tenVoucher,
       maVoucher,
@@ -60,18 +78,6 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
           />
         </Col>
         <Col span={11}>
-          <label className="text-sm block mb-2">Số lượng</label>
-          <Input
-            type="number"
-            value={soLuong}
-            onChange={(e) => setSoLuong(parseInt(e.target.value))}
-            placeholder="Nhập số lượng"
-          />
-        </Col>
-      </Row>
-
-      <Row className="flex justify-between mb-3">
-        <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Mã voucher
           </label>
@@ -79,17 +85,6 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
             value={maVoucher}
             onChange={(e) => setMaVoucher(e.target.value)}
             placeholder="Nhập mã voucher"
-          />
-        </Col>
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Giá trị giảm
-          </label>
-          <Input
-            type="number"
-            value={giaTriGiam}
-            onChange={(e) => setGiaTriGiam(parseFloat(e.target.value))}
-            placeholder="Nhập giá trị giảm"
           />
         </Col>
       </Row>
@@ -111,23 +106,25 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
         </Col>
         <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Ngày bắt đầu
+            <span className="text-red-600">*</span> Giá trị giảm
           </label>
-          <DatePicker
-            style={{ width: "100%" }}
-            onChange={(date) => setNgayBatDau(date)}
+          <Input
+            type="number"
+            value={giaTriGiam}
+            onChange={(e) => setGiaTriGiam(parseFloat(e.target.value))}
+            placeholder="Nhập giá trị giảm"
           />
         </Col>
       </Row>
 
       <Row className="flex justify-between mb-3">
         <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Ngày kết thúc
-          </label>
-          <DatePicker
-            style={{ width: "100%" }}
-            onChange={(date) => setNgayKetThuc(date)}
+          <label className="text-sm block mb-2">Số lượng</label>
+          <Input
+            type="number"
+            value={soLuong}
+            onChange={(e) => setSoLuong(parseInt(e.target.value))}
+            placeholder="Nhập số lượng"
           />
         </Col>
         <Col span={11}>
@@ -151,6 +148,27 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
             value={giaTriGiamToiDa}
             onChange={(e) => setGiaTriGiamToiDa(parseFloat(e.target.value))}
             placeholder="Nhập giá trị giảm tối đa"
+          />
+        </Col>
+        <Col span={11}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Ngày bắt đầu
+          </label>
+          <DatePicker
+            style={{ width: "100%" }}
+            onChange={(date) => setNgayBatDau(date)}
+          />
+        </Col>
+      </Row>
+
+      <Row className="flex justify-between mb-3">
+        <Col span={11}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Ngày kết thúc
+          </label>
+          <DatePicker
+            style={{ width: "100%" }}
+            onChange={(date) => setNgayKetThuc(date)}
           />
         </Col>
         <Col span={11}>

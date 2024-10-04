@@ -1,5 +1,4 @@
-
-import { Modal } from "antd";
+import { Modal, notification } from "antd";
 import { FaEdit } from "react-icons/fa";
 import { useState, useEffect } from "react";
 
@@ -16,12 +15,30 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
   const [trangThai, setTrangThai] = useState(""); 
 
   const handleConfirmEdit = () => {
+    // Kiểm tra các giá trị
+    if (parseFloat(giaTriGiam) <= 0 || parseFloat(giaTriDonHangToiThieu) <= 0 || parseFloat(giaTriGiamToiDa) <= 0 || parseInt(soLuong, 10) <= 0) {
+      notification.error({
+        message: "Lỗi",
+        description: "Tất cả các giá trị phải lớn hơn 0!",
+      });
+      return;
+    }
+
+    // Kiểm tra ngày bắt đầu và ngày kết thúc
+    if (ngayBatDau && ngayKetThuc && new Date(ngayKetThuc) < new Date(ngayBatDau)) {
+      notification.error({
+        message: "Lỗi",
+        description: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu!",
+      });
+      return;
+    }
+
     handleSubmit(voucher?.id, {
       tenVoucher: newVoucherName,
       maVoucher,
       giaTriGiam: parseFloat(giaTriGiam),
       giaTriDonHangToiThieu: parseFloat(giaTriDonHangToiThieu),
-      giaTriGiamToiDa: parseFloat(giaTriGiamToiDa), // Gửi giá trị này
+      giaTriGiamToiDa: parseFloat(giaTriGiamToiDa),
       ngayBatDau,
       ngayKetThuc,
       hinhThucGiam,
@@ -36,7 +53,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       setMaVoucher(voucher.maVoucher);
       setGiaTriGiam(voucher.giaTriGiam);
       setGiaTriDonHangToiThieu(voucher.giaTriDonHangToiThieu);
-      setGiaTriGiamToiDa(voucher.giaTriGiamToiDa); // Khởi tạo giá trị cho trường này
+      setGiaTriGiamToiDa(voucher.giaTriGiamToiDa);
       setNgayBatDau(voucher.ngayBatDau);
       setNgayKetThuc(voucher.ngayKetThuc);
       setHinhThucGiam(voucher.hinhThucGiam);
@@ -106,8 +123,8 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
         <label>Giá trị giảm tối đa</label>
         <input
           type="number"
-          onChange={(e) => setGiaTriGiamToiDa(e.target.value)} // Xử lý thay đổi
-          value={giaTriGiamToiDa} // Liên kết với giá trị
+          onChange={(e) => setGiaTriGiamToiDa(e.target.value)}
+          value={giaTriGiamToiDa}
           className="w-full border rounded-sm h-8 p-4"
         />
       </div>
