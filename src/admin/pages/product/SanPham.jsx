@@ -1,7 +1,9 @@
+import TableSanPham from "../../component/product/sanpham/TableSanPham"
+
 const SanPham = () => {
   return (
     <div>
-        Đây là trang sản phẩm
+        <TableSanPham/>
     </div>
   )
 }

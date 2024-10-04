@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Input, Badge, Dropdown, Avatar } from "antd";
 import {
   UserOutlined,
@@ -6,7 +6,12 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
+import CartDrawer from "../cart/CartDrawer";
 const Navigation = () => {
+  const [isOpenDrawer, setOpenDrawer] = useState(false);
+  const showDrawer = () => {
+    setOpenDrawer(true);
+  };
   return (
     <div>
       <p className="flex h-5 items-center justify-center bg-black px-4 text-xs font-medium text-white sm:text-1 sm:px-4 lg:px-6">
@@ -68,6 +73,7 @@ const Navigation = () => {
           />
           <Badge count={5} style={{ marginRight: "20px" }}>
             <ShoppingCartOutlined
+              onClick={() => setOpenDrawer(true)}
               style={{ fontSize: "24px", padding: "0 15px" }}
             />
           </Badge>
@@ -84,6 +90,7 @@ const Navigation = () => {
           </Dropdown>
         </div>
       </nav>
+      <CartDrawer showDrawer={setOpenDrawer} isOpenDrawer={isOpenDrawer} />
     </div>
   );
 };
