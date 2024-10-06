@@ -49,3 +49,4 @@ const ModalEdit = ({ isOpen, handleClose, title, handleSubmit, mausac }) => {
   );
 };
 export default ModalEdit;
+
