@@ -1,25 +1,55 @@
 import { useEffect, useState, useCallback } from "react";
-import { Button, Flex, Table, Space, notification, Spin } from "antd";
+import {
+  Button,
+  Flex,
+  Table,
+  Space,
+  notification,
+  Spin,
+  Col,
+  Row,
+  Select,
+  Switch,
+} from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
 import ModalThemMoiSanPham from "./ModalThemMoiSanPham";
 import TimKiem from "../TimKiem";
-import { getAllSanPhamApi,deleteSanPhamApi } from "../../../../api/SanPhamApi";
-import ModalEdit from "../ModalEdit";
+import {
+  getAllSanPhamApi,
+  deleteSanPhamApi,
+  updateSanPhamApi,
+  createSanPhamApi,
+  updateProductStautsApi,
+} from "../../../../api/SanPhamApi";
+import { getAllDanhMucApi } from "../../../../api/DanhMucService";
+import { getAllThuongHieuApi } from "../../../../api/ThuongHieuService";
+import { getAllChatLieuVaiApi } from "../../../../api/ChatLieuVaiApi";
+import { getAllChatLieuDeApi } from "../../../../api/ChatLieuDeApi";
+import ModalEditSanPham from "./ModalEditSanPham";
 
 const TableSanPham = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalAddOpen, setIsModalAddOpen] = useState(false);
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
   const [itemDelete, setDeletingItem] = useState(null);
-  const [itemEdit, setEditItem] = useState(null);
+  const [productEdit, setProductEdit] = useState(null);
   const [dataSource, setDataSource] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [valueSearch, setValueSearch] = useState();
   const [loading, setLoading] = useState(false);
+  const [dataDanhMuc, setDataDanhMuc] = useState([]);
+  const [dataThuongHieu, setDataThuongHieu] = useState([]);
+  const [dataChatLieuVai, setDatChatLieuVai] = useState([]);
+  const [dataChatLieuDe, setDataChatLieuDe] = useState([]);
+
+  const [valueSearch, setValueSearch] = useState();
+  const [idDanhMuc, setIdDanhMuc] = useState();
+  const [idThuongHieu, setIdThuongHieu] = useState();
+  const [idChatLieuVai, setIdChatLieuVai] = useState();
+  const [idChatLieuDe, setIdChatLieuDe] = useState();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -27,7 +57,11 @@ const TableSanPham = () => {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        // tenMau: valueSearch,
+        idDanhMuc,
+        idThuongHieu,
+        idChatLieuVai,
+        idChatLieuDe,
+        tenSanPham: valueSearch,
       };
       const res = await getAllSanPhamApi(params);
       if (res && res.data) {
@@ -39,17 +73,133 @@ const TableSanPham = () => {
         setTotalItems(res.data.totalElements);
       }
     } catch (error) {
-      console.error("Failed to fetch data", error);
+      console.error("Failed to fetch data san pham", error);
       notification.error({
         message: "Error",
-        description: "Failed to fetch data",
+        description: "Failed to fetch data san pham",
       });
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, valueSearch]);
+  }, [
+    currentPage,
+    pageSize,
+    idDanhMuc,
+    idThuongHieu,
+    idChatLieuVai,
+    idChatLieuDe,
+    valueSearch,
+  ]);
+
+  const fetchDataDanhMuc = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        pageNumber: 0,
+        pageSize: 100,
+      };
+      const res = await getAllDanhMucApi(params);
+      if (res && res.data) {
+        const dataWithKey = res.data.content.map((item) => ({
+          ...item,
+          key: item.id,
+        }));
+        setDataDanhMuc(dataWithKey);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data danh muc", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to fetch data danh muc",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDataThuongHieu = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        pageNumber: 0,
+        pageSize: 100,
+      };
+      const res = await getAllThuongHieuApi(params);
+      if (res && res.data) {
+        const dataWithKey = res.data.content.map((item) => ({
+          ...item,
+          key: item.id,
+        }));
+        setDataThuongHieu(dataWithKey);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data thuong hieu", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to fetch data thuong hieu",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDataChatLieuDe = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        pageNumber: 0,
+        pageSize: 100,
+      };
+      const res = await getAllChatLieuDeApi(params);
+      if (res && res.data) {
+        const dataWithKey = res.data.content.map((item) => ({
+          ...item,
+          key: item.id,
+        }));
+        setDataChatLieuDe(dataWithKey);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data chat lieu de", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to fetch data chat lieu de",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDataChatLieuVai = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        pageNumber: 0,
+        pageSize: 100,
+      };
+      const res = await getAllChatLieuVaiApi(params);
+      if (res && res.data) {
+        const dataWithKey = res.data.content.map((item) => ({
+          ...item,
+          key: item.id,
+        }));
+        setDatChatLieuVai(dataWithKey);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data chat lieu vai", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to fetch data chat lieu vai",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
+    fetchDataDanhMuc();
+    fetchDataThuongHieu();
+    fetchDataChatLieuDe();
+    fetchDataChatLieuVai();
     fetchData();
   }, [fetchData]);
 
@@ -61,17 +211,15 @@ const TableSanPham = () => {
   const handleConfirmDelete = async () => {
     setLoading(true);
     try {
-      await deleteMauSacApi(itemDelete.id);
+      await deleteSanPhamApi(itemDelete.id);
       notification.success({
         message: "Success",
         duration: 4,
-        showProgress: true,
         pauseOnHover: false,
-        description: `Deleted ${itemDelete.tenMau} successfully!`,
+        showProgress: true,
+        description: `Xóa sản phẩm thành công !`,
       });
       setIsModalOpen(false);
-      setDeletingItem(null);
-      setCurrentPage(1);
       await fetchData();
     } catch (error) {
       console.error("Failed to delete item", error);
@@ -88,32 +236,32 @@ const TableSanPham = () => {
   };
 
   const handleEdit = (record) => {
-    setEditItem(record);
+    setProductEdit(record);
     setIsModalEditOpen(true);
   };
 
-  const handleConfirmEdit = async (id, updateMauSac) => {
+  const handleConfirmEdit = async (id, updateProduct) => {
     setLoading(true);
     try {
-      await updateMauSacApi(id, updateMauSac);
+      await updateSanPhamApi(id, updateProduct);
       notification.success({
         message: "Success",
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
-        description: `Cập nhật màu sắc ${updateMauSac.tenMau} thành công!`,
+        description: `Cập nhật sản phẩm ${updateProduct.tenSanPham} thành công!`,
       });
       setIsModalEditOpen(false);
       // setCurrentPage(1);
       await fetchData();
     } catch (error) {
-      console.error("Failed to update color", error);
+      console.error("Failed to update san pham", error);
       notification.error({
         message: "Error",
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
-        description: "Failed to update color",
+        description: "Failed to update san pham",
       });
     } finally {
       setLoading(false);
@@ -124,28 +272,57 @@ const TableSanPham = () => {
     setIsModalAddOpen(true);
   };
 
-  const handleConfirmAdd = async (newColorName) => {
+  const handleConfirmAdd = async (newProduct) => {
     setLoading(true);
     try {
-      await createMauSacApi({ tenMau: newColorName });
+      await createSanPhamApi(newProduct);
       notification.success({
         message: "Success",
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
-        description: `Thêm màu sắc ${newColorName} thành công!`,
+        description: `Thêm sản phẩm thành công!`,
       });
       setIsModalAddOpen(false);
       // setCurrentPage(1);
       await fetchData();
     } catch (error) {
-      console.error("Failed to create new color", error);
+      console.error("Failed to create sản phẩm", error);
       notification.error({
         message: "Error",
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
-        description: "Failed to create new color",
+        description: "Failed to create sản phẩm",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangeStatus = async (id, isActive) => {
+    setLoading(true);
+    try {
+      const newStatus = isActive ? 1 : 0;
+      await updateProductStautsApi(id, newStatus);
+      notification.success({
+        message: "Success",
+        duration: 4,
+        pauseOnHover: false,
+        showProgress: true,
+        description: `Cập nhật trạng thái sản phẩm thành công!`,
+      });
+      setIsModalEditOpen(false);
+      // setCurrentPage(1);
+      await fetchData();
+    } catch (error) {
+      console.error("Failed to update san pham", error);
+      notification.error({
+        message: "Error",
+        duration: 4,
+        pauseOnHover: false,
+        showProgress: true,
+        description: "Failed to update trạng thái sản phẩm",
       });
     } finally {
       setLoading(false);
@@ -181,6 +358,12 @@ const TableSanPham = () => {
     {
       title: "Trạng thái",
       dataIndex: "trangThai",
+      render: (_, record) => (
+        <Switch
+          checked={record.trangThai == 1}
+          onChange={(checked) => handleChangeStatus(record.id, checked)}
+        />
+      ),
     },
     {
       title: "Ngày tạo",
@@ -210,6 +393,124 @@ const TableSanPham = () => {
         valueSearch={setValueSearch}
         handleAddOpen={handleAdd}
       />
+      <Row className="flex justify-between mb-3 mt-3">
+        <Col span={5}>
+          <label className="text-sm block mb-2" htmlFor="">
+            Thương hiệu
+          </label>
+          <Select
+            showSearch
+            style={{
+              width: "100%",
+            }}
+            placeholder="-----------------------------------"
+            optionFilterProp="label"
+            filterSort={(optionA, optionB) =>
+              (optionA?.label ?? "")
+                .toLowerCase()
+                .localeCompare((optionB?.label ?? "").toLowerCase())
+            }
+            value={idThuongHieu}
+            onChange={(value) => {
+              setIdThuongHieu(value);
+            }}
+            options={[
+              { value: "", label: "-----------------------------------" },
+              ...dataThuongHieu?.map((thuongHieu) => ({
+                value: thuongHieu.id,
+                label: thuongHieu.tenThuongHieu,
+              })),
+            ]}
+          />
+        </Col>
+        <Col span={5}>
+          <label className="text-sm block mb-2" htmlFor="">
+            Danh mục
+          </label>
+          <Select
+            showSearch
+            style={{
+              width: "100%",
+            }}
+            value={idDanhMuc}
+            onChange={(value) => {
+              setIdDanhMuc(value);
+            }}
+            placeholder="-----------------------------------"
+            optionFilterProp="label"
+            filterSort={(optionA, optionB) =>
+              (optionA?.label ?? "")
+                .toLowerCase()
+                .localeCompare((optionB?.label ?? "").toLowerCase())
+            }
+            options={[
+              { value: "", label: "-----------------------------------" },
+              ...dataDanhMuc?.map((danhMuc) => ({
+                value: danhMuc.id,
+                label: danhMuc.tenDanhMuc,
+              })),
+            ]}
+          />
+        </Col>
+        <Col span={5}>
+          <label className="text-sm block mb-2" htmlFor="">
+            Chất liệu vải
+          </label>
+          <Select
+            showSearch
+            style={{
+              width: "100%",
+            }}
+            value={idChatLieuVai}
+            onChange={(value) => {
+              setIdChatLieuVai(value);
+            }}
+            placeholder="-----------------------------------"
+            optionFilterProp="label"
+            filterSort={(optionA, optionB) =>
+              (optionA?.label ?? "")
+                .toLowerCase()
+                .localeCompare((optionB?.label ?? "").toLowerCase())
+            }
+            options={[
+              { value: "", label: "-----------------------------------" },
+              ...dataChatLieuVai?.map((vai) => ({
+                value: vai.id,
+                label: vai.tenChatLieuVai,
+              })),
+            ]}
+          />
+        </Col>
+        <Col span={5}>
+          <label className="text-sm block mb-2" htmlFor="">
+            Chất liệu đế
+          </label>
+          <Select
+            showSearch
+            style={{
+              width: "100%",
+            }}
+            value={idChatLieuDe}
+            onChange={(value) => {
+              setIdChatLieuDe(value);
+            }}
+            placeholder="-----------------------------------"
+            optionFilterProp="label"
+            filterSort={(optionA, optionB) =>
+              (optionA?.label ?? "")
+                .toLowerCase()
+                .localeCompare((optionB?.label ?? "").toLowerCase())
+            }
+            options={[
+              { value: "", label: "-----------------------------------" },
+              ...dataChatLieuDe?.map((de) => ({
+                value: de.id,
+                label: de.tenChatLieu,
+              })),
+            ]}
+          />
+        </Col>
+      </Row>
       <Flex gap="middle" className="mt-4" vertical>
         <Table
           columns={columns}
@@ -230,7 +531,7 @@ const TableSanPham = () => {
       <ModalConfirm
         isOpen={isModalOpen}
         handleClose={() => setIsModalOpen(false)}
-        title={"Màu sắc"}
+        title={"sản phẩm"}
         handleConfirm={handleConfirmDelete}
       />
       <ModalThemMoiSanPham
@@ -238,13 +539,21 @@ const TableSanPham = () => {
         handleClose={() => setIsModalAddOpen(false)}
         title={"sản phẩm"}
         handleSubmit={handleConfirmAdd}
+        dataDanhMuc={dataDanhMuc}
+        dataThuongHieu={dataThuongHieu}
+        dataChatLieuVai={dataChatLieuVai}
+        dataChatLieuDe={dataChatLieuDe}
       />
-      <ModalEdit
-        title={"Màu sắc"}
-        isOpen={isModalEditOpen}
+      <ModalEditSanPham
         handleClose={() => setIsModalEditOpen(false)}
-        mausac={itemEdit}
+        isOpen={isModalEditOpen}
+        title={"Sản phẩm"}
+        product={productEdit}
         handleSubmit={handleConfirmEdit}
+        dataDanhMuc={dataDanhMuc}
+        dataThuongHieu={dataThuongHieu}
+        dataChatLieuVai={dataChatLieuVai}
+        dataChatLieuDe={dataChatLieuDe}
       />
     </Spin>
   );

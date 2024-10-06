@@ -54,6 +54,8 @@ const TableMauSac = () => {
     }
   }, [currentPage, pageSize, valueSearch]);
 
+
+  
   useEffect(() => {
     fetchData();
   }, [fetchData]);

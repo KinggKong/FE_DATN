@@ -3,20 +3,22 @@ import { ExclamationCircleFilled } from "@ant-design/icons";
 
 const ModalConfirm = ({ isOpen, handleClose, title, handleConfirm }) => {
   const handleOk = () => {
-    // Hiển thị modal xác nhận khi nhấn OK
-    Modal.confirm({
-      title: "Bạn có chắc chắn?",
-      content: "Bạn có chắc muốn thực hiện hành động này?",
-      onOk() {
-        console.log("Xác nhận hành động thành công");
         handleConfirm();
-        handleClose();
-      },
-      onCancel() {
-        console.log("Hủy hành động");
-      },
-    });
+        // handleClose();
+    // Modal.confirm({
+    //   title: "Bạn có chắc chắn?",
+    //   content: "Bạn có chắc muốn thực hiện hành động này?",
+    //   onOk() {
+    //     console.log("Xác nhận hành động thành công");
+    //     handleConfirm();
+    //     handleClose();
+    //   },
+    //   onCancel() {
+    //     console.log("Hủy hành động");
+    //   },
+    // });
   };
+
   return (
     <>
       <Modal
