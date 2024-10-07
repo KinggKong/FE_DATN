@@ -19,7 +19,7 @@ const TableSanPhamChiTiet = () => {
             dataIndex:'hinhAnhList',
             render: (hinhAnhList) => {
                 if (hinhAnhList && hinhAnhList.length > 0) {
-                    return <img src={hinhAnhList[0].src} alt="Hình ảnh sản phẩm" style={{ height: '100px', width: 'auto' }} />;
+                    return <img src={hinhAnhList[0].url} alt="Hình ảnh sản phẩm" style={{ height: '100px', width: 'auto' }} />;
                 }
                 return <span>Không có hình ảnh</span>; // Hiển thị nếu không có hình ảnh
             },
