@@ -11,6 +11,8 @@ import Nhanvien from "../admin/pages/taikhoan/Nhanvien";
 import KhachHang from "../admin/pages/taikhoan/KhachHang";
 import ThongKe from "../admin/pages/thongke/ThongKe"
 import MauSac from "../admin/pages/product/MauSac";
+import SanPhamChiTiet from "../admin/pages/product/SanPhamChiTiet";
+import FormWithColors from "../admin/component/product/spct/FormAddSPCT";
 
 const AdminRouters = {
   path: "/admin/",
@@ -64,6 +66,14 @@ const AdminRouters = {
       path: "thongke",
       element: <ThongKe />,
     },
+    {
+      path:"sanphamchitiet",
+      element:<SanPhamChiTiet />
+    },
+    {
+      path:"sanphamchitiet/add",
+      element:<FormWithColors/>
+    }
   ],
 };
 
