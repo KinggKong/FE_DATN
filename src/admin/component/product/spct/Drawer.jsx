@@ -151,9 +151,11 @@ const DrawerAdd = () => {
           tenKichThuoc: sizeItem.tenKichThuoc, // Lấy thông tin kích thước từ sizeItem
           tenMau: colorItem.tenMau, // Lấy thông tin màu sắc từ colorItem
           trangThai: 1,
+          color: color, // Thêm trường color để nhóm các dòng cùng màu
+          
         };
       });
-
+      console.log(tableData);
       newData.push(...variants);
     });
 
@@ -196,22 +198,7 @@ const DrawerAdd = () => {
     selectedRowKeys,
     onChange: onSelectChange,
   };
-  // const handleUploadChange = (color, fileList) => {
-  //   // Cập nhật tất cả các biến thể có cùng màu
-  //   const updatedTableData = tableData.map((item) => {
-  //     // Kiểm tra nếu biến thể có cùng màu
-  //     if (item.color === color) {
-  //       return {
-  //         ...item,
-  //         image: fileList, // Cập nhật danh sách file ảnh cho tất cả biến thể cùng màu
-  //       };
-  //     }
-  //     return item;
-  //   });
 
-  //   // Cập nhật lại state tableData
-  //   setTableData(updatedTableData);
-  // };
   const handleUploadChange = (color, file) => {
     setTableData((prevTableData) =>
       prevTableData.map((item) => {
@@ -385,46 +372,7 @@ const DrawerAdd = () => {
       }
     }
 
-    // },{
-    //   title: 'Hình ảnh',
-    //   dataIndex: 'color', // Sử dụng color để nhóm các dòng
-    //   render: (text, record) => {
-    //     const isFirst = tableData.findIndex((item) => item.color === record.color) === tableData.findIndex((item) => item.key === record.key);
-
-    //     return isFirst ? (
-    //       <Form.Item label="" valuePropName="fileList" getValueFromEvent={normFile}>
-    //         <Upload
-    //           // action="/upload.do"
-    //           listType="picture-card"
-    //           fileList={record.image || []}
-    //           onChange={({ fileList }) => handleUploadChange(record.color, fileList)} // Group by color
-    //           beforeUpload={(file) => {
-    //             if (record.image && record.image.length >= 6) {
-    //               alert('Bạn chỉ có thể tải lên tối đa 6 ảnh.');
-    //               return Upload.LIST_IGNORE;
-    //             }
-    //             return true;
-    //           }}
-    //         >
-    //           {record.image && record.image.length >= 6 ? null : (
-    //             <button
-    //               style={{
-    //                 border: 0,
-    //                 background: 'none',
-    //               }}
-    //               type="button"
-    //             >
-    //               <PlusOutlined />
-    //               <div style={{ marginTop: 8 }}>Upload</div>
-    //             </button>
-    //           )}
-    //         </Upload>
-    //       </Form.Item>
-    //     ) : null; // Ẩn chỗ upload ảnh cho các dòng khác cùng màu
-
-
-    //   }
-    // }
+   
 
   ];
   return (
