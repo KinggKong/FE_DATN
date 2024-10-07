@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Button, Flex, Table, Space, notification, Spin } from "antd";
+import { Button, Flex, Table, Space, notification, Spin, Switch } from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
@@ -18,7 +18,7 @@ const TableVoucher = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [valueSearch, setValueSearch] = useState(""); // Khởi tạo là chuỗi rỗng
+  const [valueSearch, setValueSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -27,11 +27,9 @@ const TableVoucher = () => {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenVoucher: valueSearch, // Thêm giá trị tìm kiếm vào params
+        tenVoucher: valueSearch,
       };
       const res = await getAllVoucherApi(params);
-      console.log("API Response:", res.data); // Log toàn bộ dữ liệu
-
       if (res && res.data && res.data.content) {
         const dataWithKey = res.data.content.map((item) => ({
           ...item,
@@ -51,13 +49,18 @@ const TableVoucher = () => {
     }
   }, [currentPage, pageSize, valueSearch]);
 
+  const checkVoucherExists = async (value, type) => {
+    const params = { tenVoucher: type === 'name' ? value : undefined, maVoucher: type === 'code' ? value : undefined };
+    const res = await getAllVoucherApi(params);
+    return res.data.content.some(item => type === 'name' ? item.tenVoucher === value : item.maVoucher === value);
+  };
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Theo dõi sự thay đổi của valueSearch và gọi fetchData
   useEffect(() => {
-    setCurrentPage(1); // Reset lại trang khi tìm kiếm
+    setCurrentPage(1);
     fetchData();
   }, [valueSearch]);
 
@@ -99,9 +102,74 @@ const TableVoucher = () => {
     setIsModalEditOpen(true);
   };
 
+  const validateVoucher = (voucher) => {
+    if (!voucher.tenVoucher.trim()) {
+      notification.error({
+        message: "Lỗi",
+        description: "Tên voucher không được để trống!",
+      });
+      return false;
+    }
+    if (!voucher.maVoucher.trim()) {
+      notification.error({
+        message: "Lỗi",
+        description: "Mã voucher không được để trống!",
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleConfirmEdit = async (id, updateVoucher) => {
     setLoading(true);
     try {
+      if (!validateVoucher(updateVoucher)) {
+        setLoading(false);
+        return;
+      }
+
+      if (!updateVoucher.hinhThucGiam || !updateVoucher.giaTriGiam || 
+          !updateVoucher.giaTriDonHangToiThieu || !updateVoucher.giaTriGiamToiDa || 
+          !updateVoucher.soLuong || !updateVoucher.ngayBatDau || !updateVoucher.ngayKetThuc) {
+        notification.error({
+          message: "Lỗi",
+          description: "Tất cả các trường không được để trống!",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (updateVoucher.loaiGiaTriGiam === '%' && 
+          (updateVoucher.giaTriGiam <= 0 || updateVoucher.giaTriGiam >= 100)) {
+        notification.error({
+          message: "Lỗi",
+          description: "Giá trị giảm theo phần trăm phải lớn hơn 0 và nhỏ hơn 100!",
+        });
+        setLoading(false);
+        return;
+      }
+
+      const existsByName = await checkVoucherExists(updateVoucher.tenVoucher, 'name');
+      const existsByCode = await checkVoucherExists(updateVoucher.maVoucher, 'code');
+
+       if (existsByName) {
+        notification.error({
+          message: "Lỗi",
+          description: "Tên voucher này đã tồn tại!",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (existsByCode) {
+        notification.error({
+          message: "Lỗi",
+          description: "Mã voucher này đã tồn tại!",
+        });
+        setLoading(false);
+        return;
+      }
+
       await updateVoucherApi(id, updateVoucher);
       notification.success({
         message: "Success",
@@ -131,10 +199,43 @@ const TableVoucher = () => {
   };
 
   const handleConfirmAdd = async (newVoucher) => {
-    console.log("New Voucher Data:", newVoucher); // Thêm dòng này để kiểm tra dữ liệu
-
     setLoading(true);
     try {
+      if (!validateVoucher(newVoucher)) {
+        setLoading(false);
+        return;
+      }
+
+      if (newVoucher.loaiGiaTriGiam === '%' && (newVoucher.giaTriGiam <= 0 || newVoucher.giaTriGiam >= 100)) {
+        notification.error({
+          message: "Lỗi",
+          description: "Giá trị giảm theo phần trăm phải lớn hơn 0 và nhỏ hơn 100!",
+        });
+        setLoading(false);
+        return;
+      }
+
+      const existsByName = await checkVoucherExists(newVoucher.tenVoucher, 'name');
+      const existsByCode = await checkVoucherExists(newVoucher.maVoucher, 'code');
+
+      if (existsByName) {
+        notification.error({
+          message: "Lỗi",
+          description: "Tên voucher này đã tồn tại!",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (existsByCode) {
+        notification.error({
+          message: "Lỗi",
+          description: "Mã voucher này đã tồn tại!",
+        });
+        setLoading(false);
+        return;
+      }
+
       await createVoucherApi(newVoucher);
       notification.success({
         message: "Success",
@@ -205,7 +306,30 @@ const TableVoucher = () => {
     {
       title: "Trạng thái",
       dataIndex: "trangThai",
-      render: (text) => (text === 1 ? "Hoạt động" : "Không hoạt động"),
+      render: (text, record) => (
+        <Switch
+          checked={text === 1}
+          onChange={async (checked) => {
+            const updatedStatus = checked ? 1 : 0;
+            const updatedVoucher = { ...record, trangThai: updatedStatus };
+
+            try {
+              await updateVoucherApi(record.id, updatedVoucher);
+              notification.success({
+                message: "Cập nhật trạng thái thành công",
+                description: `Voucher ${record.maVoucher} đã được ${checked ? "kích hoạt" : "tắt"}!`,
+              });
+              await fetchData(); // Cập nhật lại danh sách
+            } catch (error) {
+              console.error("Failed to update voucher status", error);
+              notification.error({
+                message: "Lỗi",
+                description: "Không thể cập nhật trạng thái voucher.",
+              });
+            }
+          }}
+        />
+      ),
     },
     {
       title: "Thao tác",
@@ -228,7 +352,7 @@ const TableVoucher = () => {
       <TimKiem
         title={"Voucher"}
         placeholder={"Nhập vào tên voucher mà bạn muốn tìm!"}
-        valueSearch={setValueSearch} // Giữ nguyên để nhận giá trị tìm kiếm
+        valueSearch={setValueSearch}
         handleAddOpen={handleAdd}
       />
       <Flex gap="middle" className="mt-4" vertical>
@@ -257,7 +381,7 @@ const TableVoucher = () => {
       <ModalThemMoiVoucher
         isOpen={isModalAddOpen}
         handleClose={() => setIsModalAddOpen(false)}
-        title={"voucher"}
+        title={"Voucher"}
         handleSubmit={handleConfirmAdd}
       />
       <ModalEdit3
