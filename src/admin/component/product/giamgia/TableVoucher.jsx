@@ -3,17 +3,12 @@ import { Button, Flex, Table, Space, notification, Spin } from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
-import ModalThemMoi from "../ModalThemMoi";
+import ModalThemMoiVoucher from "./ModalThemMoiVoucher"; 
 import TimKiem from "../TimKiem";
-import {
-  deleteMauSacApi,
-  getAllMauSacApi,
-  createMauSacApi,
-  updateMauSacApi,
-} from "../../../../api/MauSacApi";
-import ModalEdit from "../ModalEdit";
+import { getAllVoucherApi, deleteVoucherApi, updateVoucherApi, createVoucherApi } from "../../../../api/VoucherApi"; 
+import ModalEdit3 from "./ModalEdit3";
 
-const TableMauSac = () => {
+const TableVoucher = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalAddOpen, setIsModalAddOpen] = useState(false);
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
@@ -23,7 +18,7 @@ const TableMauSac = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [valueSearch, setValueSearch] = useState();
+  const [valueSearch, setValueSearch] = useState(""); // Khởi tạo là chuỗi rỗng
   const [loading, setLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -32,10 +27,12 @@ const TableMauSac = () => {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenMau: valueSearch,
+        tenVoucher: valueSearch, // Thêm giá trị tìm kiếm vào params
       };
-      const res = await getAllMauSacApi(params);
-      if (res && res.data) {
+      const res = await getAllVoucherApi(params);
+      console.log("API Response:", res.data); // Log toàn bộ dữ liệu
+
+      if (res && res.data && res.data.content) {
         const dataWithKey = res.data.content.map((item) => ({
           ...item,
           key: item.id,
@@ -54,11 +51,15 @@ const TableMauSac = () => {
     }
   }, [currentPage, pageSize, valueSearch]);
 
-
-  
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Theo dõi sự thay đổi của valueSearch và gọi fetchData
+  useEffect(() => {
+    setCurrentPage(1); // Reset lại trang khi tìm kiếm
+    fetchData();
+  }, [valueSearch]);
 
   const handleDelete = (record) => {
     setDeletingItem(record);
@@ -68,17 +69,16 @@ const TableMauSac = () => {
   const handleConfirmDelete = async () => {
     setLoading(true);
     try {
-      await deleteMauSacApi(itemDelete.id);
+      await deleteVoucherApi(itemDelete.id);
       notification.success({
         message: "Success",
         duration: 4,
         showProgress: true,
         pauseOnHover: false,
-        description: `Deleted ${itemDelete.tenMau} successfully!`,
+        description: `Deleted voucher ${itemDelete.maVoucher} successfully!`,
       });
       setIsModalOpen(false);
       setDeletingItem(null);
-      setCurrentPage(1);
       await fetchData();
     } catch (error) {
       console.error("Failed to delete item", error);
@@ -99,28 +99,27 @@ const TableMauSac = () => {
     setIsModalEditOpen(true);
   };
 
-  const handleConfirmEdit = async (id, updateMauSac) => {
+  const handleConfirmEdit = async (id, updateVoucher) => {
     setLoading(true);
     try {
-      await updateMauSacApi(id, updateMauSac);
+      await updateVoucherApi(id, updateVoucher);
       notification.success({
         message: "Success",
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
-        description: `Cập nhật màu sắc ${updateMauSac.tenMau} thành công!`,
+        description: `Cập nhật voucher ${updateVoucher.maVoucher} thành công!`,
       });
       setIsModalEditOpen(false);
-      // setCurrentPage(1);
       await fetchData();
     } catch (error) {
-      console.error("Failed to update color", error);
+      console.error("Failed to update voucher", error);
       notification.error({
         message: "Error",
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
-        description: "Failed to update color",
+        description: "Failed to update voucher",
       });
     } finally {
       setLoading(false);
@@ -131,28 +130,29 @@ const TableMauSac = () => {
     setIsModalAddOpen(true);
   };
 
-  const handleConfirmAdd = async (newColorName) => {
+  const handleConfirmAdd = async (newVoucher) => {
+    console.log("New Voucher Data:", newVoucher); // Thêm dòng này để kiểm tra dữ liệu
+
     setLoading(true);
     try {
-      await createMauSacApi({ tenMau: newColorName });
+      await createVoucherApi(newVoucher);
       notification.success({
         message: "Success",
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
-        description: `Thêm màu sắc ${newColorName} thành công!`,
+        description: `Thêm voucher ${newVoucher.maVoucher} thành công!`,
       });
       setIsModalAddOpen(false);
-      // setCurrentPage(1);
       await fetchData();
     } catch (error) {
-      console.error("Failed to create new color", error);
+      console.error("Failed to create new voucher", error);
       notification.error({
         message: "Error",
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
-        description: "Failed to create new color",
+        description: "Failed to create new voucher",
       });
     } finally {
       setLoading(false);
@@ -165,13 +165,47 @@ const TableMauSac = () => {
       dataIndex: "id",
     },
     {
-      title: "Màu sắc",
-      dataIndex: "tenMau",
-      showSorterTooltip: false,
+      title: "Tên voucher", 
+      dataIndex: "tenVoucher", 
     },
     {
-      title: "Ngày tạo",
-      dataIndex: "createdAt",
+      title: "Mã voucher",
+      dataIndex: "maVoucher",
+    },
+    {
+      title: "Hình thức giảm",
+      dataIndex: "hinhThucGiam", 
+    },
+    {
+      title: "Giá trị giảm", 
+      dataIndex: "giaTriGiam", 
+    },
+    {
+      title: "Giá trị đơn hàng tối thiểu",
+      dataIndex: "giaTriDonHangToiThieu",
+    },
+    {
+      title: "Giá trị giảm tối đa",
+      dataIndex: "giaTriGiamToiDa",
+    },
+    {
+      title: "Số lượng",
+      dataIndex: "soLuong",
+    },
+    {
+      title: "Ngày bắt đầu",
+      dataIndex: "ngayBatDau",
+      render: (text) => new Date(text).toLocaleDateString(),
+    },
+    {
+      title: "Ngày kết thúc",
+      dataIndex: "ngayKetThuc",
+      render: (text) => new Date(text).toLocaleDateString(),
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "trangThai",
+      render: (text) => (text === 1 ? "Hoạt động" : "Không hoạt động"),
     },
     {
       title: "Thao tác",
@@ -192,9 +226,9 @@ const TableMauSac = () => {
   return (
     <Spin spinning={loading} tip="Loading...">
       <TimKiem
-        title={"Màu sắc"}
-        placeholder={"Nhập vào màu của giày mà bạn muốn tìm !"}
-        valueSearch={setValueSearch}
+        title={"Voucher"}
+        placeholder={"Nhập vào tên voucher mà bạn muốn tìm!"}
+        valueSearch={setValueSearch} // Giữ nguyên để nhận giá trị tìm kiếm
         handleAddOpen={handleAdd}
       />
       <Flex gap="middle" className="mt-4" vertical>
@@ -217,24 +251,24 @@ const TableMauSac = () => {
       <ModalConfirm
         isOpen={isModalOpen}
         handleClose={() => setIsModalOpen(false)}
-        title={"Màu sắc"}
+        title={"Voucher"}
         handleConfirm={handleConfirmDelete}
       />
-      <ModalThemMoi
+      <ModalThemMoiVoucher
         isOpen={isModalAddOpen}
         handleClose={() => setIsModalAddOpen(false)}
-        title={"Màu sắc"}
+        title={"voucher"}
         handleSubmit={handleConfirmAdd}
       />
-      <ModalEdit
-        title={"Màu sắc"}
+      <ModalEdit3
+        title={"Voucher"}
         isOpen={isModalEditOpen}
         handleClose={() => setIsModalEditOpen(false)}
-        mausac={itemEdit}
+        voucher={itemEdit}
         handleSubmit={handleConfirmEdit}
       />
     </Spin>
   );
 };
 
-export default TableMauSac;
+export default TableVoucher;

@@ -1,16 +1,17 @@
 import { Modal, Row, Col, Input, Switch, Select } from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
-import { IoMdAddCircleOutline } from "react-icons/io";
+import { FaEdit } from "react-icons/fa";
 import { useEffect } from "react";
 const { TextArea } = Input;
 import { useFormik } from "formik";
 import * as Yup from "yup";
 
-const ModalThemMoi = ({
+const ModalEditSanPham = ({
   isOpen,
   handleClose,
   title,
   handleSubmit,
+  product,
   dataDanhMuc,
   dataThuongHieu,
   dataChatLieuVai,
@@ -20,34 +21,33 @@ const ModalThemMoi = ({
     tenSanPham: Yup.string()
       .min(8, "Tên sản phẩm phải có ít nhất 8 kí tự")
       .required("Tên sản phẩm là bắt buộc"),
-    idDanhMuc: Yup.number().required("Danh mục là bắt buộc"),
     idThuongHieu: Yup.number().required("Thương hiệu là bắt buộc"),
+    idDanhMuc: Yup.number().required("Danh mục là bắt buộc"),
     idChatLieuVai: Yup.number().required("Chất liệu vải là bắt buộc"),
     idChatLieuDe: Yup.number().required("Chất liệu đế là bắt buộc"),
-    moTa: Yup.string(),
+    moTa: Yup.string().nullable(), // Cho phép trống
   });
 
   const formik = useFormik({
     initialValues: {
-      tenSanPham: "",
-      moTa: "",
-      trangThai: 1,
-      idDanhMuc: null,
-      idThuongHieu: null,
-      idChatLieuVai: null,
-      idChatLieuDe: null,
+      tenSanPham: product?.tenSanPham || "",
+      moTa: product?.moTa || "",
+      trangThai: product?.trangThai ,
+      idDanhMuc: product?.danhMuc?.id || null,
+      idThuongHieu: product?.thuongHieu?.id || null,
+      idChatLieuVai: product?.chatLieuVai?.id || null,
+      idChatLieuDe: product?.chatLieuDe?.id || null,
     },
+    enableReinitialize: true, 
     validationSchema,
     onSubmit: (values) => {
-      handleSubmit(values);
+      handleSubmit(product?.id, values);
     },
-    validateOnChange: false,
-    validateOnBlur: false,
   });
 
   useEffect(() => {
     if (!isOpen) {
-      formik.resetForm();
+      formik.resetForm(); // Reset lại form khi modal đóng
     }
   }, [isOpen]);
 
@@ -57,10 +57,10 @@ const ModalThemMoi = ({
         open={isOpen}
         title={
           <span className="flex">
-            <IoMdAddCircleOutline
+            <FaEdit
               style={{ color: "green", marginRight: 8, fontSize: "1.5rem" }}
             />
-            Thêm mới {title}
+            Chỉnh sửa {title}
           </span>
         }
         width={1000}
@@ -88,7 +88,7 @@ const ModalThemMoi = ({
               onChange={formik.handleChange}
               placeholder="Nhập vào tên sản phẩm"
             />
-            {formik.errors.tenSanPham && (
+            {formik.touched.tenSanPham && formik.errors.tenSanPham && (
               <div className="text-red-600">{formik.errors.tenSanPham}</div>
             )}
           </Col>
@@ -134,7 +134,7 @@ const ModalThemMoi = ({
                 label: thuongHieu.tenThuongHieu,
               }))}
             />
-            {formik.errors.idThuongHieu && (
+            {formik.touched.idThuongHieu && formik.errors.idThuongHieu && (
               <div className="text-red-600">{formik.errors.idThuongHieu}</div>
             )}
           </Col>
@@ -163,7 +163,7 @@ const ModalThemMoi = ({
                 label: danhMuc.tenDanhMuc,
               }))}
             />
-            {formik.errors.idDanhMuc && (
+            {formik.touched.idDanhMuc && formik.errors.idDanhMuc && (
               <div className="text-red-600">{formik.errors.idDanhMuc}</div>
             )}
           </Col>
@@ -235,8 +235,8 @@ const ModalThemMoi = ({
             Mô tả
           </label>
           <TextArea
-            id="moTa"
-            name="moTa"
+          id="moTa"
+          name="moTa"
             maxLength={100}
             placeholder="Mô tả sản phẩm"
             value={formik.values.moTa}
@@ -247,4 +247,5 @@ const ModalThemMoi = ({
     </>
   );
 };
-export default ModalThemMoi;
+
+export default ModalEditSanPham;
