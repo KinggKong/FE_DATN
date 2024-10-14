@@ -7,43 +7,53 @@ const { Header, Content, Footer } = Layout;
 const { TabPane } = Tabs;
 const { Option } = Select;
 
+// Khởi tạo danh sách sản phẩm ban đầu
+const initialProducts = [
+  { id: 1, name: 'Sản phẩm 1', price: 100 },
+  { id: 2, name: 'Sản phẩm 2', price: 200 },
+  { id: 3, name: 'Sản phẩm 3', price: 300 },
+  { id: 4, name: 'Sản phẩm 4', price: 400 },
+  { id: 5, name: 'Sản phẩm 5', price: 500 },
+  { id: 6, name: 'Sản phẩm 6', price: 600 },
+  { id: 7, name: 'Sản phẩm 7', price: 700 },
+  { id: 8, name: 'Sản phẩm 8', price: 800 },
+  { id: 9, name: 'Sản phẩm 9', price: 900 },
+  { id: 10, name: 'Sản phẩm 10', price: 1000 },
+  { id: 11, name: 'Sản phẩm 11', price: 1100 },
+  { id: 12, name: 'Sản phẩm 12', price: 1200 },
+  { id: 13, name: 'Sản phẩm 13', price: 1300 },
+  { id: 14, name: 'Sản phẩm 14', price: 1400 },
+  { id: 15, name: 'Sản phẩm 15', price: 1500 },
+];
+
+// Danh sách nhân viên
+const employees = [
+  { id: 1, name: 'Nhân viên 1' },
+  { id: 2, name: 'Nhân viên 2' },
+  { id: 3, name: 'Nhân viên 3' },
+];
+
+// Thành phần chính của hệ thống POS
 const POS = () => {
+  // Khởi tạo các state để quản lý dữ liệu
   const [invoices, setInvoices] = useState([]);
   const [activeKey, setActiveKey] = useState("1");
   const [editItem, setEditItem] = useState(null);
   const [editQuantity, setEditQuantity] = useState(0);
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(initialProducts.map(product => ({ ...product, quantity: 0 })));
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const [customerPhone, setCustomerPhone] = useState('');
-  const [selectedEmployee, setSelectedEmployee] = useState('Nhân viên 1');
+  const [selectedEmployee, setSelectedEmployee] = useState(employees[0]?.name);
   const [paymentMethod, setPaymentMethod] = useState('');
   const [moneyGiven, setMoneyGiven] = useState(0);
   const [selectedVoucher, setSelectedVoucher] = useState('');
 
-  // Gọi API để lấy dữ liệu sản phẩm
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch('/api/products');
-        const data = await response.json();
-        // Nếu cần định dạng lại dữ liệu
-        const formattedData = data.map(product => ({
-          ...product,
-          quantity: 0, // thêm thuộc tính số lượng
-        }));
-        setProducts(formattedData);
-      } catch (error) {
-        console.error('Lỗi khi lấy sản phẩm:', error);
-        notification.error({ message: 'Lỗi', description: 'Không thể lấy dữ liệu sản phẩm.' });
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
+  // Hàm tạo hóa đơn mới
   const handleInvoiceCreation = () => {
     const pendingInvoices = invoices.filter(invoice => !invoice.paid);
+
     if (pendingInvoices.length >= 5) {
       notification.warning({
         message: 'Giới hạn hóa đơn',
@@ -51,16 +61,20 @@ const POS = () => {
       });
       return;
     }
+
     const newInvoiceKey = (invoices.length > 0 ? Math.max(...invoices.map(invoice => parseInt(invoice.key))) + 1 : 1).toString();
     setInvoices([...invoices, { key: newInvoiceKey, items: [], paid: false }]);
     setActiveKey(newInvoiceKey);
+
+    // Đặt lại thông tin thanh toán
     setCustomerPhone('');
-    setSelectedEmployee('Nhân viên 1');
+    setSelectedEmployee(employees[0]?.name);
     setPaymentMethod('');
     setMoneyGiven(0);
     setSelectedVoucher('');
   };
 
+  // Thêm sản phẩm vào hóa đơn hiện tại
   const addToCart = (product) => {
     const newInvoices = [...invoices];
     const currentInvoice = newInvoices.find(invoice => invoice.key === activeKey);
@@ -75,13 +89,15 @@ const POS = () => {
       setInvoices(newInvoices);
       notification.success({
         message: 'Thêm vào hóa đơn',
-        description: `${product.tenSanPham} đã được thêm vào hóa đơn!`,
+        description: `${product.name} đã được thêm vào hóa đơn!`,
       });
     }
   };
 
+  // Xóa sản phẩm khỏi hóa đơn hiện tại
   const removeFromCart = (id) => {
     const currentInvoice = invoices.find(invoice => invoice.key === activeKey);
+
     if (currentInvoice && !currentInvoice.paid) {
       Modal.confirm({
         title: 'Xác nhận xóa',
@@ -90,6 +106,8 @@ const POS = () => {
           const newInvoices = [...invoices];
           currentInvoice.items = currentInvoice.items.filter(item => item.id !== id);
           setInvoices(newInvoices);
+
+          // Hiển thị thông báo khi xóa sản phẩm
           notification.success({
             message: 'Xóa sản phẩm',
             description: 'Sản phẩm đã được xóa khỏi giỏ hàng.',
@@ -105,14 +123,17 @@ const POS = () => {
     }
   };
 
+  // Mở modal chỉnh sửa số lượng sản phẩm
   const openEditModal = (item) => {
     setEditItem(item);
     setEditQuantity(item.quantity);
   };
 
+  // Lưu số lượng sản phẩm đã chỉnh sửa
   const saveEditQuantity = () => {
     const newInvoices = [...invoices];
     const currentInvoice = newInvoices.find(invoice => invoice.key === activeKey);
+
     if (currentInvoice && !currentInvoice.paid) {
       const existingItem = currentInvoice.items.find(item => item.id === editItem.id);
       if (existingItem) {
@@ -121,16 +142,19 @@ const POS = () => {
       setInvoices(newInvoices);
       notification.success({
         message: 'Chỉnh sửa thành công',
-        description: `Số lượng của ${editItem.tenSanPham} đã được cập nhật!`,
+        description: `Số lượng của ${editItem.name} đã được cập nhật!`,
       });
       setEditItem(null);
     }
   };
 
+  // Hàm xử lý thanh toán hóa đơn
   const handlePayment = () => {
     const currentInvoice = invoices.find(invoice => invoice.key === activeKey);
+
     if (currentInvoice && currentInvoice.items.length > 0) {
       const total = currentInvoice.items.reduce((total, item) => total + item.price * item.quantity, 0);
+
       Modal.confirm({
         title: 'Xác nhận thanh toán',
         content: `Bạn có chắc chắn muốn thanh toán hóa đơn với tổng số tiền: ${total} VNĐ?`,
@@ -157,8 +181,10 @@ const POS = () => {
     }
   };
 
+  // Hàm hủy hóa đơn hiện tại
   const handleCancelInvoice = () => {
     const currentInvoice = invoices.find(invoice => invoice.key === activeKey);
+
     if (currentInvoice && !currentInvoice.paid) {
       Modal.confirm({
         title: 'Xác nhận hủy hóa đơn',
@@ -166,10 +192,11 @@ const POS = () => {
         onOk: () => {
           const updatedInvoices = invoices.filter(invoice => invoice.key !== activeKey);
           setInvoices(updatedInvoices);
+          // Đặt activeKey về một hóa đơn còn lại nếu có
           if (updatedInvoices.length > 0) {
             setActiveKey(updatedInvoices[0].key);
           } else {
-            setActiveKey("1");
+            setActiveKey("1"); // Đặt lại về giá trị mặc định
           }
           notification.success({
             message: 'Hủy hóa đơn thành công',
@@ -185,23 +212,33 @@ const POS = () => {
     }
   };
 
+  // Theo dõi sự thay đổi của paymentMethod
+  useEffect(() => {
+    const currentInvoice = invoices.find(invoice => invoice.key === activeKey);
+    if (paymentMethod === "bankTransfer" && currentInvoice) {
+      const total = currentInvoice.items.reduce((total, item) => total + item.price * item.quantity, 0);
+      setMoneyGiven(total);
+    }
+  }, [paymentMethod, invoices, activeKey]);
+
+  // Cấu hình cột cho bảng sản phẩm
   const productColumns = [
-    { title: 'Tên sản phẩm', dataIndex: 'tenSanPham', key: 'tenSanPham' },
+    { title: 'Tên sản phẩm', dataIndex: 'name', key: 'name' },
     { title: 'Giá', dataIndex: 'price', key: 'price', render: price => `${price} VNĐ` },
     { title: 'Số lượng', dataIndex: 'quantity', key: 'quantity' },
     {
       title: 'Hành động',
       key: 'action',
       render: (text, record) => (
-        <Button type="link" onClick={() => addToCart(record)}>
-          <FaEdit className="size-5" />
+        <Button type="link" onClick={() => addToCart(record)}><FaEdit className="size-5" />
         </Button>
       ),
     },
   ];
 
+  // Cấu hình cột cho bảng hóa đơn
   const invoiceColumns = [
-    { title: 'Tên sản phẩm', dataIndex: 'tenSanPham', key: 'tenSanPham' },
+    { title: 'Tên sản phẩm', dataIndex: 'name', key: 'name' },
     { title: 'Giá', dataIndex: 'price', key: 'price', render: price => `${price} VNĐ` },
     { title: 'Số lượng', dataIndex: 'quantity', key: 'quantity' },
     {
@@ -211,11 +248,9 @@ const POS = () => {
         <>
           {!invoices.find(invoice => invoice.key === activeKey).paid && (
             <>
-              <Button type="link" onClick={() => openEditModal(record)}>
-                <FaEdit className="size-5" />
+              <Button type="link" onClick={() => openEditModal(record)}><FaEdit className="size-5" />
               </Button>
-              <Button type="link" danger onClick={() => removeFromCart(record.id)}>
-                <MdDelete className="size-5" />
+              <Button type="link" danger onClick={() => removeFromCart(record.id)}><MdDelete className="size-5" />
               </Button>
             </>
           )}
@@ -224,6 +259,7 @@ const POS = () => {
     },
   ];
 
+  // Tính toán sản phẩm hiện tại cho phân trang
   const indexOfLastProduct = currentPage * itemsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
   const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
@@ -269,6 +305,8 @@ const POS = () => {
                   />
                 </div>
 
+                {/* Thông tin thanh toán */}
+
                 <div style={{ width: '300px', marginLeft: '20px', border: '1px solid #ddd', padding: '10px' }}>
                   <h4 style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '24px', margin: '20px 0', color: invoice.paid ? 'red' : 'black' }}>
                     Thông tin thanh toán
@@ -284,9 +322,9 @@ const POS = () => {
                   <div style={{ marginBottom: '10px', color: invoice.paid ? 'red' : 'black' }}>
                     <label>Tên nhân viên:</label>
                     <Select value={selectedEmployee} onChange={(value) => setSelectedEmployee(value)} style={{ width: '100%', marginTop: '5px' }} disabled={invoice.paid}>
-                      {/* Giả sử bạn có danh sách nhân viên từ API */}
-                      <Option value="Nhân viên 1">Nhân viên 1</Option>
-                      <Option value="Nhân viên 2">Nhân viên 2</Option>
+                      {employees.map(employee => (
+                        <Option key={employee.id} value={employee.name}>{employee.name}</Option>
+                      ))}
                     </Select>
                   </div>
                   <div style={{ marginBottom: '10px', color: invoice.paid ? 'red' : 'black' }}>
@@ -321,6 +359,7 @@ const POS = () => {
                     Hủy hóa đơn
                   </Button>
                 </div>
+
               </div>
             </TabPane>
           ))}
@@ -328,7 +367,7 @@ const POS = () => {
 
         {editItem && (
           <Modal
-            title={`Chỉnh sửa số lượng: ${editItem.tenSanPham}`}
+            title={`Chỉnh sửa số lượng: ${editItem.name}`}
             visible={!!editItem}
             onOk={saveEditQuantity}
             onCancel={() => setEditItem(null)}
@@ -347,3 +386,4 @@ const POS = () => {
 };
 
 export default POS;
+
