@@ -1,11 +1,12 @@
 import React from 'react'
+import POS from '../../component/product/banhangtaiquay/BanHangTaiQuay';
 
 const BanHang = () => {
   return (
     <div>
-      Đây là trang bán hàng
+      <POS />
     </div>
-  )
-}
+  );
+};
 
 export default BanHang

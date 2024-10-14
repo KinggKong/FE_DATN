@@ -1,5 +1,7 @@
+
+
 import { useEffect, useState, useCallback } from "react";
-import { Button, Flex, Table, Space, notification, Switch } from "antd";
+import { Button, Flex, Table, Space, notification } from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
@@ -10,7 +12,7 @@ import {
   getAllKichThuocApi,
   createKichThuocApi,
   updateKichThuocApi,
-} from "../../../../api/KichThuocApi";
+} from "../../../../api/KichThuocApi"; // Cập nhật API import cho KichThuoc
 import ModalEdit from "../ModalEdit1";
 
 const TableKichThuoc = () => {
@@ -26,20 +28,15 @@ const TableKichThuoc = () => {
   const [valueSearch, setValueSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const validateKichThuoc = (value) => {
-    const numberValue = Number(value);
-    return !isNaN(numberValue) && numberValue >= 35 && numberValue <= 47;
-  };
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenKichThuoc: valueSearch,
+        tenKichThuoc: valueSearch, // Cập nhật tên tham số tìm kiếm
       };
-      const res = await getAllKichThuocApi(params);
+      const res = await getAllKichThuocApi(params); // Cập nhật API gọi cho KichThuoc
       if (res && res.data) {
         const dataWithKey = res.data.content.map((item) => ({
           ...item,
@@ -59,12 +56,6 @@ const TableKichThuoc = () => {
     }
   }, [currentPage, pageSize, valueSearch]);
 
-  const checkKichThuocExists = async (tenKichThuoc) => {
-    const params = { tenKichThuoc };
-    const res = await getAllKichThuocApi(params);
-    return res.data.content.some(item => item.tenKichThuoc === tenKichThuoc);
-  };
-
   const handleDelete = (record) => {
     setDeletingItem(record);
     setIsModalOpen(true);
@@ -72,18 +63,18 @@ const TableKichThuoc = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      await deleteKichThuocApi(itemDelete.id);
+      await deleteKichThuocApi(itemDelete.id); // Cập nhật API gọi cho KichThuoc
       notification.success({
         duration: 4,
         pauseOnHover: false,
         message: "Success",
         showProgress: true,
-        description: `Deleted size ${itemDelete.tenKichThuoc} successfully!`,
+        description: `Deleted size ${itemDelete.tenKichThuoc} successfully!`, // Cập nhật tên kích thước
       });
       setIsModalOpen(false);
       setDeletingItem(null);
       setCurrentPage(1);
-      await fetchData();
+      await fetchData(); // Gọi fetchData sau khi xóa thành công
     } catch (error) {
       console.error("Failed to delete item", error);
     }
@@ -94,55 +85,20 @@ const TableKichThuoc = () => {
     setIsModalEditOpen(true);
   };
 
-  const handleStatusChange = async (record, checked) => {
-    const updatedData = { ...record, trangThai: checked ? 1 : 0 };
-    
+  const handleConfirmEdit = async (id, updateKichThuoc) => { // Cập nhật tên tham số
     try {
-      await updateKichThuocApi(record.id, updatedData);
-      notification.success({
-        message: "Cập nhật trạng thái thành công",
-        description: `Trạng thái kích thước ${record.tenKichThuoc} đã được ${checked ? "ngừng hoạt động" : "hoạt động"}!`,
-      });
-      await fetchData();
-    } catch (error) {
-      console.error("Failed to update status", error);
-      notification.error({
-        message: "Lỗi",
-        description: "Không thể cập nhật trạng thái.",
-      });
-    }
-  };
-
-  const handleConfirmEdit = async (id, updateKichThuoc) => {
-    if (!validateKichThuoc(updateKichThuoc.tenKichThuoc)) {
-      notification.error({
-        message: "Error",
-        description: "Kích thước phải là số và nằm trong khoảng từ 35 đến 47!",
-      });
-      return;
-    }
-
-    const exists = await checkKichThuocExists(updateKichThuoc.tenKichThuoc);
-    if (exists) {
-      notification.error({
-        message: "Error",
-        description: "Kích thước này đã tồn tại!",  
-      });
-      return;
-    }
-
-    try {
-      await updateKichThuocApi(id, updateKichThuoc);
+      console.log("Dữ liệu gửi đi:", updateKichThuoc);
+      await updateKichThuocApi(id, updateKichThuoc); // Cập nhật API gọi cho KichThuoc
       notification.success({
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
         message: "Success",
-        description: `Cập nhật kích thước ${updateKichThuoc.tenKichThuoc} thành công!`,
+        description: `Cập nhật kích thước ${updateKichThuoc.tenKichThuoc} thành công!`, // Cập nhật tên kích thước
       });
       setIsModalEditOpen(false);
       setCurrentPage(1);
-      await fetchData();
+      await fetchData(); // Gọi fetchData sau khi cập nhật thành công
     } catch (error) {
       console.log(error);
     }
@@ -152,77 +108,49 @@ const TableKichThuoc = () => {
     setIsModalAddOpen(true);
   };
 
-  const handleConfirmAdd = async (newKichThuocName) => {
-    if (!validateKichThuoc(newKichThuocName)) {
-      notification.error({
-        message: "Error",
-        description: "Kích thước phải là số và nằm trong khoảng từ 35 đến 47!",
-      });
-      return;
-    }
-
-    const exists = await checkKichThuocExists(newKichThuocName);
-    if (exists) {
-      notification.error({
-        message: "Error",
-        description: "Kích thước này đã tồn tại!",
-      });
-      return;
-    }
-
+  const handleConfirmAdd = async (newKichThuocName) => { // Cập nhật tên tham số
     try {
-      await createKichThuocApi({ tenKichThuoc: newKichThuocName });
+      await createKichThuocApi({ tenKichThuoc: newKichThuocName }); // Cập nhật API gọi cho KichThuoc
       notification.success({
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
         message: "Success",
-        description: `Thêm kích thước ${newKichThuocName} thành công!`,
+        description: `Thêm kích thước ${newKichThuocName} thành công!`, // Cập nhật tên kích thước
       });
       setIsModalAddOpen(false);
       setCurrentPage(1);
-      await fetchData();
+      await fetchData(); // Gọi fetchData sau khi thêm thành công
     } catch (error) {
       console.error("Failed to create new size", error);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(); // Gọi fetchData mỗi khi currentPage, pageSize, hoặc valueSearch thay đổi
   }, [fetchData]);
 
   const columns = [
     {
       title: "STT",
       dataIndex: "id",
-      key: "id",
+      key: "id", // Thêm key cho mỗi cột
     },
     {
       title: "Kích thước",
-      dataIndex: "tenKichThuoc",
-      key: "tenKichThuoc",
+      dataIndex: "tenKichThuoc", // Cập nhật tên trường
+      key: "tenKichThuoc", // Thêm key cho mỗi cột
       showSorterTooltip: false,
     },
     {
       title: "Ngày tạo",
       dataIndex: "createdAt",
-      key: "createdAt",
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "trangThai",
-      key: "trangThai",
-      render: (text, record) => (
-        <Switch
-          checked={text === 0} // 0 là hoạt động
-          onChange={(checked) => handleStatusChange(record, !checked)} // Chuyển đổi trạng thái
-        />
-      ),
+      key: "createdAt", // Thêm key cho mỗi cột
     },
     {
       title: "Thao tác",
       dataIndex: "thaotac",
-      key: "thaotac",
+      key: "thaotac", // Thêm key cho mỗi cột
       render: (_, record) => (
         <Space size="middle">
           <Button type="link" onClick={() => handleEdit1(record)}>
@@ -278,7 +206,7 @@ const TableKichThuoc = () => {
         title={"Kích thước"}
         isOpen={isModalEditOpen}
         handleClose={() => setIsModalEditOpen(false)}
-        kichthuoc={itemEdit}
+        kichthuoc={itemEdit} // Đổi tên từ size thành kichthuoc
         handleSubmit={handleConfirmEdit}
       />
     </>
