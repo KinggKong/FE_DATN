@@ -36,19 +36,41 @@ const employees = [
 // Thành phần chính của hệ thống POS
 const POS = () => {
   // Khởi tạo các state để quản lý dữ liệu
-  const [invoices, setInvoices] = useState([]);
-  const [activeKey, setActiveKey] = useState("1");
-  const [editItem, setEditItem] = useState(null);
-  const [editQuantity, setEditQuantity] = useState(0);
-  const [products, setProducts] = useState(initialProducts.map(product => ({ ...product, quantity: 0 })));
+ // Khởi tạo danh sách hóa đơn
+const [invoices, setInvoices] = useState([]); 
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5);
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [selectedEmployee, setSelectedEmployee] = useState(employees[0]?.name);
-  const [paymentMethod, setPaymentMethod] = useState('');
-  const [moneyGiven, setMoneyGiven] = useState(0);
-  const [selectedVoucher, setSelectedVoucher] = useState('');
+// Theo dõi tab hóa đơn đang hoạt động
+const [activeKey, setActiveKey] = useState("1"); 
+
+// Lưu thông tin sản phẩm đang chỉnh sửa
+const [editItem, setEditItem] = useState(null); 
+
+// Số lượng sản phẩm khi chỉnh sửa
+const [editQuantity, setEditQuantity] = useState(0); 
+
+// Danh sách sản phẩm, khởi tạo với số lượng bằng 0
+const [products, setProducts] = useState(initialProducts.map(product => ({ ...product, quantity: 0 }))); 
+
+// Trang hiện tại trong danh sách sản phẩm
+const [currentPage, setCurrentPage] = useState(1); 
+
+// Số lượng sản phẩm hiển thị trên mỗi trang
+const [itemsPerPage] = useState(5); 
+
+// Số điện thoại của khách hàng
+const [customerPhone, setCustomerPhone] = useState(''); 
+
+// Nhân viên được chọn, khởi tạo với nhân viên đầu tiên
+const [selectedEmployee, setSelectedEmployee] = useState(employees[0]?.name); 
+
+// Phương thức thanh toán
+const [paymentMethod, setPaymentMethod] = useState(''); 
+
+// Số tiền khách hàng đưa
+const [moneyGiven, setMoneyGiven] = useState(0); 
+
+// Voucher được chọn
+const [selectedVoucher, setSelectedVoucher] = useState(''); 
 
   // Hàm tạo hóa đơn mới
   const handleInvoiceCreation = () => {
