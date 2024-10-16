@@ -1,22 +1,51 @@
-import { Modal, notification } from "antd";
+import moment from 'moment';
+import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select } from "antd";
 import { FaEdit } from "react-icons/fa";
 import { useState, useEffect } from "react";
+
+const { Option } = Select;
 
 const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
   const [newVoucherName, setNewVoucherName] = useState("");
   const [maVoucher, setMaVoucher] = useState("");
   const [giaTriGiam, setGiaTriGiam] = useState("");
   const [giaTriDonHangToiThieu, setGiaTriDonHangToiThieu] = useState("");
-  const [giaTriGiamToiDa, setGiaTriGiamToiDa] = useState(""); // Thêm trường này
-  const [ngayBatDau, setNgayBatDau] = useState("");
-  const [ngayKetThuc, setNgayKetThuc] = useState("");
+  const [giaTriGiamToiDa, setGiaTriGiamToiDa] = useState("");
+  const [ngayBatDau, setNgayBatDau] = useState(null);
+  const [ngayKetThuc, setNgayKetThuc] = useState(null);
   const [hinhThucGiam, setHinhThucGiam] = useState(""); 
   const [soLuong, setSoLuong] = useState(""); 
-  const [trangThai, setTrangThai] = useState(""); 
+  const [trangThai, setTrangThai] = useState(true); 
 
   const handleConfirmEdit = () => {
-    // Kiểm tra các giá trị
-    if (parseFloat(giaTriGiam) <= 0 || parseFloat(giaTriDonHangToiThieu) <= 0 || parseFloat(giaTriGiamToiDa) <= 0 || parseInt(soLuong, 10) <= 0) {
+    const giaTriGiamFloat = parseFloat(giaTriGiam);
+
+    // Kiểm tra điều kiện cho hình thức giảm
+    if (hinhThucGiam === "%" && (giaTriGiamFloat <= 0 || giaTriGiamFloat >= 100)) {
+      notification.error({
+        message: "Lỗi",
+        description: "Giá trị giảm phải lớn hơn 0 và nhỏ hơn 100 khi hình thức giảm là %!",
+      });
+      return;
+    }
+
+    if (hinhThucGiam === "VNĐ" && giaTriGiamFloat <= 1000) {
+      notification.error({
+        message: "Lỗi",
+        description: "Giá trị giảm phải lớn hơn 1000 khi hình thức giảm là VNĐ!",
+      });
+      return;
+    }
+
+    if (giaTriGiamFloat <= 0) {
+      notification.error({
+        message: "Lỗi",
+        description: "Giá trị giảm phải lớn hơn 0!",
+      });
+      return;
+    }
+
+    if (parseFloat(giaTriDonHangToiThieu) <= 0 || parseFloat(giaTriGiamToiDa) <= 0 || parseInt(soLuong, 10) <= 0) {
       notification.error({
         message: "Lỗi",
         description: "Tất cả các giá trị phải lớn hơn 0!",
@@ -24,8 +53,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       return;
     }
 
-    // Kiểm tra ngày bắt đầu và ngày kết thúc
-    if (ngayBatDau && ngayKetThuc && new Date(ngayKetThuc) < new Date(ngayBatDau)) {
+    if (ngayBatDau && ngayKetThuc && ngayKetThuc.isBefore(ngayBatDau)) {
       notification.error({
         message: "Lỗi",
         description: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu!",
@@ -36,14 +64,14 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
     handleSubmit(voucher?.id, {
       tenVoucher: newVoucherName,
       maVoucher,
-      giaTriGiam: parseFloat(giaTriGiam),
+      giaTriGiam: giaTriGiamFloat,
       giaTriDonHangToiThieu: parseFloat(giaTriDonHangToiThieu),
       giaTriGiamToiDa: parseFloat(giaTriGiamToiDa),
-      ngayBatDau,
-      ngayKetThuc,
+      ngayBatDau: ngayBatDau ? ngayBatDau.format('YYYY-MM-DDTHH:mm:ss') : null,
+      ngayKetThuc: ngayKetThuc ? ngayKetThuc.format('YYYY-MM-DDTHH:mm:ss') : null,
       hinhThucGiam,
       soLuong: parseInt(soLuong, 10),
-      trangThai,
+      trangThai: trangThai ? 1 : 0,
     });
   };
 
@@ -54,11 +82,11 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       setGiaTriGiam(voucher.giaTriGiam);
       setGiaTriDonHangToiThieu(voucher.giaTriDonHangToiThieu);
       setGiaTriGiamToiDa(voucher.giaTriGiamToiDa);
-      setNgayBatDau(voucher.ngayBatDau);
-      setNgayKetThuc(voucher.ngayKetThuc);
+      setNgayBatDau(moment(voucher.ngayBatDau));
+      setNgayKetThuc(moment(voucher.ngayKetThuc));
       setHinhThucGiam(voucher.hinhThucGiam);
       setSoLuong(voucher.soLuong);
-      setTrangThai(voucher.trangThai);
+      setTrangThai(voucher.trangThai === 1);
     }
   }, [voucher]);
 
@@ -67,110 +95,129 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       open={isOpen}
       title={
         <span className="flex">
-          <FaEdit
-            style={{ color: "green", marginRight: 8, fontSize: "1.5rem" }}
-          />
+          <FaEdit style={{ color: "green", marginRight: 8, fontSize: "1.5rem" }} />
           Chỉnh sửa {title}
         </span>
       }
       okType="primary"
       onOk={handleConfirmEdit}
       onCancel={handleClose}
-      footer={(_, { OkBtn, CancelBtn }) => (
-        <>
-          <CancelBtn />
-          <OkBtn />
-        </>
-      )}
       keyboard={false}
       maskClosable={false}
     >
-      <div className="mb-4">
-        <label>Tên voucher</label>
-        <input
-          onChange={(e) => setNewVoucherName(e.target.value)}
-          value={newVoucherName}
-          className="w-full border rounded-sm h-8 p-4"
-        />
-      </div>
-      <div className="mb-4">
-        <label>Mã voucher</label>
-        <input
-          onChange={(e) => setMaVoucher(e.target.value)}
-          value={maVoucher}
-          className="w-full border rounded-sm h-8 p-4"
-        />
-      </div>
-      <div className="mb-4">
-        <label>Giá trị giảm</label>
-        <input
-          type="number"
-          onChange={(e) => setGiaTriGiam(e.target.value)}
-          value={giaTriGiam}
-          className="w-full border rounded-sm h-8 p-4"
-        />
-      </div>
-      <div className="mb-4">
-        <label>Giá trị đơn hàng tối thiểu</label>
-        <input
-          type="number"
-          onChange={(e) => setGiaTriDonHangToiThieu(e.target.value)}
-          value={giaTriDonHangToiThieu}
-          className="w-full border rounded-sm h-8 p-4"
-        />
-      </div>
-      <div className="mb-4">
-        <label>Giá trị giảm tối đa</label>
-        <input
-          type="number"
-          onChange={(e) => setGiaTriGiamToiDa(e.target.value)}
-          value={giaTriGiamToiDa}
-          className="w-full border rounded-sm h-8 p-4"
-        />
-      </div>
-      <div className="mb-4">
-        <label>Ngày bắt đầu</label>
-        <input
-          type="datetime-local"
-          onChange={(e) => setNgayBatDau(e.target.value)}
-          value={ngayBatDau}
-          className="w-full border rounded-sm h-8 p-4"
-        />
-      </div>
-      <div className="mb-4">
-        <label>Ngày kết thúc</label>
-        <input
-          type="datetime-local"
-          onChange={(e) => setNgayKetThuc(e.target.value)}
-          value={ngayKetThuc}
-          className="w-full border rounded-sm h-8 p-4"
-        />
-      </div>
-      <div className="mb-4">
-        <label>Hình thức giảm</label>
-        <input
-          onChange={(e) => setHinhThucGiam(e.target.value)}
-          value={hinhThucGiam}
-          className="w-full border rounded-sm h-8 p-4"
-        />
-      </div>
-      <div className="mb-4">
-        <label>Số lượng</label>
-        <input
-          type="number"
-          onChange={(e) => setSoLuong(e.target.value)}
-          value={soLuong}
-          className="w-full border rounded-sm h-8 p-4"
-        />
-      </div>
-      <div className="mb-4">
-        <label>Trạng thái</label>
-        <input
-          onChange={(e) => setTrangThai(e.target.value)}
-          value={trangThai}
-          className="w-full border rounded-sm h-8 p-4"
-        />
-      </div>
+      <Row className="flex justify-between mb-3">
+        <Col span={11}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Tên voucher
+          </label>
+          <Input
+            value={newVoucherName}
+            onChange={(e) => setNewVoucherName(e.target.value)}
+            placeholder="Nhập vào tên voucher"
+          />
+        </Col>
+        <Col span={11}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Mã voucher
+          </label>
+          <Input
+            value={maVoucher}
+            onChange={(e) => setMaVoucher(e.target.value)}
+            placeholder="Nhập mã voucher"
+          />
+        </Col>
+      </Row>
+
+      <Row className="flex justify-between mb-3">
+        <Col span={11}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Giá trị giảm
+          </label>
+          <Input
+            type="number"
+            value={giaTriGiam}
+            onChange={(e) => setGiaTriGiam(e.target.value)}
+            placeholder="Nhập giá trị giảm"
+          />
+        </Col>
+        <Col span={11}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Hình thức giảm
+          </label>
+          <Select
+            value={hinhThucGiam}
+            onChange={(value) => setHinhThucGiam(value)}
+          >
+            <Option value="VNĐ">VNĐ</Option>
+            <Option value="%">%</Option>
+          </Select>
+        </Col>
+      </Row>
+
+      <Row className="flex justify-between mb-3">
+        <Col span={11}>
+          <label className="text-sm block mb-2"><span className="text-red-600">*</span>Giá trị đơn hàng tối thiểu</label>
+          <Input
+            type="number"
+            value={giaTriDonHangToiThieu}
+            onChange={(e) => setGiaTriDonHangToiThieu(e.target.value)}
+            placeholder="Nhập giá trị đơn hàng tối thiểu"
+          />
+        </Col>
+        <Col span={11}>
+          <label className="text-sm block mb-2"><span className="text-red-600">*</span> Giá trị giảm tối đa</label>
+          <Input
+            type="number"
+            value={giaTriGiamToiDa}
+            onChange={(e) => setGiaTriGiamToiDa(e.target.value)}
+            placeholder="Nhập giá trị giảm tối đa"
+          />
+        </Col>
+      </Row>
+
+      <Row className="flex justify-between mb-3">
+        <Col span={11}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Ngày bắt đầu
+          </label>
+          <DatePicker
+            style={{ width: "100%" }}
+            value={ngayBatDau}
+            onChange={(date) => setNgayBatDau(date)}
+          />
+        </Col>
+        <Col span={11}>
+          <label className="text-sm block mb-2"><span className="text-red-600">*</span> Số lượng</label>
+          <Input
+            type="number"
+            value={soLuong}
+            onChange={(e) => setSoLuong(e.target.value)}
+            placeholder="Nhập số lượng"
+          />
+        </Col>
+      </Row>
+
+      <Row className="flex justify-between mb-3">
+        <Col span={11}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Ngày kết thúc
+          </label>
+          <DatePicker
+            style={{ width: "100%" }}
+            value={ngayKetThuc}
+            onChange={(date) => setNgayKetThuc(date)}
+          />
+        </Col>
+        <Col span={11}>
+          <label className="text-sm block mb-2"><span className="text-red-600">*</span> Trạng thái</label>
+          <Switch
+            checked={trangThai}
+            onChange={(checked) => setTrangThai(checked)}
+            checkedChildren="Hoạt động"
+            unCheckedChildren="Không hoạt động"
+          />
+        </Col>
+      </Row>
     </Modal>
   );
 };
