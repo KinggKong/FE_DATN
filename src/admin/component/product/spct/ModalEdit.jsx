@@ -192,7 +192,7 @@ const ModalEdit = ({
                             value={formik.values.tenSanPham}
                             onChange={formik.handleChange}
                             placeholder="Nhập vào tên sản phẩm"
-                            disabled
+                            readOnly
                         />
                         {formik.touched.tenSanPham && formik.errors.tenSanPham && (
                             <div className="text-red-600">{formik.errors.tenSanPham}</div>
