@@ -25,10 +25,16 @@ const updateProductStautsApi = (id, params) => {
   return axiosClient.put(url,params);
 };
 
+const getSanPhamByIdApi = (id) => {
+  const url = `/api/v1/sanphams/${id}`;
+  return axiosClient.get(url);
+};
+
 export {
   getAllSanPhamApi,
   deleteSanPhamApi,
   createSanPhamApi,
   updateSanPhamApi,
-  updateProductStautsApi
+  updateProductStautsApi,
+  getSanPhamByIdApi,
 };

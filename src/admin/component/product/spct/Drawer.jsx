@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { createSanPhamChiTietApi } from '../../../../api/SanPhamChiTietAPI';
-import { Modal, Flex, Form, Select, Row, Col, Space, Button, Table, Input, Upload, notification, Drawer } from 'antd';
+
+import { Modal, Flex, Form, Select, Row, Col, Space, Button, Table, Input, Upload, notification, Drawer,Image } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import axios from 'axios';
+
 import { getAllMauSacApi, getMauSacByIdApi } from '../../../../api/MauSacApi';
 import { getAllKichThuocApi, getKichThuocByIdApi } from '../../../../api/KichThuocApi';
+import { getAllSanPhamApi, getSanPhamByIdApi } from '../../../../api/SanPhamApi';
 import { useEffect } from 'react';
-import { storage } from "./firebaseConfig"; // Import tệp cấu hình Firebase
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { v4 as uuidv4 } from "uuid";
+
 const { Option } = Select;
-const DrawerAdd = () => {
+const DrawerAdd = ({
+  isOpen,
+  handleClose,
+  handleAddProduct,
+}) => {
   const [colors, setColors] = useState([]);  // Khởi tạo với mảng rỗng để tránh lỗi
   const [sizes, setSizes] = useState([]);
   const [color, setColor] = useState([]);  // Khởi tạo với mảng rỗng để tránh lỗi
@@ -25,6 +28,10 @@ const DrawerAdd = () => {
   const [open, setOpen] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [tableData, setTableData] = useState([]);
+  const [form] = Form.useForm();
+  const [previewImage, setPreviewImage] = useState('');
+    const [previewOpen, setPreviewOpen] = useState(false);
 
   const start = () => {
     setIsModalVisible(true);
@@ -44,9 +51,10 @@ const DrawerAdd = () => {
     const fetchData = async () => {
       try {
         // Gọi cả hai API đồng thời
-        const [sizesResponse, colorsResponse] = await Promise.all([
+        const [sizesResponse, colorsResponse, productsResponse] = await Promise.all([
           getAllKichThuocApi(),
           getAllMauSacApi(),
+          getAllSanPhamApi(),
         ]);
 
         // Kiểm tra và cập nhật kích thước
@@ -64,6 +72,12 @@ const DrawerAdd = () => {
         } else {
           console.error('API phản hồi màu sắc không phải là mảng:', colorsResponse.data);
         }
+        if (Array.isArray(productsResponse.data.content)) {
+          setProducts(productsResponse.data.content);
+          console.log('Sản phẩm:', productsResponse.data.content);
+        } else {
+          console.error('API phản hồi màu sắc không phải là mảng:', colorsResponse.data);
+        }
       } catch (error) {
         console.error('Lỗi khi gọi API:', error);
       }
@@ -76,26 +90,10 @@ const DrawerAdd = () => {
   }, []);
 
 
-  useEffect(() => {
-    axios.get('https://api.escuelajs.co/api/v1/products')
-      .then(response => {
-        if (Array.isArray(response.data)) {
-          const newProduct = response.data.map(product => ({
-            value: product.id,
-            label: product.title,
-          }));
-          setProducts(newProduct);  // Đảm bảo rằng response là mảng                             
-        } else {
-          console.error('API response is not an array:', response.data);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching colors:', error);
-      });
-  }, []);
+ 
 
 
-  const [tableData, setTableData] = useState([]);
+  
 
   const handleColorChange = (selectedColors) => {
     setColor(selectedColors);
@@ -106,17 +104,10 @@ const DrawerAdd = () => {
     setSize(selectedSizes);
     generateTableData(color, selectedSizes, product);
   };
-  const handleProductChange = (productId) => {
-    axios.get(`https://api.escuelajs.co/api/v1/products/${productId}`)
-      .then(response => {
-        const selectedProduct = response.data; // Giả sử API trả về thông tin sản phẩm
-        setProduct(selectedProduct);
-        setProductTitle(selectedProduct.title);
-        generateTableData(color, size, selectedProduct);
-      })
-      .catch(error => {
-        console.error('Error fetching product:', error);
-      });
+  const handleProductChange = (selectedProduct) => {
+    setProduct(selectedProduct);
+    generateTableData(color, size, selectedProduct);
+    console.log(selectedProduct);
   };
   const handleDelete = (key) => {
     const updatedData = tableData.filter((item) => item.key !== key); // Lọc bỏ dòng có key tương ứng
@@ -134,7 +125,7 @@ const DrawerAdd = () => {
 
     selectedColors.forEach((color) => {
       const colorItem = colors.find((item) => item.id === color);
-
+      const productItem = products.find((item) => item.id === selectedProduct);
       const variants = selectedSizes.map((size) => {
         const sizeItem = sizes.find((item) => item.id === size); // Sửa lỗi
 
@@ -142,12 +133,12 @@ const DrawerAdd = () => {
           key: `${color}-${size}`,
           id_mauSac: color,
           id_kichThuoc: size,
-          maSanPham: generateProductCode(selectedProduct.title),
-          id_sanPham: 1,//selectedProduct.id,
-          name: `${selectedProduct.title}: ${sizeItem.tenKichThuoc}-${colorItem.tenMau}`, // Lấy tên từ sizeItem và colorItem
+          maSanPham: generateProductCode(productItem.tenSanPham),
+          id_sanPham: product,//selectedProduct.id,
+          name: `${productItem.tenSanPham} [ ${sizeItem.tenKichThuoc}-${colorItem.tenMau} ]`, // Lấy tên từ sizeItem và colorItem
           soLuong: 0,
           giaBan: 0,
-          hinhanh: '',
+          hinhAnh: '',
           tenKichThuoc: sizeItem.tenKichThuoc, // Lấy thông tin kích thước từ sizeItem
           tenMau: colorItem.tenMau, // Lấy thông tin màu sắc từ colorItem
           trangThai: 1,
@@ -164,6 +155,17 @@ const DrawerAdd = () => {
 
 
   const handleInputChange = (key, dataIndex, value) => {
+    const numericValue = parseFloat(value);
+
+    // Kiểm tra nếu giá trị âm
+    if (numericValue < 0) {
+      notification.error({
+        message: 'Lỗi nhập liệu',
+        description: `${dataIndex === 'soLuong' ? 'Số lượng' : 'Giá'} không được nhỏ hơn 0`,
+        duration: 3,
+      });
+      return; // Dừng xử lý khi phát hiện giá trị âm
+    }
     const updatedData = tableData.map((item) => {
       if (item.key === key) {
         return { ...item, [dataIndex]: value };
@@ -198,21 +200,49 @@ const DrawerAdd = () => {
     selectedRowKeys,
     onChange: onSelectChange,
   };
-
+  // hàm thêm ảnh
+  
+  
   const handleUploadChange = (color, file) => {
     setTableData((prevTableData) =>
       prevTableData.map((item) => {
         if (item.color === color) {
           // Lưu file vào trường `image` cho dòng có cùng color
+          const fileWithUrl = {
+            uid: file.uid || `rc-upload-${Date.now()}`, // Tạo uid nếu không có
+            name: file.name,
+            status: 'done', // Có thể là 'done' nếu bạn đã upload thành công
+            url: URL.createObjectURL(file), // URL để hiển thị
+          };
           return {
             ...item,
             image: item.image ? [...item.image, file] : [file], // Thêm ảnh vào danh sách
+            reviewImage: item.reviewImage ? [...item.reviewImage, fileWithUrl] : [fileWithUrl], // Thêm file có URL vào reviewImage
           };
         }
         return item;
       })
     );
   };
+  // hàm xóa ảnh
+  const handleRemoveImage = (color, file) => {
+    // Cập nhật lại danh sách ảnh sau khi xóa
+    const updatedTableData = tableData.map((item) => {
+      if (item.color === color) {
+        const updatedImages = item.image.filter((img) => img.uid !== file.uid);
+        const updatedReviewImages = item.reviewImage.filter((img) => img.uid !== file.uid);
+        return {
+          ...item,
+          image: updatedImages,
+          reviewImage: updatedReviewImages,
+        };
+      }
+      return item;
+    });
+  
+    setTableData(updatedTableData);
+  };
+  
 
   const onFinish = (values) => {
     console.log('Received values of form: ', values);
@@ -224,69 +254,19 @@ const DrawerAdd = () => {
     return productCode;
   }
 
-  const uploadImageToFirebase = async (image) => {
-    const imgRef = ref(storage, `images/${uuidv4()}`);
-    await uploadBytes(imgRef, image);
-    return await getDownloadURL(imgRef);
-  };
-
-  const handleAddProduct = async () => {
-    if (!tableData || tableData.length === 0) {
-      notification.error({
-        duration: 4,
-        pauseOnHover: false,
-        message: "Error",
-        description: "Không có dữ liệu để thêm sản phẩm!",
-      });
-      return;
-    }
-    try {
+ 
+  const resetFrom =()=>{
+    form.resetFields();
+    generateTableData(color, size, product);
+    setTableData([]);
+  }
 
 
-
-      const uploadPromises = tableData.map(async (item) => {
-        const uploadedImageUrls = await Promise.all(
-          item.image.map(uploadImageToFirebase) // Tải từng ảnh lên Firebase
-        );
-        return {
-          ...item,
-          hinhanh: uploadedImageUrls, // Thêm các URL ảnh vào sản phẩm
-        };
-      });
-      
-
-      const updatedTableData = await Promise.all(uploadPromises); // Đợi tất cả các ảnh được tải lên
-      console.log(updatedTableData);
-      await createSanPhamChiTietApi(updatedTableData);
-
-      notification.success({
-        duration: 4,
-        pauseOnHover: false,
-        message: "Success",
-        showProgress: true,
-        description: "Thêm sản phẩm thành công!",
-      });
-      setTableData([]); // Xóa dữ liệu sau khi thêm thành công
-      setOpen(false);
-      // Nếu cần đóng modal sau khi thêm thành công
-      //setIsModalAddOpen(false);
-
-      // Nếu cần reset dữ liệu hoặc reload trang
-      //setCurrentPage(1);
-      //await fetchData();
-
-    } catch (error) {
-      console.error("Failed to add product", error);
-
-      notification.error({
-        duration: 4,
-        pauseOnHover: false,
-        message: "Error",
-        description: "Thêm sản phẩm thất bại!",
-      });
-    }
-    console.log(tableData);
-  };
+  
+  const productOptions = products.map((product) => ({
+    value: product.id, // Hoặc giá trị mà bạn muốn lấy khi chọn sản phẩm
+    label: product.tenSanPham, // Hiển thị tên sản phẩm
+  }));
 
   const columns = [
     {
@@ -339,7 +319,7 @@ const DrawerAdd = () => {
           <Form.Item label="" valuePropName="fileList" getValueFromEvent={normFile}>
             <Upload
               listType="picture-card"
-              fileList={record.image || []}
+              fileList={record.reviewImage || []}
               beforeUpload={(file) => {
                 // Kiểm tra số lượng ảnh
                 if (record.image && record.image.length >= 6) {
@@ -349,10 +329,16 @@ const DrawerAdd = () => {
 
                 // Lưu file vào trạng thái của React khi người dùng chọn file
                 handleUploadChange(record.color, file); // Cập nhật file vào trạng thái của color
-
+                console.log(record.image);
                 // Ngăn chặn Ant Design upload tự động file
                 return false;
               }}
+              onPreview={(file) => {
+                // Thiết lập ảnh xem trước
+                setPreviewImage(file.url || file.preview); // Sử dụng preview nếu không có url
+                setPreviewOpen(true);
+            }}
+              onRemove={(file) => handleRemoveImage(record.color, file)}
             >
               {record.image && record.image.length >= 6 ? null : (
                 <button
@@ -367,6 +353,19 @@ const DrawerAdd = () => {
                 </button>
               )}
             </Upload>
+            {previewImage && (
+                        <Image
+                            wrapperStyle={{
+                                display: 'none',
+                            }}
+                            preview={{
+                                visible: previewOpen,
+                                onVisibleChange: (visible) => setPreviewOpen(visible),
+                                afterOpenChange: (visible) => !visible && setPreviewImage(''),
+                            }}
+                            src={previewImage}
+                        />
+                    )}
           </Form.Item>
         ) : null; // Ẩn chỗ upload ảnh cho các dòng khác cùng màu
       }
@@ -377,14 +376,14 @@ const DrawerAdd = () => {
   ];
   return (
     <>
-      <Button type="primary" onClick={showDrawer} icon={<PlusOutlined />}>
+      {/* <Button type="primary" onClick={showDrawer} icon={<PlusOutlined />}>
         Thêm mới sản phẩm chi tiết
-      </Button>
+      </Button> */}
       <Drawer
         title="Thêm mới sản phẩm chi tiết"
         width={1130}
-        onClose={onClose}
-        open={open}
+        onClose={handleClose}
+        open={isOpen}
         styles={{
           body: {
             paddingBottom: 80,
@@ -392,8 +391,10 @@ const DrawerAdd = () => {
         }}
         extra={
           <Space>
-            <Button onClick={onClose}>Cancel</Button>
-            <Button onClick={handleAddProduct} type="primary">
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={async()=>{ 
+              await handleAddProduct(tableData);
+              resetFrom();} } type="primary">
               Submit
             </Button>
           </Space>
@@ -402,6 +403,7 @@ const DrawerAdd = () => {
 
 
         <Form
+          form={form}
           name="validate_other"
           // {...formItemLayout}
           onFinish={onFinish}
@@ -422,13 +424,13 @@ const DrawerAdd = () => {
               >
                 <Select
                   showSearch
-                  onChange={(value, option) => handleProductChange(option.value)}
+                  onChange= {handleProductChange}
                   placeholder="Search to Select"
                   optionFilterProp="label"
                   filterSort={(optionA, optionB) =>
                     (optionA?.label ?? '').toLowerCase().localeCompare((optionB?.label ?? '').toLowerCase())
                   }
-                  options={products}
+                  options={productOptions}
                 />
               </Form.Item>
             </Col>
@@ -475,7 +477,7 @@ const DrawerAdd = () => {
           <Form.Item >
             <Space>
 
-              <Button htmlType="reset">reset</Button>
+              <Button htmlType="reset" onClick={resetFrom}>Reset</Button>
             </Space>
           </Form.Item>
 
@@ -486,7 +488,7 @@ const DrawerAdd = () => {
           <Button type="primary" onClick={start} disabled={!hasSelected} loading={loading}>
             Set số lượng và giá chung
           </Button>
-          {hasSelected ? `Selected ${selectedRowKeys.length} items` : null}
+          {/* {hasSelected ? `Selected ${selectedRowKeys.length} items` : null} */}
         </Flex>
         <Table rowSelection={rowSelection} columns={columns} dataSource={tableData}
 

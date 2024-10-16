@@ -24,4 +24,21 @@ const getSanPhamChiTietByIdApi = (id) => {
     const url = `/api/v1/sanphamchitiets/${id}`;
     return axiosClient.get(url);
     }
-export { getAllSanPhamChiTietApi, deleteSanPhamChiTietApi, createSanPhamChiTietApi, updateSanPhamChiTietApi, getSanPhamChiTietByIdApi };
+const getSanPhamChiTietByProductIdApi = (id) => {
+    const url = `/api/v1/sanphamchitiets/sanpham/${id}`;
+    return axiosClient.get(url);
+    }
+const getSanPhamChiTietByIdMauSacAndIdKichThuocApi = (params) => {
+    const url = `/api/v1/sanphamchitiets/exits`;
+    return axiosClient.get(url, { params });
+}
+const updateProductStautsApi = (id, params) => {
+    const url = `/api/v1/sanphamchitiets/status/${id}`;
+    return axiosClient.put(url,params);
+    };
+export { getAllSanPhamChiTietApi, deleteSanPhamChiTietApi,
+     createSanPhamChiTietApi, updateSanPhamChiTietApi,
+      getSanPhamChiTietByIdApi, updateProductStautsApi,
+    getSanPhamChiTietByProductIdApi ,
+    getSanPhamChiTietByIdMauSacAndIdKichThuocApi
+    };

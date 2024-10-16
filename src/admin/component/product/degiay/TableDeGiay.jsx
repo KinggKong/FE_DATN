@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { Button, Flex, Table, Space, notification } from "antd";
+import { useEffect, useState, useCallback } from "react";
+import { Button, Flex, Table, Space, notification, Spin } from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
-import axios from "axios";
+
 import ModalThemMoi from "../ModalThemMoi";
-import { CgAdd } from "react-icons/cg";
+
 import ModalSua from "../ModalSua";
 
 import {
@@ -31,6 +31,7 @@ const TableDeGiay = () => {
     const [valueSearch, setValueSearch] = useState();
 
 
+
     const handleEdit = (record) => {
         setUpdateItem(record);
         console.log(record);
@@ -48,6 +49,7 @@ const TableDeGiay = () => {
     };
 
     const handleConfirmAdd = async (newItem) => {
+        setLoading(true);
         try {
             await createChatLieuDeApi({ tenChatLieu: newItem, trangThai: 1 });
             notification.success({
@@ -58,57 +60,80 @@ const TableDeGiay = () => {
                 description: `Thêm thành cong!`,
             });
             setIsModalAddOpen(false);
-            setCurrentPage(1);
+            //setCurrentPage(1);
             await fetchData();
         } catch (error) {
             console.error("Failed to create item", error);
+            notification.error({
+                message: "Error",
+                description: "Failed to create item",
+            });
+        } finally {
+            setLoading(false);
         }
-
     }
 
 
 
-    const handleConfirmUpdate = async (id, itemUpdate) => {
-        try {
-            await updateChatLieuDeApi(id, itemUpdate);
-            notification.success({
-                duration: 4,
-                pauseOnHover: false,
-                message: "Success",
-                showProgress: true,
-                description: `Cập nhật thành công chất liệu ${itemUpdate.tenChatLieu}!`,
-            });
-            setIsModalUpdateOpen(false);
-            setCurrentPage(1);
-            await fetchData();
 
-        } catch
-        (error) {
-            console.error("Failed to update item", error);
-        };
-    }
-    const handleConfirmDelete = async () => {
-        try {
-            await deleteChatLieuDeApi(itemDelete.id);
-            notification.success({
-                duration: 4,
-                pauseOnHover: false,
-                message: "Success",
-                showProgress: true,
-                description: `Xóa thành công chất liệu ${itemDelete.tenChatLieu}!`,
-            });
-            setIsModalOpen(false);
-            setDeletingItem(null);
-            setCurrentPage(1);
-            await fetchData();
-        } catch (error) {
-            console.error("Failed to delete item", error);
-        }
 
+const handleConfirmUpdate = async (id, itemUpdate) => {
+    setLoading(true);
+    try {
+        await updateChatLieuDeApi(id, itemUpdate);
+        notification.success({
+            duration: 4,
+            pauseOnHover: false,
+            message: "Success",
+            showProgress: true,
+            description: `Cập nhật thành công chất liệu ${itemUpdate.tenChatLieu}!`,
+        });
+        setIsModalUpdateOpen(false);
+        setCurrentPage(1);
+        await fetchData();
+
+    } catch
+    (error) {
+        console.error("Failed to update item", error);
+        notification.error({    
+            message: "Error",
+            description: "Failed to update item",
+        });
+    }finally {
+        setLoading(false);
     };
+};
+const handleConfirmDelete = async () => {
+    setLoading(true);
+    try {
+        await deleteChatLieuDeApi(itemDelete.id);
+        notification.success({
+            duration: 4,
+            pauseOnHover: false,
+            message: "Success",
+            showProgress: true,
+            description: `Xóa thành công chất liệu ${itemDelete.tenChatLieu}!`,
+        });
+        setIsModalOpen(false);
+        setDeletingItem(null);
+        setCurrentPage(1);
+        await fetchData();
+    } catch (error) {
+        console.error("Failed to delete item", error);
+        notification.error({
+            message: "Error",
+            description: "Failed to delete item",
+        });
+    }finally {
+        setLoading(false);
+    }
+
+};
 
 
-    const fetchData = async () => {
+const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
         const params = {
             pageNumber: currentPage - 1,
             pageSize,
@@ -125,67 +150,78 @@ const TableDeGiay = () => {
             setDataSource(dataWithKey);
             setTotalItems(res.data.totalElements);
         }
-    };
-    useEffect(() => {
+    } catch (error) {
+        console.error("Failed to fetch data", error);
+        notification.error({
+            message: "Error",
+            description: "Failed to fetch data",
+        });
 
-        fetchData();
-    }, [fetchData]);
+    } finally {
+        setLoading(false);
+    }
+}, [currentPage, pageSize, valueSearch]);
+useEffect(() => {
+
+    fetchData();
+}, [fetchData]);
 
 
 
-    const columns = [
-        {
-            title: "STT",
-            dataIndex: "id",
-        },
-        {
-            title: "Loại đế",
-            dataIndex: "tenChatLieu",
-            showSorterTooltip: false,
-        },
-        {
-            title: "Ngày tạo",
-            dataIndex: "createdAt",
-        },
-        {
-            title: "Thao tác",
-            dataIndex: "thaotac",
-            render: (_, record) => (
-                <Space size="middle">
-                    <Button type="link" onClick={() => handleEdit(record)}>
-                        <FaEdit className="size-5" />
-                    </Button>
-                    <Button type="link" danger onClick={() => handleDelete(record)}>
-                        <MdDelete className="size-5" />
-                    </Button>
-                </Space>
-            ),
-        },
-    ];
+const columns = [
+    {
+        title: "STT",
+        dataIndex: "id",
+    },
+    {
+        title: "Loại đế",
+        dataIndex: "tenChatLieu",
+        showSorterTooltip: false,
+    },
+    {
+        title: "Ngày tạo",
+        dataIndex: "created_at",
+    },
+    {
+        title: "Thao tác",
+        dataIndex: "thaotac",
+        render: (_, record) => (
+            <Space size="middle">
+                <Button type="link" onClick={() => handleEdit(record)}>
+                    <FaEdit className="size-5" />
+                </Button>
+                <Button type="link" danger onClick={() => handleDelete(record)}>
+                    <MdDelete className="size-5" />
+                </Button>
+            </Space>
+        ),
+    },
+];
 
-    const start = () => {
-        setLoading(true);
-        // ajax request after empty completing
-        setTimeout(() => {
-            setSelectedRowKeys([]);
-            setLoading(false);
-        }, 1000);
-    };
+// const start = () => {
+//     setLoading(true);
+//     // ajax request after empty completing
+//     setTimeout(() => {
+//         setSelectedRowKeys([]);
+//         setLoading(false);
+//     }, 1000);
+// };
 
-    const onSelectChange = (newSelectedRowKeys) => {
-        console.log("selectedRowKeys changed: ", newSelectedRowKeys);
-        setSelectedRowKeys(newSelectedRowKeys);
-    };
+const onSelectChange = (newSelectedRowKeys) => {
+    console.log("selectedRowKeys changed: ", newSelectedRowKeys);
+    setSelectedRowKeys(newSelectedRowKeys);
+};
 
-    // const rowSelection = {
-    //     selectedRowKeys,
-    //     onChange: onSelectChange,
-    // };
+// const rowSelection = {
+//     selectedRowKeys,
+//     onChange: onSelectChange,
+// };
 
-    // const hasSelected = selectedRowKeys.length > 0;
+// const hasSelected = selectedRowKeys.length > 0;
 
-    return (
-        <>
+return (
+    <>
+        <Spin spinning={loading} tip="Loading...">
             <TimKiem
                 title={"Chất liệu đế"}
                 placeholder={"Nhập vào chất liệu đế của giày mà bạn muốn tìm !"}
@@ -232,8 +268,9 @@ const TableDeGiay = () => {
                 handleSubmit={handleConfirmUpdate}
                 initialData={itemUpdate}
             />
-        </>
-    );
+        </Spin>
+    </>
+);
 };
 
 export default TableDeGiay;
