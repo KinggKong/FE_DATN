@@ -84,7 +84,7 @@ const DrawerView = ({
     <>
 
       <Drawer
-        title={<span>Thong tin san pham </span>}
+        title={<span>Thông tin sản phẩm </span>}
         width={1130}
         onClose={onClose}
         open={isOpen}

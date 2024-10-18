@@ -51,7 +51,9 @@ const TableSanPhamChiTiet = () => {
     const [dataThuongHieu, setDataThuongHieu] = useState([]);
     const [dataChatLieuVai, setDatChatLieuVai] = useState([]);
     const [dataChatLieuDe, setDataChatLieuDe] = useState([]);
-    const { confirm } = Modal;
+    
+
+    
 
     //fetch data filter
     const fetchDataSanPham = async () => {
@@ -425,91 +427,7 @@ const TableSanPhamChiTiet = () => {
         await uploadBytes(imgRef, image);
         return await getDownloadURL(imgRef);
     };
-    // const handleAddProduct = async (tableData) => {
-    //     console.log(tableData);
-    //     if (!tableData || tableData.length === 0) {
-    //         notification.error({
-    //             duration: 4,
-    //             pauseOnHover: false,
-    //             message: "Error",
-    //             description: "Không có dữ liệu để thêm sản phẩm!",
-    //         });
-    //         return;
-    //     }
-    //     try {
-
-    //         // const checkPromises = tableData.map(async (item) => {
-    //         //     const params = {
-    //         //         idSp: item.id_sanPham,
-    //         //         idMauSac: item.id_mauSac,
-    //         //         idKichThuoc: item.id_kichThuoc
-    //         //     };
-
-    //         //     const response = await getSanPhamChiTietByIdMauSacAndIdKichThuocApi(params);
-    //         //     return response.data; // Trả về sản phẩm chi tiết nếu đã tồn tại, null nếu không tồn tại
-    //         // });
-
-    //         // const checkResults = await Promise.all(checkPromises);
-    //         // const existingItems = checkResults.filter(item => item != null); // Lọc các sản phẩm chi tiết đã tồn tại
-
-    //         // if (existingItems.length > 0) {
-    //         //     // Nếu có sản phẩm chi tiết đã tồn tại, hiển thị confirm
-    //         //     const confirmResult = await confirm({
-    //         //         title: "Sản phẩm đã tồn tại!",
-    //         //         content: "Sản phẩm chi tiết đã tồn tại. Bạn có muốn cập nhật hay tiếp tục thêm không?",
-    //         //         okText: "Cập nhật",
-    //         //         cancelText: "Huỷ",
-    //         //     });
-
-    //         //     if (!confirmResult) {
-    //         //         return; // Người dùng huỷ bỏ, không tiếp tục thêm
-    //         //     }
-    //         // }
-
-    //         const uploadPromises = tableData.map(async (item) => {
-    //             // Kiểm tra nếu có ảnh thì mới tải lên Firebase
-    //             const uploadedImageUrls = item.image && item.image.length > 0
-    //                 ? await Promise.all(item.image.map(uploadImageToFirebase))
-    //                 : []; // Nếu không có ảnh thì trả về mảng rỗng
-
-    //             return {
-    //                 ...item,
-    //                 hinhAnh: uploadedImageUrls, // Thêm các URL ảnh vào sản phẩm, nếu không có thì là mảng rỗng
-    //             };
-    //         });
-
-
-
-
-    //         const updatedTableData = await Promise.all(uploadPromises); // Đợi tất cả các ảnh được tải lên
-    //         console.log(updatedTableData);
-    //         await createSanPhamChiTietApi(updatedTableData);
-
-    //         notification.success({
-    //             duration: 4,
-    //             pauseOnHover: false,
-    //             message: "Success",
-    //             showProgress: true,
-    //             description: "Thêm sản phẩm thành công!",
-    //         });
-
-
-    //         await fetchData();
-    //         setOpen(false);
-
-
-
-    //     } catch (error) {
-    //         console.error("Failed to add product", error);
-
-    //         notification.error({
-    //             duration: 4,
-    //             pauseOnHover: false,
-    //             message: "Error",
-    //             description: "Thêm sản phẩm thất bại!",
-    //         });
-    //     }
-    // }
+   
     const handleAddProduct = async (tableData) => {
         console.log(tableData);
         if (!tableData || tableData.length === 0) {

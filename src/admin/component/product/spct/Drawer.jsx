@@ -20,12 +20,10 @@ const DrawerAdd = ({
   const [size, setSize] = useState([]);
   const [products, setProducts] = useState([]);
   const [product, setProduct] = useState([]);
-  const [productTitle, setProductTitle] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [hasSelected, setHasSelected] = useState(false);
   const [commonQuantity, setCommonQuantity] = useState(0);
   const [commonPrice, setCommonPrice] = useState(0);
-  const [open, setOpen] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [loading, setLoading] = useState(false);
   const [tableData, setTableData] = useState([]);
@@ -36,15 +34,17 @@ const DrawerAdd = ({
   const start = () => {
     setIsModalVisible(true);
   };
-
-
-
-  const showDrawer = () => {
-    setOpen(true);
+  const onClose = () => { 
+    setColor([]);
+    setSize([]);
+    setProduct([]);
+    setTableData([]);
+    form.resetFields();
+    handleClose();
   };
-  const onClose = () => {
-    setOpen(false);
-  };
+
+
+  
 
   useEffect(() => {
     let isMounted = true;
@@ -184,10 +184,18 @@ const DrawerAdd = ({
       return item;
     });
     setTableData(updatedData);
+    setCommonPrice(0); // Đặt giá chung về 0
+    setCommonQuantity(0); // Đặt số lượng chung về 0
+    setSelectedRowKeys([]); // Bỏ chọn tất cả các dòng
+    setHasSelected(false); // Bỏ chọn tất cả các dòng
     setIsModalVisible(false); // Đóng modal
   };
 
   const handleModalCancel = () => {
+    setCommonPrice(0); // Đặt giá chung về 0
+    setCommonQuantity(0); // Đặt số lượng chung về 0
+    setSelectedRowKeys([]); // Bỏ chọn tất cả các dòng
+    setHasSelected(false); // Bỏ chọn tất cả các dòng
     setIsModalVisible(false); // Đóng modal mà không thay đổi gì
   };
 
@@ -382,7 +390,7 @@ const DrawerAdd = ({
       <Drawer
         title="Thêm mới sản phẩm chi tiết"
         width={1130}
-        onClose={handleClose}
+        onClose={onClose}
         open={isOpen}
         styles={{
           body: {
@@ -391,7 +399,7 @@ const DrawerAdd = ({
         }}
         extra={
           <Space>
-            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={onClose}>Cancel</Button>
             <Button onClick={async()=>{ 
               await handleAddProduct(tableData);
               resetFrom();} } type="primary">
@@ -440,9 +448,9 @@ const DrawerAdd = ({
               <Form.Item
                 name="select-multiple-color"
                 label="Màu sắc"
-                rules={[{ required: true, message: 'Please select your favourite colors!', type: 'array' }]}
+                rules={[{ required: true, message: 'Vui lòng chọn màu của sản phẩm!', type: 'array' }]}
               >
-                <Select mode="multiple" placeholder="Please select favourite colors" onChange={handleColorChange}>
+                <Select mode="multiple" placeholder="Chọn màu của chi tiết sản phẩm" onChange={handleColorChange}>
                   {Array.isArray(colors) && colors.length > 0 ? (
                     colors.map(color => (
                       <Option key={color.id} value={color.id}>
@@ -459,9 +467,9 @@ const DrawerAdd = ({
               <Form.Item
                 name="select-multiple-size"
                 label="Kích thước"
-                rules={[{ required: true, message: 'Please select your favourite sizes!', type: 'array' }]}
+                rules={[{ required: true, message: 'Vui lòng chọn kích thước của sản phẩm!', type: 'array' }]}
               >
-                <Select mode="multiple" placeholder="Please select favourite sizes" onChange={handleSizeChange}>
+                <Select mode="multiple" placeholder="Chọn kích thước của chi tiết sản phẩm" onChange={handleSizeChange}>
                   {Array.isArray(sizes) && sizes.length > 0 ? (
                     sizes.map(size => (
                       <Option key={size.id} value={size.id}>
