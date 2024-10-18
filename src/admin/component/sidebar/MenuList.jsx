@@ -11,6 +11,7 @@ import { FaEye } from "react-icons/fa6";
 import { MdLocalShipping } from "react-icons/md";
 import { IoExitOutline } from "react-icons/io5";
 import { GiConverseShoe } from "react-icons/gi";
+import { GiRunningShoe } from "react-icons/gi";
 import { MdAutoFixHigh } from "react-icons/md";
 import { MdDiscount } from "react-icons/md";
 import { MdCategory } from "react-icons/md";
@@ -44,6 +45,9 @@ const MenuList = ({ darkTheme }) => {
         >
           <Menu.Item key="sub1-t1" icon={<GiConverseShoe />}>
             <Link to={"sanpham"}>Sản phẩm</Link>
+          </Menu.Item>
+          <Menu.Item key="sub1-t2" icon={<GiRunningShoe />}>
+            <Link to={"sanphamchitiet"}>Sản phẩm chi tiết</Link>
           </Menu.Item>
           <Menu.SubMenu
             key="sub1-t2"
