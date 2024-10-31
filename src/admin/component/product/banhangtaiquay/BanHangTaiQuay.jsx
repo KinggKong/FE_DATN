@@ -135,8 +135,8 @@ const POS = () => {
                                 extra={<Button type="primary">Tạo hóa đơn</Button>}
                                 style={{ borderColor: invoiceColor, borderWidth: 2, borderStyle: 'solid' }}
                             >
-                                <Tabs defaultActiveKey="1">
-                                    <TabPane tab="Hóa đơn 1" key="1">
+                                <Tabs type="card" defaultActiveKey="1">
+                                    <TabPane  tab="Hóa đơn 1" key="1">
                                         <div>
                                             <Button type="primary" style={{ marginBottom: '16px' }}>Làm mới</Button>
                                             <Table
