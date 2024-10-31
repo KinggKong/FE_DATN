@@ -201,13 +201,13 @@ const POS = () => {
                                         <Input placeholder="Nhập số tiền" style={{ fontWeight: 'bold' }} addonAfter="VNĐ" />
                                     </Form.Item>
                                     <Form.Item label="Tiền giảm :">
-                                        <Input value="100,000" readOnly style={{ fontWeight: 'bold', color: 'blue' }} addonAfter="VNĐ" />
+                                        <Input value="100,000" readOnly style={{ fontWeight: 'bold', color: 'blue' }}  />
                                     </Form.Item>
                                     <Form.Item label="Thành tiền :">
-                                        <Input value="900,000" readOnly style={{ fontWeight: 'bold', color: 'red' }} addonAfter="VNĐ" />
+                                        <Input value="900,000" readOnly style={{ fontWeight: 'bold', color: 'red' }}  />
                                     </Form.Item>
                                     <Form.Item label="Tiền trả lại :">
-                                        <Input value="100,000" readOnly style={{ fontWeight: 'bold', color: 'green' }} addonAfter="VNĐ" />
+                                        <Input value="100,000" readOnly style={{ fontWeight: 'bold', color: 'green' }}  />
                                     </Form.Item>
                                     <Form.Item>
                                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
