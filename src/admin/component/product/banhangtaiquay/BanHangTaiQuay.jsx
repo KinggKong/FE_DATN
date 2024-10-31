@@ -35,14 +35,15 @@ const POS = () => {
             dataIndex: 'size',
         },
         {
+          title: 'Đơn giá',
+          dataIndex: 'price',
+      },
+        {
             title: 'Số lượng',
             dataIndex: 'quantity',
-            render: () => <Input type="number" min="0" style={{ width: '70px' }} />,
+            render: () => <Input type="number" min="0" style={{ width: '80px' }} />,
         },
-        {
-            title: 'Đơn giá',
-            dataIndex: 'price',
-        },
+       
         {
             title: 'Thao tác',
             render: (_, record) => (
@@ -97,7 +98,7 @@ const POS = () => {
             productName: 'Sản phẩm 1',
             color: 'Đỏ',
             size: '44',
-            quantity: '',
+            quantity: '1000',
             price: '100,000',
         },
     ];
@@ -122,6 +123,7 @@ const POS = () => {
     const productColor = 'green'; // Màu tiêu đề của sản phẩm
     const paymentColor = 'orange'; // Màu tiêu đề của thông tin thanh toán
 
+    
     return (
         <div className="page-wrapper">
             <div className="body-wrapper">
