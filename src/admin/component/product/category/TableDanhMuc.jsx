@@ -33,7 +33,7 @@ const TableDanhMuc = () => {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenMau: valueSearch,
+        tenDanhMuc: valueSearch,
       };
       const res = await getAllDanhMucApi(params);
       if (res && res.data) {
@@ -103,6 +103,7 @@ const TableDanhMuc = () => {
       });
       setIsModalEditOpen(false);
       setCurrentPage(1);
+      await fetchData(); 
     } catch (error) {
       console.log(error);
     }
@@ -145,7 +146,7 @@ const TableDanhMuc = () => {
     },
     {
       title: "Ngày tạo",
-      dataIndex: "createdAt",
+      dataIndex: "created_at",
     },
     {
       title: "Thao tác",

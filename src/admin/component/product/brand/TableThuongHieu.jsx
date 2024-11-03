@@ -33,7 +33,7 @@ const TableThuongHieu = () => {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenMau: valueSearch,
+        tenThuongHieu: valueSearch,
       };
       const res = await getAllThuongHieuApi(params);
       if (res && res.data) {
@@ -104,6 +104,7 @@ const TableThuongHieu = () => {
       });
       setIsModalEditOpen(false);
       setCurrentPage(1);
+      await fetchData();
     } catch (error) {
       console.log(error);
     }
@@ -146,7 +147,7 @@ const TableThuongHieu = () => {
     },
     {
       title: "Ngày tạo",
-      dataIndex: "createdAt",
+      dataIndex: "created_at",
     },
     {
       title: "Thao tác",
