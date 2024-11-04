@@ -21,6 +21,8 @@ import { SlSizeFullscreen } from "react-icons/sl";
 import { LiaShoePrintsSolid } from "react-icons/lia";
 import { FaRegUser } from "react-icons/fa";
 import { FaUserCircle } from "react-icons/fa";
+import { BiSolidDiscount } from "react-icons/bi";
+import { CiDiscount1 } from "react-icons/ci";
 
 const MenuList = ({ darkTheme }) => {
   return (
@@ -91,10 +93,19 @@ const MenuList = ({ darkTheme }) => {
         <Menu.Item key="progress" icon={<AreaChartOutlined />}>
           <Link to={"thongke"}>Thống kê</Link>
         </Menu.Item>
-
-        <Menu.Item key="discount" icon={<MdDiscount />}>
-          <Link to={"giamgia"}>Giảm giá</Link>
-        </Menu.Item>
+        <Menu.SubMenu
+          key="submn3"
+          icon={<BiSolidDiscount />}
+          title="Giảm giá"
+        >
+           <Menu.Item key="sub3-t1" icon={<MdDiscount />}>
+          <Link to={"giamgia"}>Phiếu giảm giá</Link>
+          </Menu.Item>
+          <Menu.Item key="sub3-t2" icon={<CiDiscount1 />}>
+          <Link to={"sale"}>Đợt giảm giá</Link>
+          </Menu.Item>
+        </Menu.SubMenu>
+       
 
         <Menu.Item key="setting" icon={<SettingOutlined />}>
           Cài đặt

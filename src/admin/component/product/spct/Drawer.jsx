@@ -39,7 +39,7 @@ const DrawerAdd = ({
     setSize([]);
     setProduct([]);
     setTableData([]);
-    form.resetFields();
+    form.resetFields(); 
     handleClose();
   };
 

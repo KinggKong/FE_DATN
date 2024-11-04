@@ -4,10 +4,11 @@ import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { AiFillEye } from "react-icons/ai";
 import { PlusOutlined } from '@ant-design/icons';
-import { getAllSanPhamChiTietApi, deleteSanPhamChiTietApi, getSanPhamChiTietByProductIdApi,
-     updateSanPhamChiTietApi, createSanPhamChiTietApi, updateProductStautsApi,
-        getSanPhamChiTietByIdMauSacAndIdKichThuocApi
- } from '../../../../api/SanPhamChiTietAPI';
+import {
+    getAllSanPhamChiTietApi, deleteSanPhamChiTietApi, getSanPhamChiTietByProductIdApi,
+    updateSanPhamChiTietApi, createSanPhamChiTietApi, updateProductStautsApi,
+    getSanPhamChiTietByIdMauSacAndIdKichThuocApi
+} from '../../../../api/SanPhamChiTietAPI';
 import { useEffect, useState } from 'react';
 import { notification } from 'antd';
 import ModalConfirm from '../ModalConfirm';
@@ -51,9 +52,9 @@ const TableSanPhamChiTiet = () => {
     const [dataThuongHieu, setDataThuongHieu] = useState([]);
     const [dataChatLieuVai, setDatChatLieuVai] = useState([]);
     const [dataChatLieuDe, setDataChatLieuDe] = useState([]);
-    
 
-    
+
+
 
     //fetch data filter
     const fetchDataSanPham = async () => {
@@ -427,7 +428,7 @@ const TableSanPhamChiTiet = () => {
         await uploadBytes(imgRef, image);
         return await getDownloadURL(imgRef);
     };
-   
+
     const handleAddProduct = async (tableData) => {
         console.log(tableData);
         if (!tableData || tableData.length === 0) {
@@ -439,7 +440,7 @@ const TableSanPhamChiTiet = () => {
             });
             return;
         }
-    
+
         try {
             const checkPromises = tableData.map(async (item) => {
                 const params = {
@@ -447,14 +448,14 @@ const TableSanPhamChiTiet = () => {
                     idMauSac: item.id_mauSac,
                     idKichThuoc: item.id_kichThuoc,
                 };
-    
+
                 const response = await getSanPhamChiTietByIdMauSacAndIdKichThuocApi(params);
                 return response.data; // Trả về sản phẩm chi tiết nếu đã tồn tại, null nếu không tồn tại
             });
-    
+
             const checkResults = await Promise.all(checkPromises);
             const existingItems = checkResults.filter(item => item != null); // Lọc các sản phẩm chi tiết đã tồn tại
-    
+
             if (existingItems.length > 0) {
                 // Nếu có sản phẩm chi tiết đã tồn tại, hiển thị confirm
                 Modal.confirm({
@@ -492,11 +493,11 @@ const TableSanPhamChiTiet = () => {
                 hinhAnh: uploadedImageUrls,
             };
         });
-    
+
         const updatedTableData = await Promise.all(uploadPromises);
         console.log(updatedTableData);
         await createSanPhamChiTietApi(updatedTableData);
-    
+
         notification.success({
             duration: 4,
             pauseOnHover: false,
@@ -504,7 +505,7 @@ const TableSanPhamChiTiet = () => {
             showProgress: true,
             description: "Thêm sản phẩm thành công!",
         });
-    
+
         await fetchData();
         setOpen(false);
     };
