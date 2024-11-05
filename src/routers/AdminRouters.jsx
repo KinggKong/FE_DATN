@@ -12,9 +12,11 @@ import KhachHang from "../admin/pages/taikhoan/KhachHang";
 import ThongKe from "../admin/pages/thongke/ThongKe"
 import MauSac from "../admin/pages/product/MauSac";
 import SanPhamChiTiet from "../admin/pages/product/SanPhamChiTiet";
+
 import DotGiamGia from "../admin/pages/giamgia/DotGiamGia";
 import FormAddDotGiamGia from "../admin/component/giamgia/DrawerAdd";
 import ViewEditDotGiamGia from "../admin/component/giamgia/ViewEdit";
+
 
 
 const AdminRouters = {
@@ -73,6 +75,7 @@ const AdminRouters = {
       path:"sanphamchitiet",
       element:<SanPhamChiTiet />
     },
+
     {
       path:"sale",
       element:<DotGiamGia />
@@ -85,6 +88,7 @@ const AdminRouters = {
       path:"sale/edit/:id",
       element:<ViewEditDotGiamGia />
     }
+
   ],
 };
 

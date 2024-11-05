@@ -37,14 +37,18 @@ const updateProductStautsApi = (id, params) => {
     return axiosClient.put(url,params);
     };
 
+
 const getAllSanPhamChiTietBySanPhamIdApi = (id) => {
     const url = `/api/v1/sanphamchitiets/get-all-by-sanpham/${id}`;
     return axiosClient.get(url);
     }
+
 export { getAllSanPhamChiTietApi, deleteSanPhamChiTietApi,
      createSanPhamChiTietApi, updateSanPhamChiTietApi,
       getSanPhamChiTietByIdApi, updateProductStautsApi,
     getSanPhamChiTietByProductIdApi ,
+
     getSanPhamChiTietByIdMauSacAndIdKichThuocApi,
     getAllSanPhamChiTietBySanPhamIdApi
+
     };
