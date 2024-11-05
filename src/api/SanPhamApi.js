@@ -25,10 +25,21 @@ const updateProductStautsApi = (id, params) => {
   return axiosClient.put(url,params);
 };
 
+const getSanPhamByIdApi = (id) => {
+  const url = `/api/v1/sanphams/${id}`;
+  return axiosClient.get(url);
+};
+const getAllSanPhamByTenSanPhamApi = (params) => {
+  const url = "/api/v1/sanphams/get-all";
+  return axiosClient.get(url, { params });
+}
+
 export {
   getAllSanPhamApi,
   deleteSanPhamApi,
   createSanPhamApi,
   updateSanPhamApi,
-  updateProductStautsApi
+  updateProductStautsApi,
+  getSanPhamByIdApi,
+  getAllSanPhamByTenSanPhamApi
 };

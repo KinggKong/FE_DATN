@@ -1,4 +1,4 @@
-import FormWithColors from "../../component/product/spct/FormAddSPCT";
+
 import TableSanPhamChiTiet from "../../component/product/spct/TableSanPhamChiTiet";
 import { Link } from 'react-router-dom';
 import { Button } from "antd";
@@ -11,7 +11,7 @@ const SanPhamChiTiet = () => {
       {/* <Button type="primary">
         <Link to="/admin/sanphamchitiet/add">Thêm mới</Link>
       </Button> */}
-      <DrawerAdd />
+      {/* <DrawerAdd /> */}
       <TableSanPhamChiTiet />
     </div>
   )
