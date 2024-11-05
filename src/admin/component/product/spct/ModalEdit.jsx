@@ -90,7 +90,47 @@ const ModalEdit = ({
         console.log(newFileList);
         
     };
-      
+    // const handleUploadChange = async ({ fileList }) => {
+    //     const newFileList = await Promise.all(
+    //         fileList.map(async (file) => {
+    //             if (!file.originFileObj) {
+    //                 console.error("File object is missing:", file);
+    //                 return null; // Hoặc trả về file hiện tại
+    //             }
+    
+    //             // Tạo đối tượng file để hiển thị
+    //             const fileWithUrl = {
+    //                 uid: file.uid || `rc-upload-${Date.now()}`, // Tạo uid nếu không có
+    //                 name: file.name,
+    //                 status: 'done', // Có thể là 'done' nếu bạn đã upload thành công
+    //                 url: URL.createObjectURL(file.originFileObj) // Sử dụng originFileObj
+    //             };
+    
+    //             // Kiểm tra nếu file chưa được upload (chưa có URL)
+    //             if (!file.url && !file.firebaseUrl) {
+    //                 // Upload ảnh lên Firebase
+    //                 const firebaseUrl = await uploadImageToFirebase(file.originFileObj);
+    //                 // Gán URL vào file object
+    //                 return {
+    //                     ...fileWithUrl,
+    //                     firebaseUrl, // Lưu URL từ Firebase
+    //                     url: firebaseUrl // Cập nhật để có thể xem trước
+    //                 };
+    //             }
+    
+    //             return fileWithUrl; // Trả về fileWithUrl đã tạo
+    //         })
+    //     );
+    
+    //     // Lọc các giá trị null nếu có
+    //     const validFileList = newFileList.filter(file => file !== null);
+        
+    //     formik.setFieldValue("hinhAnh", validFileList); // Cập nhật lại giá trị cho Formik
+    //     setHinhAnhNew(validFileList.map(file => file.url)); // Lưu chỉ URL vào hinhAnh
+    //     console.log(validFileList);
+    // };
+    //   }    
+
     
     const uploadButton = (
         <button

@@ -29,10 +29,12 @@ const getSanPhamByIdApi = (id) => {
   const url = `/api/v1/sanphams/${id}`;
   return axiosClient.get(url);
 };
+
 const getAllSanPhamByTenSanPhamApi = (params) => {
   const url = "/api/v1/sanphams/get-all";
   return axiosClient.get(url, { params });
 }
+
 
 export {
   getAllSanPhamApi,
@@ -41,5 +43,7 @@ export {
   updateSanPhamApi,
   updateProductStautsApi,
   getSanPhamByIdApi,
+
   getAllSanPhamByTenSanPhamApi
+
 };
