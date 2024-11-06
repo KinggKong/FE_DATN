@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, Button, Table, Typography, Modal, Input, Select, Space, Card, Pagination } from 'antd';
 import { ShoppingCartOutlined, DeleteOutlined, PlusOutlined, MinusCircleOutlined, PlusCircleOutlined, PayCircleOutlined } from '@ant-design/icons';
 import { getAllSanPhamChiTietApi } from '../../../../api/SanPhamChiTietAPI'; // Import API
+import { MdDelete } from 'react-icons/md';
+import { FaEdit } from 'react-icons/fa';
+
 
 const { TabPane } = Tabs;
 const { Title, Text } = Typography;
@@ -20,7 +23,7 @@ const POS = () => {
             amountPaid: 0,
             change: 0,
             products: [
-                { name: 'Sản phẩm A', quantity: 1, price: 100000, total: 100000, color: 'Đỏ', size: 'L', image: '/images/sp_a.jpg' }
+                { name: 'Sản phẩm A', quantity: 1, price: 100000, total: 100000, color: 'Đỏ', size: '45', image: '' },
             ]
         },
         {
@@ -31,7 +34,7 @@ const POS = () => {
             amountPaid: 0,
             change: 0,
             products: [
-                { name: 'Sản phẩm B', quantity: 2, price: 200000, total: 400000, color: 'Xanh', size: 'M', image: '/images/sp_b.jpg' }
+                { name: 'Sản phẩm B', quantity: 2, price: 200000, total: 400000, color: 'Xanh', size: '41', image: '' }
             ]
         },
         {
@@ -42,10 +45,102 @@ const POS = () => {
             amountPaid: 0,
             change: 0,
             products: [
-                { name: 'Sản phẩm C', quantity: 1, price: 150000, total: 150000, color: 'Vàng', size: 'S', image: '/images/sp_c.jpg' }
+                { name: 'Sản phẩm C', quantity: 3, price: 150000, total: 150000, color: 'Vàng', size: '39', image: '' }
             ]
         },
     ]);
+
+    // Cột của bảng sản phẩm trong hóa đơn (có thêm cột hình ảnh và tổng tiền)
+    const columns = [
+        {
+            title: 'Hình ảnh',
+            dataIndex: 'image',
+            key: 'image',
+            render: (image, record) => (
+                <div className="d-flex justify-content-center">
+                    <img
+                        src={record.image || "https://megafashion.vn/data/product/fmq1695868840.jpg"} // Hình ảnh mặc định nếu không có trong record
+
+                        style={{
+                            width: '100px',
+                            height: '100px',
+                            objectFit: 'cover',
+                            borderRadius: '8px',
+                        }}
+                        alt={record.name}
+                    />
+                </div>
+            ),
+        },
+        {
+            title: 'Sản phẩm',
+            dataIndex: 'name',
+            key: 'name',
+            render: (text, record) => (
+                <div className="d-flex" style={{ width: '100%' }}>
+                    {/* Thông tin sản phẩm (Tên, Màu sắc, Kích cỡ, Giá tiền) */}
+                    <div >
+                        <p className="mb-0" style={{ fontWeight: 'bold' }}>Tên: {record.name}</p>
+                        <p className="mb-0" style={{ fontWeight: 'bold', color: 'red', marginBottom: '8px' }}>Giá: {record.price.toLocaleString()} VNĐ </p>
+                        <p className="mb-0" style={{ fontWeight: '' }}>Màu sắc: {record.color}</p>
+                        <p className="mb-0" style={{ color: 'gray' }}>Kích cỡ: {record.size}</p>
+                        <p className="mb-0" style={{ color: 'gray' }}>x {record.quantity}</p>
+
+                    </div>
+                </div>
+            ),
+        },
+        {
+            title: 'Số lượng',
+            dataIndex: 'quantity',
+            key: 'quantity',
+            render: (quantity) => <p className="mb-0" style={{ fontWeight: 'bold' }}>{quantity}</p>,
+        },
+        {
+            title: 'Tổng tiền',
+            dataIndex: 'total',
+            key: 'total',
+            render: (total) => <p className="mb-0" style={{ fontWeight: 'bold', color: 'red' }}>{total.toLocaleString()} VNĐ</p>,
+        },
+        {
+            title: 'Thao tác',
+            key: 'actions',
+            render: (_, record) => (
+                <Space size="middle">
+                    <Button
+                        type="link"
+                        primary
+                        onClick={() => handleUpdateProduct(record.key)}
+                    >
+                        <FaEdit className="size-5" />
+                    </Button>
+                    <Button
+                        type="link"
+                        danger
+                        onClick={() => handleDeleteProduct(record.key)}
+                    >
+                        <MdDelete className="size-5" />
+                    </Button>
+                </Space>
+            ),
+        },
+    ];
+
+
+
+    // Hàm tính sản phẩm x số lượng 
+    useEffect(() => {
+        setOrders((prevOrders) =>
+            prevOrders.map((order) => ({
+                ...order,
+                products: order.products.map((product) => ({
+                    ...product,
+                    total: product.price * product.quantity,
+                })),
+            }))
+        );
+    }, []);
+
 
     // State cho modal và thông tin sản phẩm đã chọn
     const [modalVisible, setModalVisible] = useState(false);
@@ -84,7 +179,7 @@ const POS = () => {
     }, []);
 
     const productColumns = [
-        { title: 'Hình ảnh', dataIndex: 'hinhAnhList', render: (hinhAnhList) => <img src={hinhAnhList && hinhAnhList.length > 0 ? hinhAnhList[0].url : ''} alt="product" style={{ width: '100px', height: 'auto', objectFit: 'cover' }} /> },
+        { title: 'Hình ảnh', dataIndex: 'hinhAnhList', render: (hinhAnhList) => <img src={hinhAnhList && hinhAnhList.length > 0 ? hinhAnhList[0].url : ''} alt="product" style={{ width: '100px', height: '100px', objectFit: 'cover' }} /> },
         { title: 'Tên sản phẩm', dataIndex: 'tenSanPham' },
         { title: 'Màu sắc', dataIndex: 'tenMauSac' },
         { title: 'Kích thước', dataIndex: 'tenKichThuoc' },
@@ -143,21 +238,12 @@ const POS = () => {
 
     // Hàm xóa sản phẩm khỏi hóa đơn
     const handleDeleteProduct = (productName) => {
-        const updatedOrders = [...orders];
-        const currentOrderIndex = updatedOrders.findIndex(order => order.id === activeTab);
-        if (currentOrderIndex !== -1) {
-            updatedOrders[currentOrderIndex].products = updatedOrders[currentOrderIndex].products.filter(
-                (product) => product.name !== productName
-            );
-            setOrders(updatedOrders);
-        }
+
     };
 
     // Hàm update sản phẩm trong hóa đơn
     const handleUpdateProduct = (product) => {
-        setProductToUpdate(product);
-        setUpdatedQuantity(product.quantity);
-        setUpdateModalVisible(true);
+
     };
 
     // Hàm tạo hóa đơn mới
@@ -207,52 +293,7 @@ const POS = () => {
         console.log(`Tiền thừa: ${change}`);
     };
 
-    // Cột của bảng sản phẩm trong hóa đơn (có thêm cột hình ảnh)
-    const columns = [
-        { title: 'Hình ảnh', dataIndex: 'image', key: 'image', render: (image) => <img src={image} alt="product" style={{ width: '100px', height: 'auto', objectFit: 'cover' }} /> },
-        { title: 'Tên sản phẩm', dataIndex: 'name', key: 'name' },
-        { title: 'Màu sắc', dataIndex: 'color', key: 'color' },
-        { title: 'Kích thước', dataIndex: 'size', key: 'size' },
-        { title: 'Đơn giá', dataIndex: 'price', key: 'price' },
-        {
-            title: 'Số lượng',
-            dataIndex: 'quantity',
-            key: 'quantity',
-            render: (text, record, index) => (
-                <Input
-                    type="number"
-                    value={record.quantity}
-                    min={1}
-                    onChange={(e) => handleQuantityChange(e, index)}
-                    style={{ width: '80px' }}
-                />
-            ),
-        },
-        { title: 'Thành tiền', dataIndex: 'total', key: 'total' },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            render: (_, product) => (
-                <>
-                    <Button
-                        type="primary"
-                        onClick={() => handleUpdateProduct(product)}
-                        style={{ marginRight: '8px' }}
-                        icon={<PlusCircleOutlined />}
-                    >
-                        Cập nhật
-                    </Button>
-                    <Button
-                        type="primary"
-                        onClick={() => handleDeleteProduct(product.name)}
-                        icon={<MinusCircleOutlined />}
-                    >
-                        Xóa
-                    </Button>
-                </>
-            ),
-        },
-    ];
+
 
     return (
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', height: '100vh' }}>
