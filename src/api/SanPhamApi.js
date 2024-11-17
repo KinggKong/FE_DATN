@@ -35,6 +35,16 @@ const getAllSanPhamByTenSanPhamApi = (params) => {
   return axiosClient.get(url, { params });
 }
 
+const getAllSanPhamByCustomerApi = (params) => {
+  const url = "/api/v1/sanphams/get-all-customer";
+  return axiosClient.get(url, { params });
+}
+
+const getSanPhamByIdDanhMucApi = (id) => {
+  const url = `/api/v1/sanphams/get-by-category/${id}`;
+  return axiosClient.get(url);
+};
+
 
 export {
   getAllSanPhamApi,
@@ -43,7 +53,8 @@ export {
   updateSanPhamApi,
   updateProductStautsApi,
   getSanPhamByIdApi,
-
-  getAllSanPhamByTenSanPhamApi
+  getAllSanPhamByCustomerApi,
+  getAllSanPhamByTenSanPhamApi,
+  getSanPhamByIdDanhMucApi
 
 };

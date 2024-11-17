@@ -20,7 +20,7 @@ const CustomerRouters = {
       element: <FilterProduct />,
     },
     {
-      path: "detail",
+      path: "detail/:id",
       element: <ProductDetail />,
     },
   ],
