@@ -23,6 +23,7 @@ import { FaRegUser } from "react-icons/fa";
 import { FaUserCircle } from "react-icons/fa";
 import { BiSolidDiscount } from "react-icons/bi";
 import { CiDiscount1 } from "react-icons/ci";
+import { FaFileInvoice } from "react-icons/fa";
 
 const MenuList = ({ darkTheme }) => {
   return (
@@ -38,6 +39,10 @@ const MenuList = ({ darkTheme }) => {
 
         <Menu.Item key="activity" icon={<MdLocalShipping />}>
           <Link to={"banhang"}>Bán hàng</Link>
+        </Menu.Item>
+
+        <Menu.Item key="ordermanagement" icon={<FaFileInvoice />}>
+          <Link to={"order-management"}>Danh sách hóa đơn</Link>
         </Menu.Item>
 
         <Menu.SubMenu

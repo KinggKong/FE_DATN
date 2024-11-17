@@ -2,14 +2,18 @@ import HomePage from "../customer/component/pages/HomePage";
 import TrangChu from "../customer/component/product/TrangChu";
 import FilterProduct from "../customer/component/product/FilterProduct";
 import ProductDetail from "../customer/component/product/ProductDetail";
+import PreCheckout from "../customer/component/shopon/PreCheckout";
+import OrderConfirmation from "../customer/component/shopon/OrderConfirmation";
+import InvoiceLookup from "../customer/component/shopon/InvoiceLookup";
+import GioiThieu from "../customer/component/gioithieu/GioiThieu";
 
 const CustomerRouters = {
   path: "/",
   element: <HomePage />,
   children: [
     {
-      index: true, // This will make "TrangChu" the default route for "/"
-      element: <TrangChu />// Redirect from "/" to "/sanpham"
+      index: true, 
+      element: <TrangChu />
     },
     {
       path: "sanpham",
@@ -22,6 +26,22 @@ const CustomerRouters = {
     {
       path: "detail",
       element: <ProductDetail />,
+    },
+    {
+      path: "payment",
+      element: <PreCheckout />,
+    },
+    {
+      path: "infor-order",
+      element: <OrderConfirmation />,
+    },
+    {
+      path: "invoice-lookup",
+      element: <InvoiceLookup />,
+    },
+    {
+      path: "about",
+      element: <GioiThieu />,
     },
   ],
 };
