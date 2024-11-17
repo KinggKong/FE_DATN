@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Button, Flex, Table, Space, notification, Spin, Switch } from "antd";
+import { Tag } from 'antd';
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
@@ -130,7 +131,7 @@ const TableVoucher = () => {
 
       if (!updateVoucher.hinhThucGiam || !updateVoucher.giaTriGiam ||
         !updateVoucher.giaTriDonHangToiThieu || !updateVoucher.giaTriGiamToiDa ||
-         !updateVoucher.ngayBatDau || !updateVoucher.ngayKetThuc) {
+        !updateVoucher.ngayBatDau || !updateVoucher.ngayKetThuc) {
         notification.error({
           message: "Lỗi",
           description: "Tất cả các trường không được để trống!",
@@ -297,20 +298,31 @@ const TableVoucher = () => {
     {
       title: "Hình thức giảm",
       dataIndex: "hinhThucGiam",
+      render: (text) => {
+        return (
+          <Tag color="green" key={text}>
+            {text}
+          </Tag>
+        );
+      }
     },
     {
       title: "Giá trị giảm",
       dataIndex: "giaTriGiam",
       render: (text, record) => {
-        
         if (record.hinhThucGiam === '%') {
-          
-          return `${text}%`;
+          return (
+            <Tag color="green" key={text}>
+              {text} %
+            </Tag>
+          );
         } else if (record.hinhThucGiam === 'VNĐ') {
-          
-          return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(text);
+          return (
+            <Tag color="green" key={text}>
+              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(text)}
+            </Tag>
+          );
         }
-        
         return text;
       }
     },
@@ -318,16 +330,25 @@ const TableVoucher = () => {
       title: "Giá trị đơn hàng tối thiểu",
       dataIndex: "giaTriDonHangToiThieu",
       render: (text) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(text);
+        return (
+          <Tag color="green" key={text}>
+            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(text)}
+          </Tag>
+        );
       }
     },
     {
       title: "Giá trị giảm tối đa (VNĐ)",
       dataIndex: "giaTriGiamToiDa",
       render: (text) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(text);
+        return (
+          <Tag color="green" key={text}>
+            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(text)}
+          </Tag>
+        );
       }
     },
+
     {
       title: "Số lượng",
       dataIndex: "soLuong",
