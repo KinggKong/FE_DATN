@@ -1,411 +1,481 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Button, Table, Tabs, Modal, Input, notification, Select } from 'antd';
-import { FaEdit } from "react-icons/fa";
-import { MdDelete } from "react-icons/md";
 
-const { Header, Content, Footer } = Layout;
+import { Tabs, Button, Table, Typography, Modal, Input, Select, Space, Card, Pagination } from 'antd';
+import { ShoppingCartOutlined, DeleteOutlined, PlusOutlined, MinusCircleOutlined, PlusCircleOutlined, PayCircleOutlined } from '@ant-design/icons';
+import { getAllSanPhamChiTietApi } from '../../../../api/SanPhamChiTietAPI'; // Import API
+import { MdDelete } from 'react-icons/md';
+import { FaEdit } from 'react-icons/fa';
+
+
 const { TabPane } = Tabs;
+const { Title, Text } = Typography;
 const { Option } = Select;
 
-// Khởi tạo danh sách sản phẩm ban đầu
-const initialProducts = [
-  { id: 1, name: 'Sản phẩm 1', price: 100 },
-  { id: 2, name: 'Sản phẩm 2', price: 200 },
-  { id: 3, name: 'Sản phẩm 3', price: 300 },
-  { id: 4, name: 'Sản phẩm 4', price: 400 },
-  { id: 5, name: 'Sản phẩm 5', price: 500 },
-  { id: 6, name: 'Sản phẩm 6', price: 600 },
-  { id: 7, name: 'Sản phẩm 7', price: 700 },
-  { id: 8, name: 'Sản phẩm 8', price: 800 },
-  { id: 9, name: 'Sản phẩm 9', price: 900 },
-  { id: 10, name: 'Sản phẩm 10', price: 1000 },
-  { id: 11, name: 'Sản phẩm 11', price: 1100 },
-  { id: 12, name: 'Sản phẩm 12', price: 1200 },
-  { id: 13, name: 'Sản phẩm 13', price: 1300 },
-  { id: 14, name: 'Sản phẩm 14', price: 1400 },
-  { id: 15, name: 'Sản phẩm 15', price: 1500 },
-];
-
-// Danh sách nhân viên
-const employees = [
-  { id: 1, name: 'Nhân viên 1' },
-  { id: 2, name: 'Nhân viên 2' },
-  { id: 3, name: 'Nhân viên 3' },
-];
-
-// Thành phần chính của hệ thống POS
 const POS = () => {
-  // Khởi tạo các state để quản lý dữ liệu
- // Khởi tạo danh sách hóa đơn
-const [invoices, setInvoices] = useState([]); 
-
-// Theo dõi tab hóa đơn đang hoạt động
-const [activeKey, setActiveKey] = useState("1"); 
-
-// Lưu thông tin sản phẩm đang chỉnh sửa
-const [editItem, setEditItem] = useState(null); 
-
-// Số lượng sản phẩm khi chỉnh sửa
-const [editQuantity, setEditQuantity] = useState(0); 
-
-// Danh sách sản phẩm, khởi tạo với số lượng bằng 0
-const [products, setProducts] = useState(initialProducts.map(product => ({ ...product, quantity: 0 }))); 
-
-// Trang hiện tại trong danh sách sản phẩm
-const [currentPage, setCurrentPage] = useState(1); 
-
-// Số lượng sản phẩm hiển thị trên mỗi trang
-const [itemsPerPage] = useState(5); 
-
-// Số điện thoại của khách hàng
-const [customerPhone, setCustomerPhone] = useState(''); 
-
-// Nhân viên được chọn, khởi tạo với nhân viên đầu tiên
-const [selectedEmployee, setSelectedEmployee] = useState(employees[0]?.name); 
-
-// Phương thức thanh toán
-const [paymentMethod, setPaymentMethod] = useState(''); 
-
-// Số tiền khách hàng đưa
-const [moneyGiven, setMoneyGiven] = useState(0); 
-
-// Voucher được chọn
-const [selectedVoucher, setSelectedVoucher] = useState(''); 
-
-  // Hàm tạo hóa đơn mới
-  const handleInvoiceCreation = () => {
-    const pendingInvoices = invoices.filter(invoice => !invoice.paid);
-
-    if (pendingInvoices.length >= 5) {
-      notification.warning({
-        message: 'Giới hạn hóa đơn',
-        description: 'Bạn chỉ có thể tạo tối đa 5 hóa đơn chưa thanh toán!',
-      });
-      return;
-    }
-
-    const newInvoiceKey = (invoices.length > 0 ? Math.max(...invoices.map(invoice => parseInt(invoice.key))) + 1 : 1).toString();
-    setInvoices([...invoices, { key: newInvoiceKey, items: [], paid: false }]);
-    setActiveKey(newInvoiceKey);
-
-    // Đặt lại thông tin thanh toán
-    setCustomerPhone('');
-    setSelectedEmployee(employees[0]?.name);
-    setPaymentMethod('');
-    setMoneyGiven(0);
-    setSelectedVoucher('');
-  };
-
-  // Thêm sản phẩm vào hóa đơn hiện tại
-  const addToCart = (product) => {
-    const newInvoices = [...invoices];
-    const currentInvoice = newInvoices.find(invoice => invoice.key === activeKey);
-
-    if (currentInvoice && !currentInvoice.paid) {
-      const existingItem = currentInvoice.items.find(item => item.id === product.id);
-      if (existingItem) {
-        existingItem.quantity += 1;
-      } else {
-        currentInvoice.items.push({ ...product, quantity: 1 });
-      }
-      setInvoices(newInvoices);
-      notification.success({
-        message: 'Thêm vào hóa đơn',
-        description: `${product.name} đã được thêm vào hóa đơn!`,
-      });
-    }
-  };
-
-  // Xóa sản phẩm khỏi hóa đơn hiện tại
-  const removeFromCart = (id) => {
-    const currentInvoice = invoices.find(invoice => invoice.key === activeKey);
-
-    if (currentInvoice && !currentInvoice.paid) {
-      Modal.confirm({
-        title: 'Xác nhận xóa',
-        content: 'Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?',
-        onOk: () => {
-          const newInvoices = [...invoices];
-          currentInvoice.items = currentInvoice.items.filter(item => item.id !== id);
-          setInvoices(newInvoices);
-
-          // Hiển thị thông báo khi xóa sản phẩm
-          notification.success({
-            message: 'Xóa sản phẩm',
-            description: 'Sản phẩm đã được xóa khỏi giỏ hàng.',
-          });
+    // State quản lý tab đang hoạt động và danh sách đơn hàng
+    const [activeTab, setActiveTab] = useState('1');
+    const [orders, setOrders] = useState([
+        {
+            id: 'HD10',
+            customer: '',
+            voucher: '',
+            paymentMethod: 'cash',
+            amountPaid: 0,
+            change: 0,
+            products: [
+                { name: 'Sản phẩm A', quantity: 1, price: 100000, total: 100000, color: 'Đỏ', size: '45', image: '' },
+            ]
         },
-        onCancel: () => {
-          notification.info({
-            message: 'Đã hủy',
-            description: 'Bạn đã hủy việc xóa sản phẩm.',
-          });
+        {
+            id: 'HD11',
+            customer: '',
+            voucher: '',
+            paymentMethod: 'cash',
+            amountPaid: 0,
+            change: 0,
+            products: [
+                { name: 'Sản phẩm B', quantity: 2, price: 200000, total: 400000, color: 'Xanh', size: '41', image: '' }
+            ]
         },
-      });
-    }
-  };
-
-  // Mở modal chỉnh sửa số lượng sản phẩm
-  const openEditModal = (item) => {
-    setEditItem(item);
-    setEditQuantity(item.quantity);
-  };
-
-  // Lưu số lượng sản phẩm đã chỉnh sửa
-  const saveEditQuantity = () => {
-    const newInvoices = [...invoices];
-    const currentInvoice = newInvoices.find(invoice => invoice.key === activeKey);
-
-    if (currentInvoice && !currentInvoice.paid) {
-      const existingItem = currentInvoice.items.find(item => item.id === editItem.id);
-      if (existingItem) {
-        existingItem.quantity = editQuantity;
-      }
-      setInvoices(newInvoices);
-      notification.success({
-        message: 'Chỉnh sửa thành công',
-        description: `Số lượng của ${editItem.name} đã được cập nhật!`,
-      });
-      setEditItem(null);
-    }
-  };
-
-  // Hàm xử lý thanh toán hóa đơn
-  const handlePayment = () => {
-    const currentInvoice = invoices.find(invoice => invoice.key === activeKey);
-
-    if (currentInvoice && currentInvoice.items.length > 0) {
-      const total = currentInvoice.items.reduce((total, item) => total + item.price * item.quantity, 0);
-
-      Modal.confirm({
-        title: 'Xác nhận thanh toán',
-        content: `Bạn có chắc chắn muốn thanh toán hóa đơn với tổng số tiền: ${total} VNĐ?`,
-        onOk: () => {
-          notification.success({
-            message: 'Thanh toán thành công',
-            description: `Hóa đơn đã được thanh toán với tổng số tiền: ${total} VNĐ!`,
-          });
-          currentInvoice.paid = true;
-          setActiveKey(invoices.length > 1 ? invoices[0].key : "1");
+        {
+            id: 'HD12',
+            customer: '',
+            voucher: '',
+            paymentMethod: 'cash',
+            amountPaid: 0,
+            change: 0,
+            products: [
+                { name: 'Sản phẩm C', quantity: 3, price: 150000, total: 150000, color: 'Vàng', size: '39', image: '' }
+            ]
         },
-        onCancel: () => {
-          notification.info({
-            message: 'Đã hủy thanh toán',
-            description: 'Bạn đã hủy thanh toán hóa đơn.',
-          });
+    ]);
+
+    // Cột của bảng sản phẩm trong hóa đơn (có thêm cột hình ảnh và tổng tiền)
+    const columns = [
+        {
+            title: 'Hình ảnh',
+            dataIndex: 'image',
+            key: 'image',
+            render: (image, record) => (
+                <div className="d-flex justify-content-center">
+                    <img
+                        src={record.image || "https://megafashion.vn/data/product/fmq1695868840.jpg"} // Hình ảnh mặc định nếu không có trong record
+
+                        style={{
+                            width: '100px',
+                            height: '100px',
+                            objectFit: 'cover',
+                            borderRadius: '8px',
+                        }}
+                        alt={record.name}
+                    />
+                </div>
+            ),
         },
-      });
-    } else {
-      notification.warning({
-        message: 'Lỗi',
-        description: 'Không có sản phẩm trong hóa đơn để thanh toán!',
-      });
-    }
-  };
+        {
+            title: 'Sản phẩm',
+            dataIndex: 'name',
+            key: 'name',
+            render: (text, record) => (
+                <div className="d-flex" style={{ width: '100%' }}>
+                    {/* Thông tin sản phẩm (Tên, Màu sắc, Kích cỡ, Giá tiền) */}
+                    <div >
+                        <p className="mb-0" style={{ fontWeight: 'bold' }}>Tên: {record.name}</p>
+                        <p className="mb-0" style={{ fontWeight: 'bold', color: 'red', marginBottom: '8px' }}>Giá: {record.price.toLocaleString()} VNĐ </p>
+                        <p className="mb-0" style={{ fontWeight: '' }}>Màu sắc: {record.color}</p>
+                        <p className="mb-0" style={{ color: 'gray' }}>Kích cỡ: {record.size}</p>
+                        <p className="mb-0" style={{ color: 'gray' }}>x {record.quantity}</p>
 
-  // Hàm hủy hóa đơn hiện tại
-  const handleCancelInvoice = () => {
-    const currentInvoice = invoices.find(invoice => invoice.key === activeKey);
-
-    if (currentInvoice && !currentInvoice.paid) {
-      Modal.confirm({
-        title: 'Xác nhận hủy hóa đơn',
-        content: `Bạn có chắc chắn muốn hủy hóa đơn ${currentInvoice.key}?`,
-        onOk: () => {
-          const updatedInvoices = invoices.filter(invoice => invoice.key !== activeKey);
-          setInvoices(updatedInvoices);
-          // Đặt activeKey về một hóa đơn còn lại nếu có
-          if (updatedInvoices.length > 0) {
-            setActiveKey(updatedInvoices[0].key);
-          } else {
-            setActiveKey("1"); // Đặt lại về giá trị mặc định
-          }
-          notification.success({
-            message: 'Hủy hóa đơn thành công',
-            description: `Hóa đơn ${currentInvoice.key} đã được hủy.`,
-          });
+                    </div>
+                </div>
+            ),
         },
-      });
-    } else {
-      notification.warning({
-        message: 'Lỗi',
-        description: 'Hóa đơn đã thanh toán không thể hủy!',
-      });
-    }
-  };
+        {
+            title: 'Số lượng',
+            dataIndex: 'quantity',
+            key: 'quantity',
+            render: (quantity) => <p className="mb-0" style={{ fontWeight: 'bold' }}>{quantity}</p>,
+        },
+        {
+            title: 'Tổng tiền',
+            dataIndex: 'total',
+            key: 'total',
+            render: (total) => <p className="mb-0" style={{ fontWeight: 'bold', color: 'red' }}>{total.toLocaleString()} VNĐ</p>,
+        },
+        {
+            title: 'Thao tác',
+            key: 'actions',
+            render: (_, record) => (
+                <Space size="middle">
+                    <Button
+                        type="link"
+                        primary
+                        onClick={() => handleUpdateProduct(record.key)}
+                    >
+                        <FaEdit className="size-5" />
+                    </Button>
+                    <Button
+                        type="link"
+                        danger
+                        onClick={() => handleDeleteProduct(record.key)}
+                    >
+                        <MdDelete className="size-5" />
+                    </Button>
+                </Space>
+            ),
+        },
+    ];
 
-  // Theo dõi sự thay đổi của paymentMethod
-  useEffect(() => {
-    const currentInvoice = invoices.find(invoice => invoice.key === activeKey);
-    if (paymentMethod === "bankTransfer" && currentInvoice) {
-      const total = currentInvoice.items.reduce((total, item) => total + item.price * item.quantity, 0);
-      setMoneyGiven(total);
-    }
-  }, [paymentMethod, invoices, activeKey]);
 
-  // Cấu hình cột cho bảng sản phẩm
-  const productColumns = [
-    { title: 'Tên sản phẩm', dataIndex: 'name', key: 'name' },
-    { title: 'Giá', dataIndex: 'price', key: 'price', render: price => `${price} VNĐ` },
-    { title: 'Số lượng', dataIndex: 'quantity', key: 'quantity' },
-    {
-      title: 'Hành động',
-      key: 'action',
-      render: (text, record) => (
-        <Button type="link" onClick={() => addToCart(record)}><FaEdit className="size-5" />
-        </Button>
-      ),
-    },
-  ];
 
-  // Cấu hình cột cho bảng hóa đơn
-  const invoiceColumns = [
-    { title: 'Tên sản phẩm', dataIndex: 'name', key: 'name' },
-    { title: 'Giá', dataIndex: 'price', key: 'price', render: price => `${price} VNĐ` },
-    { title: 'Số lượng', dataIndex: 'quantity', key: 'quantity' },
-    {
-      title: 'Hành động',
-      key: 'action',
-      render: (text, record) => (
-        <>
-          {!invoices.find(invoice => invoice.key === activeKey).paid && (
-            <>
-              <Button type="link" onClick={() => openEditModal(record)}><FaEdit className="size-5" />
-              </Button>
-              <Button type="link" danger onClick={() => removeFromCart(record.id)}><MdDelete className="size-5" />
-              </Button>
-            </>
-          )}
-        </>
-      ),
-    },
-  ];
+    // Hàm tính sản phẩm x số lượng 
+    useEffect(() => {
+        setOrders((prevOrders) =>
+            prevOrders.map((order) => ({
+                ...order,
+                products: order.products.map((product) => ({
+                    ...product,
+                    total: product.price * product.quantity,
+                })),
+            }))
+        );
+    }, []);
 
-  // Tính toán sản phẩm hiện tại cho phân trang
-  const indexOfLastProduct = currentPage * itemsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
-  const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
 
-  return (
-    <Layout>
-      <Header style={{ color: 'white', fontSize: '24px' }}>Hệ thống Bán Hàng Tại Quầy</Header>
-      <Content style={{ padding: '20px' }}>
-        <Button type="primary" onClick={handleInvoiceCreation} style={{ marginBottom: '20px' }}>
-          Tạo hóa đơn
-        </Button>
+    // State cho modal và thông tin sản phẩm đã chọn
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [quantity, setQuantity] = useState(1);
 
-        <Table
-          dataSource={currentProducts}
-          columns={productColumns}
-          rowKey="id"
-          pagination={{
-            current: currentPage,
-            pageSize: itemsPerPage,
-            total: products.length,
-            onChange: (page) => setCurrentPage(page),
-          }}
-          title={() => 'Danh sách sản phẩm'}
-        />
+    // Từ khóa tìm kiếm
+    const [searchTerm, setSearchTerm] = useState('');
 
-        <Tabs activeKey={activeKey} onChange={setActiveKey} style={{ marginTop: '20px' }}>
-          {invoices.map(invoice => (
-            <TabPane
-              tab={<span style={{ color: invoice.paid ? 'red' : 'black' }}>Hóa đơn {invoice.key}</span>}
-              key={invoice.key}
+    // Cập nhật từ khóa tìm kiếm khi người dùng nhập
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value.toLowerCase());
+    };
+
+    const [availableProducts, setAvailableProducts] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    // Hàm gọi API để lấy danh sách sản phẩm
+    const fetchProducts = async () => {
+        setLoading(true);
+        try {
+            const res = await getAllSanPhamChiTietApi({ pageNumber: 0, pageSize: 20 }); // Ví dụ, lấy trang 0, 20 sản phẩm mỗi trang
+            if (res && res.data) {
+                setAvailableProducts(res.data.content); // Giả sử API trả về `data.content` chứa sản phẩm
+            }
+        } catch (error) {
+            console.error('Error fetching products:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Gọi API khi component mount lần đầu
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+    const productColumns = [
+        { title: 'Hình ảnh', dataIndex: 'hinhAnhList', render: (hinhAnhList) => <img src={hinhAnhList && hinhAnhList.length > 0 ? hinhAnhList[0].url : ''} alt="product" style={{ width: '100px', height: '100px', objectFit: 'cover' }} /> },
+        { title: 'Tên sản phẩm', dataIndex: 'tenSanPham' },
+        { title: 'Màu sắc', dataIndex: 'tenMauSac' },
+        { title: 'Kích thước', dataIndex: 'tenKichThuoc' },
+        {
+            title: 'Đơn giá', dataIndex: 'giaBan', sorter: {
+                compare: (a, b) => a.giaBan - b.giaBan,
+                multiple: 2,
+            },
+        },
+        {
+            title: 'Số lượng', dataIndex: 'soLuong', sorter: {
+                compare: (a, b) => a.soLuong - b.soLuong,
+                multiple: 3,
+            },
+        },
+        {
+            title: 'Thao tác',
+            render: (_, product) => (
+                <Button type="primary" onClick={() => handleProductSelection(product)}>
+                    <ShoppingCartOutlined />
+                </Button>
+            ),
+        },
+    ];
+
+    // Hàm thay đổi tab đang chọn
+    const handleTabChange = (key) => {
+        setActiveTab(key);
+    };
+
+    // Hàm xóa đơn hàng
+    const handleDeleteOrder = (orderId) => {
+        setOrders(orders.filter(order => order.id !== orderId));
+    };
+
+    // Hàm mở modal để thêm sản phẩm vào đơn hàng
+    const handleAddProduct = () => {
+        setModalVisible(true);
+    };
+
+    // Hàm đóng modal khi không cần thêm sản phẩm
+    const handleCloseModal = () => {
+        setModalVisible(false);
+    };
+
+    // Hàm chọn sản phẩm từ danh sách có sẵn
+    const handleProductSelection = (product) => {
+        setSelectedProduct(product);
+        setQuantity(1); // Đặt lại số lượng sản phẩm về mặc định là 1
+    };
+
+    // Hàm thay đổi số lượng sản phẩm khi người dùng nhập vào
+    const handleQuantityChange = (e) => {
+        setQuantity(Number(e.target.value));
+    };
+
+    // Hàm xóa sản phẩm khỏi hóa đơn
+    const handleDeleteProduct = (productName) => {
+
+    };
+
+    // Hàm update sản phẩm trong hóa đơn
+    const handleUpdateProduct = (product) => {
+
+    };
+
+    // Hàm tạo hóa đơn mới
+    const handleCreateInvoice = () => {
+        const newOrder = {
+            id: `HD${orders.length + 1}`,
+            customer: '',
+            voucher: '',
+            paymentMethod: 'cash',
+            amountPaid: 0,
+            change: 0,
+            products: []
+        };
+        setOrders([...orders, newOrder]);
+        setActiveTab(newOrder.id); // Chuyển sang tab của đơn hàng mới
+    };
+
+    // Hàm tính tổng tiền của đơn hàng theo ID
+    const calculateTotalAmount = (orderId) => {
+        const order = orders.find(order => order.id === orderId);
+        return order ? order.products.reduce((total, product) => total + product.total, 0) : 0;
+    };
+
+    // Hàm tính tiền thừa trả lại khách hàng
+    const calculateChange = (orderId, amountPaid) => {
+        const totalAmount = calculateTotalAmount(orderId);
+        return amountPaid - totalAmount;
+    };
+
+    // Hàm cập nhật thông tin các trường như tên khách hàng, voucher, phương thức thanh toán
+    const handleFieldChange = (field, value) => {
+        const updatedOrders = [...orders];
+        const orderIndex = updatedOrders.findIndex(order => order.id === activeTab);
+        if (orderIndex !== -1) {
+            updatedOrders[orderIndex][field] = value;
+            setOrders(updatedOrders);
+        }
+    };
+
+    // Hàm thanh toán cho đơn hàng
+    const handlePayment = () => {
+        const totalAmount = calculateTotalAmount(activeTab);
+        const change = calculateChange(activeTab, amountPaid);
+        console.log(`Thanh toán thành công với phương thức: ${paymentMethod}`);
+        console.log(`Tổng tiền: ${totalAmount} VND`);
+        console.log(`Tiền khách đưa: ${amountPaid}`);
+        console.log(`Tiền thừa: ${change}`);
+    };
+
+
+
+    return (
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', height: '100vh' }}>
+            {/* Tiêu đề và nút tạo hóa đơn */}
+            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Title level={2}>Bán hàng tại quầy</Title>
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateInvoice}>
+                    Tạo hóa đơn
+                </Button>
+            </div>
+
+            {/* Tabs hiển thị danh sách đơn hàng */}
+            <Tabs activeKey={activeTab} onChange={handleTabChange}>
+                {orders.map((order, index) => (
+                    <TabPane
+                        tab={(
+                            <span>
+                                Đơn hàng {index + 1} - {order.id} <ShoppingCartOutlined />
+                                {/* Nút xóa đơn hàng */}
+                                <Button
+                                    type="text"
+                                    icon={<DeleteOutlined />}
+                                    onClick={() => handleDeleteOrder(order.id)}
+                                    style={{ marginLeft: '10px', color: 'red' }}
+                                />
+                            </span>
+                        )}
+                        key={order.id}
+                    >
+                        {/* Phần hiển thị sản phẩm và thông tin thanh toán trong đơn hàng */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            {/* Phần sản phẩm trong hóa đơn */}
+                            <Card
+                                title="Hóa Đơn Bán Hàng"
+                                style={{
+                                    marginBottom: '20px',
+                                    padding: '20px',
+                                    boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
+                                    borderRadius: '8px',
+                                    flex: 3,
+                                    marginRight: '20px',
+                                }}
+                            >
+                                <Button icon={<PlusOutlined />} onClick={handleAddProduct}>
+                                    THÊM SẢN PHẨM
+                                </Button>
+                                <Title level={4} style={{ marginTop: '20px' }}>
+                                    <ShoppingCartOutlined /> Sản phẩm trong hóa đơn
+                                </Title>
+
+                                {/* Kiểm tra nếu đơn hàng không có sản phẩm */}
+                                {order.products.length === 0 ? (
+                                    <div style={{ textAlign: 'center', marginTop: '50px' }}>
+                                        <Text strong>Không có sản phẩm nào</Text>
+                                    </div>
+                                ) : (
+                                    <Table
+                                        columns={columns}
+                                        dataSource={order.products}
+                                        style={{ marginTop: '20px' }}
+                                        pagination={{
+                                            pageSize: 5,
+                                            showSizeChanger: true,
+                                            total: order.products.length,
+                                        }}
+                                    />
+                                )}
+                            </Card>
+
+                            {/* Thông tin thanh toán */}
+                            <Card
+                                title={
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
+                                        <span>Thông tin thanh toán: <span style={{ color: 'red' }}>{order.id}</span> </span>
+                                    </div>
+                                }
+                                style={{
+                                    padding: '20px',
+                                    boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
+                                    borderRadius: '8px',
+                                    flex: 1,
+                                }}
+                            >
+                                {/* Các trường nhập liệu thông tin thanh toán */}
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label>Tên khách hàng: </label>
+                                    <Input
+                                        value={order.customer}
+                                        onChange={(e) => handleFieldChange('customer', e.target.value)}
+                                        placeholder="Nhập tên khách hàng"
+                                    />
+                                </div>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label>Mã voucher: </label>
+                                    <Input
+                                        value={order.voucher}
+                                        onChange={(e) => handleFieldChange('voucher', e.target.value)}
+                                        placeholder="Nhập mã voucher"
+                                    />
+                                </div>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label>Hình thức thanh toán: </label>
+                                    <Select
+                                        value={order.paymentMethod}
+                                        onChange={(value) => handleFieldChange('paymentMethod', value)}
+                                        style={{ width: '100%' }}
+                                    >
+                                        <Option value="cash">Tiền mặt</Option>
+                                        <Option value="card">Thẻ</Option>
+                                        <Option value="online">Thanh toán online</Option>
+                                    </Select>
+                                </div>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label>Tiền khách đưa: </label>
+                                    <Input
+                                        type="number"
+                                        value={order.amountPaid}
+                                        onChange={(e) => handleFieldChange('amountPaid', Number(e.target.value))}
+                                    />
+                                </div>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label>Tiền thừa: </label>
+                                    <Input
+                                        value={order.change}
+                                        disabled
+                                    />
+                                </div>
+                                <div style={{ marginBottom: '15px', fontWeight: 'bold' }}>
+                                    <label>Tổng tiền: </label>
+                                    <Input
+                                        value={calculateTotalAmount(order.id)}
+                                        disabled
+                                    />
+                                </div>
+
+                                {/* Nút thanh toán */}
+                                <Button
+                                    type="primary"
+                                    icon={<PayCircleOutlined />}
+                                    style={{ marginTop: '25px' }}
+                                    onClick={handlePayment}
+                                >
+                                    Xác Nhận Thanh Toán
+                                </Button>
+                            </Card>
+                        </div>
+                    </TabPane>
+                ))}
+            </Tabs>
+
+            {/* Modal chọn sản phẩm */}
+            <Modal
+                title="Chọn sản phẩm"
+                visible={modalVisible}
+                onCancel={handleCloseModal}
+                footer={null}
+                width={800}
             >
-              <div style={{ display: 'flex' }}>
-                <div style={{ flex: 1 }}>
-                  <Table
-                    dataSource={invoice.items}
-                    columns={invoiceColumns}
-                    rowKey="id"
+                <Input
+                    placeholder="Tìm kiếm sản phẩm"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    style={{ marginBottom: '20px' }}
+                />
+
+                <Table
+                    columns={productColumns}
+                    dataSource={availableProducts.filter(product =>
+                        product.tenSanPham.toLowerCase().includes(searchTerm)
+                    )}
+                    rowKey="id" // Giả sử mỗi sản phẩm có id
                     pagination={{
-                      pageSize: itemsPerPage,
-                      total: invoice.items.length,
-                      showSizeChanger: false,
+                        pageSize: 5,
+                        showSizeChanger: true,
+                        total: availableProducts.length,
                     }}
-                  />
-                </div>
-
-                {/* Thông tin thanh toán */}
-
-                <div style={{ width: '300px', marginLeft: '20px', border: '1px solid #ddd', padding: '10px' }}>
-                  <h4 style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '24px', margin: '20px 0', color: invoice.paid ? 'red' : 'black' }}>
-                    Thông tin thanh toán
-                  </h4>
-                  <div style={{ marginBottom: '10px', color: invoice.paid ? 'red' : 'black' }}>
-                    <label>Mã hóa đơn:</label>
-                    <span style={{ marginLeft: '10px' }}>{invoice.key}</span>
-                  </div>
-                  <div style={{ marginBottom: '10px', color: invoice.paid ? 'red' : 'black' }}>
-                    <label>Số điện thoại khách:</label>
-                    <Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} disabled={invoice.paid} />
-                  </div>
-                  <div style={{ marginBottom: '10px', color: invoice.paid ? 'red' : 'black' }}>
-                    <label>Tên nhân viên:</label>
-                    <Select value={selectedEmployee} onChange={(value) => setSelectedEmployee(value)} style={{ width: '100%', marginTop: '5px' }} disabled={invoice.paid}>
-                      {employees.map(employee => (
-                        <Option key={employee.id} value={employee.name}>{employee.name}</Option>
-                      ))}
-                    </Select>
-                  </div>
-                  <div style={{ marginBottom: '10px', color: invoice.paid ? 'red' : 'black' }}>
-                    <label>Hình thức thanh toán:</label>
-                    <Select value={paymentMethod} onChange={(value) => setPaymentMethod(value)} style={{ width: '100%', marginTop: '5px' }} disabled={invoice.paid}>
-                      <Option value="cash">Tiền mặt</Option>
-                      <Option value="creditCard">Thẻ tín dụng</Option>
-                      <Option value="bankTransfer">Chuyển khoản ngân hàng</Option>
-                    </Select>
-                  </div>
-                  <div style={{ marginBottom: '10px', color: invoice.paid ? 'red' : 'black' }}>
-                    <label>Tiền khách đưa:</label>
-                    <Input type="number" value={moneyGiven} onChange={(e) => setMoneyGiven(e.target.value)} disabled={invoice.paid} />
-                  </div>
-                  <div style={{ marginBottom: '10px', color: invoice.paid ? 'red' : 'black' }}>
-                    <label>Voucher:</label>
-                    <Select value={selectedVoucher} onChange={(value) => setSelectedVoucher(value)} style={{ width: '100%', marginTop: '5px' }} disabled={invoice.paid}>
-                      <Option value="20percent">20% Giảm giá</Option>
-                    </Select>
-                  </div>
-                  <div style={{ marginBottom: '10px', color: invoice.paid ? 'red' : 'black' }}>
-                    <label>Tiền thừa:</label>
-                    <Input type="number" value={moneyGiven - invoice.items.reduce((total, item) => total + item.price * item.quantity, 0)} readOnly />
-                  </div>
-                  <h4 style={{ color: invoice.paid ? 'red' : 'black' }}>
-                    Tổng tiền: {invoice.items.reduce((total, item) => total + item.price * item.quantity, 0)} VNĐ
-                  </h4>
-                  <Button type="primary" onClick={handlePayment} disabled={invoice.paid}>
-                    Thanh toán
-                  </Button>
-                  <Button type="danger" onClick={handleCancelInvoice} disabled={invoice.paid} style={{ marginTop: '10px' }}>
-                    Hủy hóa đơn
-                  </Button>
-                </div>
-
-              </div>
-            </TabPane>
-          ))}
-        </Tabs>
-
-        {editItem && (
-          <Modal
-            title={`Chỉnh sửa số lượng: ${editItem.name}`}
-            visible={!!editItem}
-            onOk={saveEditQuantity}
-            onCancel={() => setEditItem(null)}
-          >
-            <Input
-              type="number"
-              value={editQuantity}
-              onChange={(e) => setEditQuantity(parseInt(e.target.value))}
-            />
-          </Modal>
-        )}
-      </Content>
-      <Footer style={{ textAlign: 'center' }}>Cửa hàng của bạn</Footer>
-    </Layout>
-  );
+                    loading={loading}
+                    style={{ marginTop: '20px' }}
+                />
+            </Modal>
+        </div>
+    );
 };
 
 export default POS;
-
