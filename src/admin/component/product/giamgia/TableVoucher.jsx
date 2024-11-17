@@ -130,7 +130,7 @@ const TableVoucher = () => {
 
       if (!updateVoucher.hinhThucGiam || !updateVoucher.giaTriGiam ||
         !updateVoucher.giaTriDonHangToiThieu || !updateVoucher.giaTriGiamToiDa ||
-        !updateVoucher.soLuong || !updateVoucher.ngayBatDau || !updateVoucher.ngayKetThuc) {
+         !updateVoucher.ngayBatDau || !updateVoucher.ngayKetThuc) {
         notification.error({
           message: "Lỗi",
           description: "Tất cả các trường không được để trống!",
@@ -301,14 +301,32 @@ const TableVoucher = () => {
     {
       title: "Giá trị giảm",
       dataIndex: "giaTriGiam",
+      render: (text, record) => {
+        
+        if (record.hinhThucGiam === '%') {
+          
+          return `${text}%`;
+        } else if (record.hinhThucGiam === 'VNĐ') {
+          
+          return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(text);
+        }
+        
+        return text;
+      }
     },
     {
       title: "Giá trị đơn hàng tối thiểu",
       dataIndex: "giaTriDonHangToiThieu",
+      render: (text) => {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(text);
+      }
     },
     {
       title: "Giá trị giảm tối đa (VNĐ)",
       dataIndex: "giaTriGiamToiDa",
+      render: (text) => {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(text);
+      }
     },
     {
       title: "Số lượng",
