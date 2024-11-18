@@ -8,24 +8,22 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 const { Option } = Select;
 
-const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => {
-  const [ten, setten] = useState("");
-  const [ma, setma] = useState("");
+const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
+  const [ten, setTen] = useState("");
   const [email, setEmail] = useState("");
   const [sdt, setSdt] = useState("");
   const [ngaySinh, setNgaySinh] = useState(null);
   const [gioiTinh, setGioiTinh] = useState(true);  
-  const [ngayTao, setNgayTao] = useState(moment()); 
   const [trangThai, setTrangThai] = useState(true);
   const [idTaiKhoan, setIdTaiKhoan] = useState("");  
-  const [idDiaChi, setIdDiaChi] = useState("");  
+  const [diaChi, setDiaChi] = useState("");  // Thêm state cho địa chỉ
   const [fileList, setFileList] = useState([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
 
-  const handleConfirmAdd = () => {
+  const handleConfirmAdd = async () => {
     // Kiểm tra dữ liệu đầu vào
-    if (!ten || !ma || !email || !sdt || !ngaySinh || !idTaiKhoan || !idDiaChi) {
+    if (!ten || !email || !sdt || !ngaySinh || !idTaiKhoan || !diaChi) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ thông tin!",
@@ -43,7 +41,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       return;
     }
 
-    // Kiểm tra số điện thoại (ví dụ: chỉ chấp nhận số có ít nhất 10 chữ số)
+    // Kiểm tra số điện thoại
     const phoneRegex = /^[0-9]{10,}$/;
     if (!phoneRegex.test(sdt)) {
       notification.error({
@@ -59,17 +57,16 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       avatarUrl = fileList[0].url;  // Lưu URL ảnh
     }
 
+    // Gọi hàm handleSubmit để truyền dữ liệu
     handleSubmit({
       ten,
-      ma,
       email,
       sdt,
       ngaySinh: ngaySinh ? ngaySinh.format('YYYY-MM-DD') : null,
       gioiTinh,  // Đảm bảo là true hoặc false
-      ngayTao: ngayTao.format('YYYY-MM-DD'), // Lưu ngày tạo
       trangThai: trangThai ? 1 : 0,
       idTaiKhoan,
-      idDiaChi,
+      diaChi,  // Thêm địa chỉ vào dữ liệu gửi lên
       avatar: avatarUrl,  // Lưu URL avatar
     });
   };
@@ -122,27 +119,14 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Tên khách hàng
+            <span className="text-red-600">*</span> Tên nhân viên
           </label>
           <Input
             value={ten}
-            onChange={(e) => setten(e.target.value)}
-            placeholder="Nhập vào tên khách hàng"
+            onChange={(e) => setTen(e.target.value)}
+            placeholder="Nhập vào tên nhân viên"
           />
         </Col>
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Mã khách hàng
-          </label>
-          <Input
-            value={ma}
-            onChange={(e) => setma(e.target.value)}
-            placeholder="Nhập mã khách hàng"
-          />
-        </Col>
-      </Row>
-
-      <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Email
@@ -153,6 +137,9 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
             placeholder="Nhập email"
           />
         </Col>
+      </Row>
+
+      <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Số điện thoại
@@ -163,9 +150,6 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
             placeholder="Nhập số điện thoại"
           />
         </Col>
-      </Row>
-
-      <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Ngày sinh
@@ -176,6 +160,9 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
             onChange={(date) => setNgaySinh(date)}
           />
         </Col>
+      </Row>
+
+      <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Giới tính
@@ -188,12 +175,8 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
           >
             <Option value="Nam">Nam</Option>
             <Option value="Nữ">Nữ</Option>
-            <Option value="Khác">Khác</Option>
           </Select>
         </Col>
-      </Row>
-
-      <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> ID Tài khoản
@@ -204,27 +187,17 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
             placeholder="Nhập ID tài khoản" type="number"
           />
         </Col>
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> ID Địa chỉ
-          </label>
-          <Input
-            value={idDiaChi}
-            onChange={(e) => setIdDiaChi(e.target.value)}
-            placeholder="Nhập ID địa chỉ" type="number"
-          />
-        </Col>
       </Row>
 
       <Row className="flex justify-between mb-3">
-        <Col span={11}>
+      <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Ngày tạo
+            <span className="text-red-600">*</span> Địa chỉ
           </label>
-          <DatePicker
-            style={{ width: "100%" }}
-            value={ngayTao}
-            disabled
+          <Input
+            value={diaChi}
+            onChange={(e) => setDiaChi(e.target.value)}
+            placeholder="Nhập địa chỉ"
           />
         </Col>
         <Col span={11}>
@@ -240,10 +213,13 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
         </Col>
       </Row>
 
+      
+    
+
       {/* Cột Upload ảnh */}
       <Row className="flex justify-between mb-3">
         <Col span={24}>
-          <label className="text-sm block mb-2">Avatar</label>
+          <label className="text-sm block mb-2">Ảnh đại diện</label>
           <Upload
             listType="picture-card"
             fileList={fileList}
@@ -266,4 +242,4 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
   );
 };
 
-export default ModalThemMoiKhachHang;
+export default ModalThemMoiNhanVien;

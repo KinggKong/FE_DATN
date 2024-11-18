@@ -1,18 +1,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { Button, Flex, Table, Space, notification, Spin, Switch, Avatar } from "antd";
-import { Tag } from 'antd';
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
-import ModalThemMoiKhachHang from "./ModalThemMoiKhachHang";
+import ModalThemMoiNhanVien from "./ModalThemMoiNhanVien";
 import TimKiem from "../TimKiem";
 import { storage } from '../spct/firebaseConfig'; // Import tệp cấu hình Firebase
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
-import { getAllKhachHangApi, deleteKhachHangApi, updateKhachHangApi, createKhachHangApi } from "../../../../api/KhachHangApi";
-import ModalEditKhachHang from "./ModalEditKhachHang";
+import { getAllNhanVienApi, deleteNhanVienApi, updateNhanVienApi, createNhanVienApi } from "../../../../api/NhanVienApi";
+import ModalEditNhanVien from "./ModalEditNhanVien";
 
-const TableKhachHang = () => {
+const TableNhanVien = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalAddOpen, setIsModalAddOpen] = useState(false);
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
@@ -33,7 +32,7 @@ const TableKhachHang = () => {
         pageSize,
         ten: valueSearch,
       };
-      const res = await getAllKhachHangApi(params);
+      const res = await getAllNhanVienApi(params);
       if (res && res.data && res.data.content) {
         const dataWithKey = res.data.content.map((item) => ({
           ...item,
@@ -53,8 +52,8 @@ const TableKhachHang = () => {
     }
   }, [currentPage, pageSize, valueSearch]);
 
-// Hàm tải ảnh lên Firebase và trả về URL ảnh
- const uploadImageToFirebase = (file) => {
+  // Hàm tải ảnh lên Firebase và trả về URL ảnh
+  const uploadImageToFirebase = (file) => {
     return new Promise((resolve, reject) => {
       const storageRef = ref(storage, `images/${file.name}`); // Tạo tham chiếu tới vị trí lưu trữ trong Firebase
       const uploadTask = uploadBytesResumable(storageRef, file);
@@ -63,7 +62,6 @@ const TableKhachHang = () => {
       uploadTask.on(
         "state_changed",
         (snapshot) => {
-          // Có thể thêm xử lý theo dõi tiến trình tại đây nếu cần
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           console.log("Upload is " + progress + "% done");
         },
@@ -97,107 +95,93 @@ const TableKhachHang = () => {
   const handleConfirmDelete = async () => {
     setLoading(true);
     try {
-      await deleteKhachHangApi(itemDelete.id);
+      await deleteNhanVienApi(itemDelete.id);
       notification.success({
         message: "Success",
-        duration: 4,
-        showProgress: true,
-        pauseOnHover: false,
-        description: `Xóa khách hàng ${itemDelete.ten} thành công!`,
+        description: `Xóa nhân viên ${itemDelete.ten} thành công!`,
       });
       setIsModalOpen(false);
       setDeletingItem(null);
       await fetchData();
     } catch (error) {
-      console.error("Xóa khách hàng thất bại", error);
+      console.error("Xóa nhân viên thất bại", error);
       notification.error({
         message: "Error",
-        duration: 4,
-        showProgress: true,
-        pauseOnHover: false,
-        description: "Xóa khách hàng thất bại",
+        description: "Xóa nhân viên thất bại",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  
   const handleEdit = (record) => {
     setEditItem(record);
     setIsModalEditOpen(true);
   };
 
-  const handleConfirmEdit = async (id, updatedKhachHang, avatarFile) => {
+  const handleConfirmEdit = async (id, updatedNhanVien, avatarFile) => {
     setLoading(true);
     try {
-      // Nếu có ảnh mới, tải lên Firebase và lấy URL
-      let avatarUrl = updatedKhachHang.avatar;
+      let avatarUrl = updatedNhanVien.avatar;
       if (avatarFile) {
-        avatarUrl = await uploadImageToFirebase(avatarFile); // Tải lên Firebase và lấy URL
+        avatarUrl = await uploadImageToFirebase(avatarFile);
       }
   
-      // Cập nhật thông tin khách hàng
-      const updatedKhachHangWithAvatar = { ...updatedKhachHang, avatar: avatarUrl };
+      const updatedNhanVienWithAvatar = { ...updatedNhanVien, avatar: avatarUrl };
   
-      // Gửi dữ liệu lên API để cập nhật khách hàng
-      await updateKhachHangApi(id, updatedKhachHangWithAvatar);
+      await updateNhanVienApi(id, updatedNhanVienWithAvatar);
   
       notification.success({
         message: "Success",
-        description: `Updated customer ${updatedKhachHang.ten} successfully!`,
+        description: `Cập nhật nhân viên ${updatedNhanVien.ten} thành công!`,
       });
   
       setIsModalEditOpen(false);
       await fetchData();
     } catch (error) {
-      console.error("Failed to update customer", error);
+      console.error("Cập nhật nhân viên thất bại", error);
       notification.error({
         message: "Error",
-        description: "Mã, Email, SĐT đã tồn tại",
+        description: " Vui lòng nhập đầy đủ thông tin",
       });
     } finally {
       setLoading(false);
     }
   };
-  
+
   const handleAdd = () => {
     setIsModalAddOpen(true);
   };
 
-  const handleConfirmAdd = async (newKhachHang, avatarFile) => {
+  const handleConfirmAdd = async (newNhanVien, avatarFile) => {
     setLoading(true);
     try {
-      // Tải ảnh lên Firebase (nếu có file ảnh)
       let avatarUrl = '';
       if (avatarFile) {
-        avatarUrl = await uploadImageToFirebase(avatarFile); // Tải lên Firebase và lấy URL
+        avatarUrl = await uploadImageToFirebase(avatarFile);
       }
   
-      // Tạo đối tượng khách hàng mới
-      const newKhachHangWithAvatar = { ...newKhachHang, avatar: avatarUrl };
+      const newNhanVienWithAvatar = { ...newNhanVien, avatar: avatarUrl };
   
-      // Gửi dữ liệu lên API tạo khách hàng mới
-      await createKhachHangApi(newKhachHangWithAvatar);
+      await createNhanVienApi(newNhanVienWithAvatar);
   
       notification.success({
         message: "Success",
-        description: `Added new customer ${newKhachHang.ten} successfully!`,
+        description: `Thêm mới nhân viên ${newNhanVien.ten} thành công!`,
       });
   
       setIsModalAddOpen(false);
       await fetchData();
     } catch (error) {
-      console.error("Failed to create new customer", error);
+      console.error("Tạo nhân viên mới thất bại", error);
       notification.error({
         message: "Error",
-        description: "Email, SĐT , Mã không được trùng nhau",
+        description: "Email, SĐT không được trùng nhau",
       });
     } finally {
       setLoading(false);
     }
   };
-  
 
   const columns = [
     {
@@ -205,23 +189,19 @@ const TableKhachHang = () => {
       dataIndex: "id",
     },
     {
-        title: "Hình ảnh",
-        dataIndex: "avatar",
-        render: (avatarUrl) => (
-          avatarUrl ? (
-            <Avatar src={avatarUrl} alt="avatar" size={64} />
-          ) : (
-            <Avatar icon="user" size={64} />
-          )
-        ),
-      },
-    {
-      title: "Tên khách hàng",
-      dataIndex: "ten",
+      title: "Hình ảnh",
+      dataIndex: "avatar",
+      render: (avatarUrl) => (
+        avatarUrl ? (
+          <Avatar src={avatarUrl} alt="avatar" size={64} />
+        ) : (
+          <Avatar icon="user" size={64} />
+        )
+      ),
     },
     {
-      title: "Mã khách hàng",
-      dataIndex: "ma",
+      title: "Tên nhân viên",
+      dataIndex: "ten",
     },
     {
       title: "Email",
@@ -237,14 +217,18 @@ const TableKhachHang = () => {
       render: (text) => new Date(text).toLocaleDateString(),
     },
     {
-        title: "Giới tính",
-        dataIndex: "gioiTinh",
-        render: (text) => (text ? 'Nam' : 'Nữ'), // Giới tính là boolean, true = Nam, false = Nữ
-      },
-      {
-        title: "ID Tài khoản",
-        dataIndex: "idTaiKhoan",
-      },
+      title: "Địa chỉ",
+      dataIndex: "diaChi",
+    },
+    {
+      title: "Giới tính",
+      dataIndex: "gioiTinh",
+      render: (text) => (text ? 'Nam' : 'Nữ'),
+    },
+    {
+      title: "ID Tài khoản",
+      dataIndex: "idTaiKhoan",
+    },
     {
       title: "Trạng thái",
       dataIndex: "trangThai",
@@ -253,27 +237,26 @@ const TableKhachHang = () => {
           checked={text === 1}
           onChange={async (checked) => {
             const updatedStatus = checked ? 1 : 0;
-            const updatedKhachHang = { ...record, trangThai: updatedStatus };
+            const updatedNhanVien = { ...record, trangThai: updatedStatus };
 
             try {
-              await updateKhachHangApi(record.id, updatedKhachHang);
+              await updateNhanVienApi(record.id, updatedNhanVien);
               notification.success({
-                message: "Updated status successfully",
-                description: `Customer ${record.ten} has been ${checked ? "activated" : "deactivated"}!`,
+                message: "Cập nhật trạng thái thành công",
+                description: `Nhân viên ${record.ten} đã ${checked ? "kích hoạt" : "vô hiệu hóa"}!`,
               });
-              await fetchData(); // Refresh data
+              await fetchData();
             } catch (error) {
-              console.error("Failed to update customer status", error);
+              console.error("Cập nhật trạng thái thất bại", error);
               notification.error({
                 message: "Error",
-                description: "Failed to update status.",
+                description: "Cập nhật trạng thái thất bại.",
               });
             }
           }}
         />
       ),
     },
-    
     {
       title: "Thao tác",
       dataIndex: "thaotac",
@@ -293,8 +276,8 @@ const TableKhachHang = () => {
   return (
     <Spin spinning={loading} tip="Loading...">
       <TimKiem
-        title={"Khách hàng"}
-        placeholder={"Nhập vào tên khách hàng để tìm!"}
+        title={"Nhân viên"}
+        placeholder={"Nhập vào tên nhân viên để tìm!"}
         valueSearch={setValueSearch}
         handleAddOpen={handleAdd}
       />
@@ -318,24 +301,24 @@ const TableKhachHang = () => {
       <ModalConfirm
         isOpen={isModalOpen}
         handleClose={() => setIsModalOpen(false)}
-        title={"Khách hàng"}
+        title={"Nhân viên"}
         handleConfirm={handleConfirmDelete}
       />
-      <ModalThemMoiKhachHang
+      <ModalThemMoiNhanVien
         isOpen={isModalAddOpen}
         handleClose={() => setIsModalAddOpen(false)}
-        title={"Khách hàng"}
+        title={"Nhân viên"}
         handleSubmit={handleConfirmAdd}
       />
-      <ModalEditKhachHang
-        title={"Khách hàng"}
+      <ModalEditNhanVien
+        title={"Nhân viên"}
         isOpen={isModalEditOpen}
         handleClose={() => setIsModalEditOpen(false)}
-        khachHang={itemEdit}
+        nhanVien={itemEdit}
         handleSubmit={handleConfirmEdit}
       />
     </Spin>
   );
 };
 
-export default TableKhachHang;
+export default TableNhanVien;

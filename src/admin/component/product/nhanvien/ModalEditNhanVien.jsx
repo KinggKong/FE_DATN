@@ -1,83 +1,88 @@
-import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select, Button, Upload, Image } from "antd";
-import { IoMdAddCircleOutline } from "react-icons/io";
-import { useState } from "react";
-import moment from "moment";
-import { UploadOutlined } from "@ant-design/icons";
+import moment from 'moment';
+import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select, Upload, Image } from "antd";
+import { FaEdit } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { UploadOutlined } from "@ant-design/icons"; 
 import { storage } from '../spct/firebaseConfig'; // Import tệp cấu hình Firebase
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-
 const { Option } = Select;
 
-const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => {
-  const [ten, setten] = useState("");
-  const [ma, setma] = useState("");
+const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien }) => {
+  const [ten, setTen] = useState("");
   const [email, setEmail] = useState("");
   const [sdt, setSdt] = useState("");
   const [ngaySinh, setNgaySinh] = useState(null);
-  const [gioiTinh, setGioiTinh] = useState(true);  
-  const [ngayTao, setNgayTao] = useState(moment()); 
-  const [trangThai, setTrangThai] = useState(true);
-  const [idTaiKhoan, setIdTaiKhoan] = useState("");  
-  const [idDiaChi, setIdDiaChi] = useState("");  
-  const [fileList, setFileList] = useState([]);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState('');
+  const [gioiTinh, setGioiTinh] = useState(true); // true for male, false for female
+  const [trangThai, setTrangThai] = useState(true); // Default to active
+  const [idTaiKhoan, setIdTaiKhoan] = useState(""); // Account ID
+  const [diaChi, setDiaChi] = useState(""); // Address ID
+  const [fileList, setFileList] = useState([]); // State để lưu file tải lên (avatar)
 
-  const handleConfirmAdd = () => {
-    // Kiểm tra dữ liệu đầu vào
-    if (!ten || !ma || !email || !sdt || !ngaySinh || !idTaiKhoan || !idDiaChi) {
+  useEffect(() => {
+    if (nhanVien) {
+      setTen(nhanVien.ten);
+      setEmail(nhanVien.email);
+      setSdt(nhanVien.sdt);
+      setNgaySinh(moment(nhanVien.ngaySinh));
+      setGioiTinh(nhanVien.gioiTinh);  // true for male, false for female
+      setIdTaiKhoan(nhanVien.idTaiKhoan);
+      setDiaChi(nhanVien.diaChi);
+      setTrangThai(nhanVien.trangThai === 1); // Assuming 1 means active
+      // Set fileList nếu nhân viên đã có avatar
+      if (nhanVien.avatar) {
+        setFileList([{ url: nhanVien.avatar }]); // Giả sử avatar là URL của ảnh
+      }
+    }
+  }, [nhanVien]);
+
+  const handleConfirmEdit = () => {
+    // Validate the employee data
+    if (!ten || !email || !sdt || !ngaySinh || !idTaiKhoan || !diaChi) {
       notification.error({
         message: "Lỗi",
-        description: "Vui lòng điền đầy đủ thông tin!",
+        description: "Vui lòng điền đầy đủ các trường!",
       });
       return;
     }
 
-    // Kiểm tra định dạng email
+    // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       notification.error({
         message: "Lỗi",
-        description: "Vui lòng nhập đúng định dạng email!",
+        description: "Email không hợp lệ!",
       });
       return;
     }
 
-    // Kiểm tra số điện thoại (ví dụ: chỉ chấp nhận số có ít nhất 10 chữ số)
+    // Validate phone number
     const phoneRegex = /^[0-9]{10,}$/;
     if (!phoneRegex.test(sdt)) {
       notification.error({
         message: "Lỗi",
-        description: "Vui lòng nhập số điện thoại hợp lệ!",
+        description: "Số điện thoại không hợp lệ!",
       });
       return;
     }
 
-    // Nếu có ảnh, upload và lưu URL
-    let avatarUrl = "";
-    if (fileList.length > 0 && fileList[0].status === 'done') {
-      avatarUrl = fileList[0].url;  // Lưu URL ảnh
-    }
-
-    handleSubmit({
+    // Handle submit
+    handleSubmit(nhanVien?.id, {
       ten,
-      ma,
       email,
       sdt,
       ngaySinh: ngaySinh ? ngaySinh.format('YYYY-MM-DD') : null,
-      gioiTinh,  // Đảm bảo là true hoặc false
-      ngayTao: ngayTao.format('YYYY-MM-DD'), // Lưu ngày tạo
+      gioiTinh,
       trangThai: trangThai ? 1 : 0,
       idTaiKhoan,
-      idDiaChi,
-      avatar: avatarUrl,  // Lưu URL avatar
+      diaChi,
+      avatar: fileList.length > 0 && fileList[0].url ? fileList[0].url : "", // Lưu URL avatar
     });
   };
 
-  // Xử lý thay đổi tệp tải lên
-  const handleChange = ({ fileList: newFileList }) => setFileList(newFileList);
+  const handleChange = ({ fileList: newFileList }) => {
+    setFileList(newFileList); // Cập nhật fileList khi người dùng thay đổi ảnh
+  };
 
-  // Xử lý xem trước ảnh
   const handlePreview = async (file) => {
     if (!file.url && !file.preview) {
       file.preview = await getBase64(file.originFileObj);
@@ -86,7 +91,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
     setPreviewOpen(true);
   };
 
-  // Hàm chuyển đổi file sang base64
+  // Hàm chuyển file sang base64 (dùng cho việc xem trước ảnh)
   const getBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -96,7 +101,6 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
     });
   };
 
-  // Tạo nút upload
   const uploadButton = (
     <div>
       <UploadOutlined />
@@ -109,12 +113,12 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       open={isOpen}
       title={
         <span className="flex">
-          <IoMdAddCircleOutline style={{ color: "green", marginRight: 8, fontSize: "1.5rem" }} />
-          Thêm mới {title}
+          <FaEdit style={{ color: "green", marginRight: 8, fontSize: "1.5rem" }} />
+          Chỉnh sửa {title}
         </span>
       }
       okType="primary"
-      onOk={handleConfirmAdd}
+      onOk={handleConfirmEdit}
       onCancel={handleClose}
       keyboard={false}
       maskClosable={false}
@@ -122,27 +126,14 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Tên khách hàng
+            <span className="text-red-600">*</span> Tên nhân viên
           </label>
           <Input
             value={ten}
-            onChange={(e) => setten(e.target.value)}
-            placeholder="Nhập vào tên khách hàng"
+            onChange={(e) => setTen(e.target.value)}
+            placeholder="Nhập tên nhân viên"
           />
         </Col>
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Mã khách hàng
-          </label>
-          <Input
-            value={ma}
-            onChange={(e) => setma(e.target.value)}
-            placeholder="Nhập mã khách hàng"
-          />
-        </Col>
-      </Row>
-
-      <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Email
@@ -151,6 +142,19 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Nhập email"
+          />
+        </Col>
+      </Row>
+
+      <Row className="flex justify-between mb-3">
+      <Col span={11}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Ngày sinh
+          </label>
+          <DatePicker
+            style={{ width: "100%" }}
+            value={ngaySinh}
+            onChange={(date) => setNgaySinh(date)}
           />
         </Col>
         <Col span={11}>
@@ -166,16 +170,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       </Row>
 
       <Row className="flex justify-between mb-3">
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Ngày sinh
-          </label>
-          <DatePicker
-            style={{ width: "100%" }}
-            value={ngaySinh}
-            onChange={(date) => setNgaySinh(date)}
-          />
-        </Col>
+        
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Giới tính
@@ -191,40 +186,29 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
             <Option value="Khác">Khác</Option>
           </Select>
         </Col>
+        <Col span={11}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span>  Địa chỉ
+          </label>
+          <Input
+            value={diaChi}
+            onChange={(e) => setDiaChi(e.target.value)}
+            placeholder="Nhập  địa chỉ"
+           
+          />
+        </Col>
       </Row>
 
       <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> ID Tài khoản
+            <span className="text-red-600">*</span> Tài khoản
           </label>
           <Input
             value={idTaiKhoan}
             onChange={(e) => setIdTaiKhoan(e.target.value)}
-            placeholder="Nhập ID tài khoản" type="number"
-          />
-        </Col>
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> ID Địa chỉ
-          </label>
-          <Input
-            value={idDiaChi}
-            onChange={(e) => setIdDiaChi(e.target.value)}
-            placeholder="Nhập ID địa chỉ" type="number"
-          />
-        </Col>
-      </Row>
-
-      <Row className="flex justify-between mb-3">
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Ngày tạo
-          </label>
-          <DatePicker
-            style={{ width: "100%" }}
-            value={ngayTao}
-            disabled
+            placeholder="Nhập ID tài khoản"
+            type="number"
           />
         </Col>
         <Col span={11}>
@@ -266,4 +250,4 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
   );
 };
 
-export default ModalThemMoiKhachHang;
+export default ModalEditNhanVien;
