@@ -321,7 +321,7 @@ const TableKhachHang = () => {
                 title={"Chỉnh sửa khách hàng"}
                 isOpen={isModalEditOpen}
                 handleClose={() => setIsModalEditOpen(false)}
-                khachhang={itemEdit}  // Truyền dữ liệu khách hàng vào modal
+                khachHang={itemEdit}  // Truyền dữ liệu khách hàng vào modal
                 handleSubmit={handleConfirmEdit}
             />
         </>

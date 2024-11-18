@@ -3,7 +3,7 @@ import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select, Uploa
 import { FaEdit } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { PlusOutlined } from "@ant-design/icons";
-import { storage } from "../spct/firebaseConfig"; // Import tệp cấu hình Firebase
+import { storage } from "../spct/firebaseConfig"; 
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
 
@@ -16,18 +16,18 @@ const ModalEditKhachHang = ({ isOpen, handleClose, handleSubmit, khachHang }) =>
     const [matKhau, setMatKhau] = useState("");
     const [email, setEmail] = useState("");
     const [sdt, setSdt] = useState("");
-    const [avatar, setAvatar] = useState("");  // Giữ URL ảnh
+    const [avatar, setAvatar] = useState([]);  
     const [ngaySinh, setNgaySinh] = useState(null);
     const [idDiaChi, setIdDiaChi] = useState("");
-    const [gioiTinh, setGioiTinh] = useState(true); // true for male, false for female
-    const [trangThai, setTrangThai] = useState(true); // 1 for active, 0 for inactive
-    const [previewImage, setPreviewImage] = useState(''); // URL hình ảnh preview
+    const [gioiTinh, setGioiTinh] = useState(true); 
+    const [trangThai, setTrangThai] = useState(true); 
+    const [previewImage, setPreviewImage] = useState(''); 
     const [previewOpen, setPreviewOpen] = useState(false);
-    const [idTaiKhoan, setIdTaiKhoan] = useState("");  // Thêm trạng thái cho id_tai_khoan
+    const [idTaiKhoan, setIdTaiKhoan] = useState("");  
 
     const handleConfirmEdit = () => {
         // Kiểm tra các giá trị nhập vào
-        if (!ten || !tenDangNhap || !matKhau || !email || !sdt || !idDiaChi || !idTaiKhoan) {
+        if (!ten || !tenDangNhap || !matKhau || !email || !sdt || !ma ||  !idDiaChi || !idTaiKhoan) {
             notification.error({
                 message: "Lỗi",
                 description: "Vui lòng điền đầy đủ thông tin.",
@@ -60,12 +60,12 @@ const ModalEditKhachHang = ({ isOpen, handleClose, handleSubmit, khachHang }) =>
             matKhau,
             email,
             sdt,
-            avatar,
+            avatar ,
             ngaySinh: ngaySinh ? ngaySinh.format('YYYY-MM-DD') : null, 
-            idDiaChi,
+            idDiaChi ,
             idTaiKhoan,  
             gioiTinh,
-            trangThai: trangThai ? 1 : 0, // Trạng thái khách hàng (1: hoạt động, 0: không hoạt động)
+            trangThai: trangThai ? 1 : 0, 
         });
     };
 
@@ -80,7 +80,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, handleSubmit, khachHang }) =>
             setAvatar(khachHang.avatar);
             setNgaySinh(moment(khachHang.ngaySinh));
             setIdDiaChi(khachHang.idDiaChi);
-            setIdTaiKhoan(khachHang.idTaiKhoan);  // Cập nhật id_tai_khoan
+            setIdTaiKhoan(khachHang.idTaiKhoan); 
             setGioiTinh(khachHang.gioiTinh);
             setTrangThai(khachHang.trangThai === 1);
         }
@@ -235,13 +235,13 @@ const ModalEditKhachHang = ({ isOpen, handleClose, handleSubmit, khachHang }) =>
                 </Col>
             </Row>
 
-            {/* Cập nhật phần input ảnh đại diện */}
+          
             <Row className="flex justify-between mb-3">
                 <Col span={11}>
                     <label className="text-sm block mb-2">Ảnh đại diện</label>
                     <Upload
                         listType="picture-card"
-                        maxCount={1}  // Giới hạn chỉ cho phép tải lên 1 ảnh
+                        maxCount={1}  
                         onChange={handleUploadChange}
                         onPreview={(file) => {
                             setPreviewImage(file.url || file.preview);
