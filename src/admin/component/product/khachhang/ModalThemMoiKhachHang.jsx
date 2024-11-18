@@ -16,14 +16,14 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, handleSubmit, khachHang })
     const [matKhau, setMatKhau] = useState("");
     const [email, setEmail] = useState("");
     const [sdt, setSdt] = useState("");
-    const [avatar, setAvatar] = useState("");  // Giữ URL ảnh
+    const [avatar, setAvatar] = useState("");  
     const [ngaySinh, setNgaySinh] = useState(null);
     const [idDiaChi, setIdDiaChi] = useState("");
-    const [gioiTinh, setGioiTinh] = useState(true); // true for male, false for female
-    const [trangThai, setTrangThai] = useState(true); // 1 for active, 0 for inactive
-    const [previewImage, setPreviewImage] = useState(''); // URL hình ảnh preview
+    const [gioiTinh, setGioiTinh] = useState(true); 
+    const [trangThai, setTrangThai] = useState(true); 
+    const [previewImage, setPreviewImage] = useState(''); 
     const [previewOpen, setPreviewOpen] = useState(false);
-    const [idTaiKhoan, setIdTaiKhoan] = useState("");  // Thêm trạng thái cho id_tai_khoan
+    const [idTaiKhoan, setIdTaiKhoan] = useState("");  
 
     const handleConfirmAdd = () => {
         // Kiểm tra các giá trị nhập vào
@@ -60,9 +60,9 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, handleSubmit, khachHang })
             email,
             sdt,
             avatar,
-            ngaySinh: ngaySinh ? ngaySinh.format('YYYY-MM-DD') : null, // Chuyển ngày sinh thành chuỗi
+            ngaySinh: ngaySinh ? ngaySinh.format('YYYY-MM-DD') : null, 
             idDiaChi,
-            idTaiKhoan,  // Thêm id_tai_khoan vào dữ liệu gửi lên server
+            idTaiKhoan, 
             gioiTinh,
             trangThai: trangThai ? 1 : 0, // Trạng thái khách hàng (1: hoạt động, 0: không hoạt động)
         });
@@ -79,7 +79,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, handleSubmit, khachHang })
             setAvatar(khachHang.avatar);
             setNgaySinh(moment(khachHang.ngaySinh));
             setIdDiaChi(khachHang.idDiaChi);
-            setIdTaiKhoan(khachHang.idTaiKhoan);  // Cập nhật id_tai_khoan
+            setIdTaiKhoan(khachHang.idTaiKhoan); 
             setGioiTinh(khachHang.gioiTinh);
             setTrangThai(khachHang.trangThai === 1);
         }

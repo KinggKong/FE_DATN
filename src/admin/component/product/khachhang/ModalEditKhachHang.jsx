@@ -3,14 +3,13 @@ import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select, Uploa
 import { FaEdit } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { PlusOutlined } from "@ant-design/icons";
-import { storage } from "../spct/firebaseConfig"; // Firebase config import
+import { storage } from "../spct/firebaseConfig"; // Import tệp cấu hình Firebase
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
 
 const { Option } = Select;
 
 const ModalEditKhachHang = ({ isOpen, handleClose, handleSubmit, khachHang }) => {
-    // State cho các trường trong modal
     const [ten, setTen] = useState("");
     const [ma, setMa] = useState("");
     const [tenDangNhap, setTenDangNhap] = useState("");
@@ -25,24 +24,6 @@ const ModalEditKhachHang = ({ isOpen, handleClose, handleSubmit, khachHang }) =>
     const [previewImage, setPreviewImage] = useState(''); // URL hình ảnh preview
     const [previewOpen, setPreviewOpen] = useState(false);
     const [idTaiKhoan, setIdTaiKhoan] = useState("");  // Thêm trạng thái cho id_tai_khoan
-
-    // Cập nhật modal với thông tin khách hàng đã chọn
-    useEffect(() => {
-        if (khachHang) {
-            setTen(khachHang.ten);
-            setMa(khachHang.ma);
-            setTenDangNhap(khachHang.tenDangNhap);
-            setMatKhau(khachHang.matKhau);
-            setEmail(khachHang.email);
-            setSdt(khachHang.sdt);
-            setAvatar(khachHang.avatar);
-            setNgaySinh(moment(khachHang.ngaySinh));
-            setIdDiaChi(khachHang.idDiaChi);
-            setIdTaiKhoan(khachHang.idTaiKhoan);  // Cập nhật id_tai_khoan
-            setGioiTinh(khachHang.gioiTinh);
-            setTrangThai(khachHang.trangThai === 1);
-        }
-    }, [khachHang]); // Khi khachHang thay đổi, cập nhật lại các giá trị
 
     const handleConfirmEdit = () => {
         // Kiểm tra các giá trị nhập vào
@@ -72,7 +53,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, handleSubmit, khachHang }) =>
 
         // Gửi dữ liệu đã nhập lên server
         handleSubmit({
-            id: khachHang.id, // Giữ lại id của khách hàng để update
+            id: khachHang.id,  
             ten,
             ma,
             tenDangNhap,
@@ -80,13 +61,30 @@ const ModalEditKhachHang = ({ isOpen, handleClose, handleSubmit, khachHang }) =>
             email,
             sdt,
             avatar,
-            ngaySinh: ngaySinh ? ngaySinh.format('YYYY-MM-DD') : null, // Chuyển ngày sinh thành chuỗi
+            ngaySinh: ngaySinh ? ngaySinh.format('YYYY-MM-DD') : null, 
             idDiaChi,
-            idTaiKhoan,  // Thêm id_tai_khoan vào dữ liệu gửi lên server
+            idTaiKhoan,  
             gioiTinh,
             trangThai: trangThai ? 1 : 0, // Trạng thái khách hàng (1: hoạt động, 0: không hoạt động)
         });
     };
+
+    useEffect(() => {
+        if (khachHang) {
+            setTen(khachHang.ten);
+            setMa(khachHang.ma);
+            setTenDangNhap(khachHang.tenDangNhap);
+            setMatKhau(khachHang.matKhau);
+            setEmail(khachHang.email);
+            setSdt(khachHang.sdt);
+            setAvatar(khachHang.avatar);
+            setNgaySinh(moment(khachHang.ngaySinh));
+            setIdDiaChi(khachHang.idDiaChi);
+            setIdTaiKhoan(khachHang.idTaiKhoan);  // Cập nhật id_tai_khoan
+            setGioiTinh(khachHang.gioiTinh);
+            setTrangThai(khachHang.trangThai === 1);
+        }
+    }, [khachHang]);
 
     const uploadImageToFirebase = async (image) => {
         const imgRef = ref(storage, `images/${uuidv4()}`);
@@ -119,18 +117,21 @@ const ModalEditKhachHang = ({ isOpen, handleClose, handleSubmit, khachHang }) =>
     return (
         <Modal
             open={isOpen}
-            title={(
+            title={
                 <span className="flex">
                     <FaEdit style={{ color: "green", marginRight: 8, fontSize: "1.5rem" }} />
                     Chỉnh sửa khách hàng
                 </span>
-            )}
+            }
             okType="primary"
             onOk={handleConfirmEdit}
             onCancel={handleClose}
             keyboard={false}
             maskClosable={false}
         >
+            {/* Các trường khác vẫn giữ nguyên */}
+
+            {/* Thêm trường ID Tài khoản */}
             <Row className="flex justify-between mb-3">
                 <Col span={11}>
                     <label className="text-sm block mb-2">

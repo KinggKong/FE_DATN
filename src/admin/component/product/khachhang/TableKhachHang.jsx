@@ -4,6 +4,7 @@ import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalEditKhachHang from "./ModalEditKhachHang";
 import ModalThemMoiKhachHang from "./ModalThemMoiKhachHang";
+import ModalConfirm from "../ModalConfirm";
 import TimKiem from "../TimKiem";
 import {
     deleteKhachHangApi,
@@ -17,7 +18,7 @@ const TableKhachHang = () => {
     const [isModalAddOpen, setIsModalAddOpen] = useState(false);
     const [isModalEditOpen, setIsModalEditOpen] = useState(false);
     const [itemDelete, setDeletingItem] = useState(null);
-    const [itemEdit, setEditItem] = useState(null);
+    const [itemEdit, setEditItem] = useState(null);  // Dữ liệu của khách hàng cần chỉnh sửa
     const [dataSource, setDataSource] = useState([]);
     const [totalItems, setTotalItems] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
@@ -73,31 +74,28 @@ const TableKhachHang = () => {
 
     const handleConfirmDelete = async () => {
         try {
-            await deleteKhachHangApi(itemDelete.id);
+            await deleteKhachHangApi(itemDelete.id); // API xóa khách hàng
             notification.success({
-                duration: 4,
-                pauseOnHover: false,
                 message: "Thành công",
-                showProgress: true,
                 description: `Xoá khách hàng ${itemDelete.ten} thành công!`,
             });
             setIsModalOpen(false);
             setDeletingItem(null);
             setCurrentPage(1);
-            await fetchData();
+            await fetchData(); // Lấy lại dữ liệu sau khi xóa
         } catch (error) {
-            console.error("Xoá khách hàng thất bại", error);
+            console.error("Lỗi khi xóa khách hàng", error);
             notification.error({
                 message: "Lỗi",
-                description: "Không thể xoá khách hàng.",
+                description: "Không thể xóa khách hàng.",
             });
         }
     };
 
     // Xử lý sửa khách hàng
     const handleEdit1 = (record) => {
-        setEditItem(record);
-        setIsModalEditOpen(true);
+        setEditItem(record);  // Lưu thông tin khách hàng cần chỉnh sửa
+        setIsModalEditOpen(true);  // Mở modal chỉnh sửa
     };
 
     // Xử lý thay đổi trạng thái
@@ -125,14 +123,6 @@ const TableKhachHang = () => {
 
     // Xử lý xác nhận chỉnh sửa khách hàng
     const handleConfirmEdit = async (id, updateKhachHang) => {
-        // if (!validateKhachHang(updateKhachHang.ten)) {
-        //     notification.error({
-        //         message: "Lỗi",
-        //         description: "Tên khách hàng phải có ít nhất 3 ký tự!",
-        //     });
-        //     return;
-        // }
-
         const exists = await checkKhachHangExists(updateKhachHang.ten);
         if (exists) {
             notification.error({
@@ -166,14 +156,6 @@ const TableKhachHang = () => {
 
     // Xử lý xác nhận thêm khách hàng
     const handleConfirmAdd = async (newKhachHangName) => {
-        // if (!validateKhachHang(newKhachHangName)) {
-        //     notification.error({
-        //         message: "Lỗi",
-        //         description: "Tên khách hàng phải có ít nhất 3 ký tự!",
-        //     });
-        //     return;
-        // }
-
         const exists = await checkKhachHangExists(newKhachHangName);
         if (exists) {
             notification.error({
@@ -238,7 +220,6 @@ const TableKhachHang = () => {
             key: "ten",
             showSorterTooltip: false,
         },
-        
         {
             title: "Email",
             dataIndex: "email",
@@ -324,7 +305,7 @@ const TableKhachHang = () => {
                     loading={loading}
                 />
             </Flex>
-            <ModalEditKhachHang
+            <ModalConfirm
                 isOpen={isModalOpen}
                 handleClose={() => setIsModalOpen(false)}
                 title={"Khách hàng"}
@@ -337,10 +318,10 @@ const TableKhachHang = () => {
                 handleSubmit={handleConfirmAdd}
             />
             <ModalEditKhachHang
-                title={"Khách hàng"}
+                title={"Chỉnh sửa khách hàng"}
                 isOpen={isModalEditOpen}
                 handleClose={() => setIsModalEditOpen(false)}
-                khachhang={itemEdit}
+                khachhang={itemEdit}  // Truyền dữ liệu khách hàng vào modal
                 handleSubmit={handleConfirmEdit}
             />
         </>
