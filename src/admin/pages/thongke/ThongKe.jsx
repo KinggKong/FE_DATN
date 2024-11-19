@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { DownloadOutlined } from '@ant-design/icons';
 
 import DemoChangeData from './BieuDoTron';
-import DemoLine from './BieuDoDuong';
+
 import { getThongKeApi } from '../../../api/ThongKeApi';
 const { RangePicker } = DatePicker;
 const onChange = (date) => {
