@@ -4,7 +4,7 @@ import { ShoppingCartOutlined } from "@ant-design/icons";
 import { useNavigate } from 'react-router-dom';
 
 const CardItem = ({ product }) => {
-  console.log(product);
+  
   const navigate = useNavigate();
   const handleCardClick = (id) => {
     navigate(`/detail/${id}`); // Điều hướng tới trang chi tiết
@@ -47,7 +47,13 @@ const CardItem = ({ product }) => {
           margin: "20px",
         }}
         className="rounded-xl hover:scale-105 transition-all duration-300 cursor-pointer"
-        cover={<Image className="rounded-t-xl" width={260} src={product?.hinhAnh} />}
+        cover={<Image
+          className="rounded-t-xl"
+          width={260}
+          height={180} // Chiều cao cố định
+          style={{ objectFit: "cover" }} // Đảm bảo ảnh vừa khít container
+          src={product?.hinhAnh}
+        />}
 
       >
         {product?.phanTramGiamGia && (

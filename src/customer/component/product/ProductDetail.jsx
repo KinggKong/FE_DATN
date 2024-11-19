@@ -1,21 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Image, Typography, Button, Radio, InputNumber, Card, Breadcrumb } from "antd";
+import { Row, Col, Image, Typography, Button, Radio, InputNumber, Card, Breadcrumb,message } from "antd";
 import { useParams } from 'react-router-dom';
 import { getSanPhamByIdApi, getSanPhamByIdDanhMucApi } from "../../../api/SanPhamApi";
 import CardItem from "../card/CardItem";
 import SPKhuyenMaiCarousel from "../carousel/SPKhuyenMaiCarousel";
 import { Link } from "react-router-dom";
 import { SyncOutlined, TrophyOutlined, CarOutlined, CreditCardOutlined } from "@ant-design/icons";
+import useCartStore from "../cart/useCartStore";
+import { getSaleCTByPrDtApi } from "../../../api/SaleCTApi";
 const ProductDetail = () => {
   const { id } = useParams();
   const [productDetail, setProductDetail] = useState({});
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
+  const [nameSize, setNameSize] = useState(null);
+  const [nameColor, setNameColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState("");
   const [productPrice, setProductPrice] = useState(0); // Thêm state cho giá sản phẩm
   const [stockQuantity, setStockQuantity] = useState(0); // Thêm state cho số lượng tồn kho
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [productDetailId, setProductDetailId] = useState(null);
+  const [productDiscountPrice, setProductDiscountPrice] = useState(0); // Thêm state cho giá sau khi giảm
+  const [discountEndDate, setDiscountEndDate] = useState(null); // Thêm state cho thời gian kết thúc giảm giá
+  const [saleForProduct, setSaleForProduct] = useState(null); // Thêm state cho thông tin khuyến mãi
+  const { addToCart } = useCartStore();
 
   const features = [
     {
@@ -43,7 +52,14 @@ const ProductDetail = () => {
   const handleThumbnailClick = (url) => setSelectedImage(url);
   const handleSizeChange = (e) => {
     setSelectedSize(e.target.value)
+
+    // Tìm tên kích thước từ danh sách sản phẩm chi tiết
+    const size = productDetail.sanPhamChiTietList?.find(item => item.id_kichThuoc === e.target.value);
+    if (size) {
+      setNameSize(size.tenKichThuoc); // Cập nhật tên kích thước
+    }
     updatePrice(e.target.value, selectedColor); // Cập nhật giá khi thay đổi kích thước
+
   };
 
   // Cập nhật ảnh chính khi chọn màu
@@ -52,6 +68,7 @@ const ProductDetail = () => {
     if (color) {
       setSelectedImage(color.hinhAnhList[0].url); // Lấy ảnh đầu tiên của màu
       setSelectedColor(colorId);
+      setNameColor(color.tenMauSac); // Cập nhật tên màu
       updatePrice(selectedSize, colorId); // Cập nhật giá khi thay đổi màu
       setStockQuantity(color.soLuong); // Cập nhật số lượng tồn kho khi thay đổi màu
     }
@@ -66,10 +83,67 @@ const ProductDetail = () => {
     );
 
     if (selectedProduct) {
-      setProductPrice(selectedProduct.giaBan); // Cập nhật giá mới
+      const basePrice = selectedProduct.giaBan; // Lấy giá gốc
+
+      // Kiểm tra nếu sản phẩm có chương trình giảm giá
+      let finalPrice = basePrice;
+      let finalDiscountPrice = basePrice;
+      if (saleForProduct && saleForProduct.phanTramGiam > 0) {
+        finalDiscountPrice = basePrice * (1 - saleForProduct.phanTramGiam / 100); // Giá sau khi giảm
+        setDiscountEndDate(saleForProduct.thoiGianKetThuc); // Cập nhật thời gian kết thúc giảm giá
+      }
+
+      setProductPrice(finalPrice); // Cập nhật giá gốc
+      setProductDiscountPrice(finalDiscountPrice); // Cập nhật giá sau giảm
+
       setStockQuantity(selectedProduct.soLuong); // Cập nhật số lượng tồn kho khi thay đổi kích thước và màu
     }
   };
+
+  useEffect(() => {
+    if (selectedSize && selectedColor) {
+      updatePrice(selectedSize, selectedColor);
+    }
+  }, [selectedSize, selectedColor, saleForProduct]);
+
+  //Hàm thêm sản phẩm vào giỏ hàng
+  const handleAddToCart = () => {
+    const productToAdd = {
+      id: productDetailId,
+      sanPhamChiTietResponse: getProductDetail(productDetailId),
+      name: productDetail.tenSanPham,
+      giaTien: productPrice,
+      discountPrice: productDiscountPrice, // Giá sau giảm
+      discountEnd: discountEndDate, // Thời gian kết thúc giảm giá (ISO format)
+      selectedColor,
+      selectedSize,
+      nameColor,
+      nameSize,
+      soLuong: quantity || 1,
+      image: selectedImage,
+
+
+    }
+
+    console.log("SP giỏ", productToAdd);
+
+
+    addToCart(productToAdd); // Thêm sản phẩm vào giỏ hàng
+    message.success("Đã thêm sản phẩm vào giỏ hàng!");
+    
+
+
+  }
+
+  // hàm tìm sản phẩm chi tiết từ danh sách thông qua idProductDetail
+  const getProductDetail = (id) => {
+    const productDetailItem = productDetail?.sanPhamChiTietList?.find(
+      (item) => item.id === id
+    );
+    return productDetailItem ? productDetailItem : null;
+  }
+
+
 
   const fetchProduct = async () => {
     try {
@@ -77,17 +151,45 @@ const ProductDetail = () => {
       setProductDetail(res.data);
       const firstItem = res.data.sanPhamChiTietList?.[0];
       if (firstItem) {
+        setProductDetailId(firstItem.id); // Set id của productDetail mặc định
         setSelectedColor(firstItem.id_mauSac);
         setSelectedSize(firstItem.id_kichThuoc);
+        setNameColor(firstItem.tenMauSac);
+        setNameSize(firstItem.tenKichThuoc);
         setSelectedImage(firstItem.hinhAnhList?.[0].url || "");
         setProductPrice(firstItem.giaBan); // Set giá mặc định
         setStockQuantity(firstItem.soLuong); // Set số lượng tồn kho mặc định
+
+
       }
       fetchProductByCategory(res.data.danhMuc.id);
     } catch (error) {
       console.log('Failed to fetch product detail: ', error);
     }
   };
+
+
+
+  const fetchSaleForProduct = async (id) => {
+    try {
+      const res = await getSaleCTByPrDtApi(id);
+
+      // Kiểm tra nếu không có dữ liệu hoặc trang thái sale không phải là 1
+      if (res.data && res.data.trangThaiSale === 1) {
+        setSaleForProduct(res.data);
+        console.log("Sale", res.data);
+      } else {
+        setSaleForProduct(null);
+        console.log("Không tìm thấy đợt giảm giá hoặc trạng thái sale không phải 1");
+      }
+    } catch (error) {
+      setSaleForProduct(null); // Đặt null khi có lỗi xảy ra
+      console.log('Failed to fetch product detail: ', error);
+    }
+  };
+
+
+
 
   const fetchProductByCategory = async (idDanhMuc) => {
     try {
@@ -103,8 +205,33 @@ const ProductDetail = () => {
 
 
   useEffect(() => {
+
     fetchProduct();
+    fetchSaleForProduct(productDetailId);
+    console.log("Id spct", productDetailId);
   }, [id]);
+  useEffect(() => {
+    fetchSaleForProduct(productDetailId);
+  }, [productDetailId]);
+
+
+  // Hàm để lấy ProductDetail ID từ sizeID và colorID
+  const getProductDetailId = (sizeID, colorID) => {
+    const productDetailItem = productDetail?.sanPhamChiTietList?.find(
+      (item) => item.id_kichThuoc === sizeID && item.id_mauSac === colorID
+    );
+
+    return productDetailItem ? productDetailItem.id : null; // Trả về id của ProductDetail hoặc null nếu không tìm thấy
+  };
+
+  useEffect(() => {
+    // Kiểm tra nếu productDetail đã sẵn sàng và selectedSize, selectedColor đã có giá trị
+    if (productDetail && selectedSize && selectedColor) {
+      const id = getProductDetailId(selectedSize, selectedColor);
+      setProductDetailId(id);
+    }
+  }, [selectedSize, selectedColor, productDetail]);
+
 
   if (!productDetail) return <div>Loading...</div>;
 
@@ -139,7 +266,8 @@ const ProductDetail = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <Breadcrumb className="text-xl font-semibold mb-2">
+      <Breadcrumb className="font-semibold mb-2"
+        style={{ fontSize: "14px" }}>
         <Breadcrumb.Item>
           <Link to={"/"} >
             Trang chủ
@@ -152,27 +280,44 @@ const ProductDetail = () => {
         </Breadcrumb.Item>
         <Breadcrumb.Item>{productDetail.tenSanPham}</Breadcrumb.Item>
       </Breadcrumb>
-      <Row gutter={[16, 16]}>
+      <Row gutter={[16, 16]} style={{ padding: "0 100px  " }} >
         {/* Cột hình ảnh sản phẩm */}
         <Col xs={24} md={10}>
           {/* Ảnh hiển thị chính */}
           <Image
             src={selectedImage}
             alt={productDetail.tenSanPham}
-            style={{ borderRadius: "8px", marginBottom: "20px" }}
+            style={{
+              borderRadius: "8px",
+              marginBottom: "20px",
+              width: "385px", // Đảm bảo chiếm toàn bộ chiều rộng container
+              height: "385px", // Chiều cao cố định
+              objectFit: "cover", // Cắt ảnh để phù hợp khung
+            }}
             preview={false}
           />
 
-          {/* Danh sách ảnh nhỏ */}
-          <Row gutter={[8, 8]}>
-            {productDetail.sanPhamChiTietList?.find((item) => item.id_mauSac === selectedColor)?.hinhAnhList.map((thumb, index) => (
-              <Col key={index} span={6}>
+          <Row
+            gutter={0} // Không có khoảng cách giữa các cột
+            style={{
+              display: "flex", // Sử dụng flex để điều chỉnh
+              gap: "4px", // Khoảng cách nhỏ giữa các ảnh
+            }}
+          >
+            {productDetail.sanPhamChiTietList?.find(
+              (item) => item.id_mauSac === selectedColor
+            )?.hinhAnhList.map((thumb, index) => (
+              <Col key={index} style={{ flex: "0 0 auto" }}>
                 <Image
                   src={thumb.url}
                   alt={`Thumb ${index}`}
                   preview={false}
                   style={{
-                    border: selectedImage === thumb.url ? "2px solid #1890ff" : "none", // Đánh dấu ảnh đang được chọn
+                    width: "80px", // Chiều rộng cố định
+                    height: "80px", // Chiều cao cố định
+                    objectFit: "cover", // Đảm bảo ảnh không bị méo
+                    border:
+                      selectedImage === thumb.url ? "2px solid #1890ff" : "none", // Đánh dấu ảnh đang được chọn
                     borderRadius: "4px",
                     cursor: "pointer",
                   }}
@@ -183,16 +328,61 @@ const ProductDetail = () => {
           </Row>
         </Col>
 
+
         {/* Cột thông tin sản phẩm */}
         <Col xs={24} md={14}>
           <Typography.Title level={3}>{productDetail.tenSanPham}</Typography.Title>
-          <Typography.Text strong style={{ fontSize: "20px", color: "#d0021b" }}>
-            {productPrice.toLocaleString()} VND
-          </Typography.Text>
-          <Typography.Paragraph>Tình trạng: {productDetail.trangThai === 1 ? 'Còn hàng' : 'Hết hàng'}</Typography.Paragraph>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {/* Kiểm tra nếu có sale */}
+            {saleForProduct ? (
+              <>
+                {/* Giá giảm */}
+                <Typography.Text strong style={{ fontSize: "20px", color: "#d0021b" }}>
+                  {productDiscountPrice.toLocaleString()} VND
+                </Typography.Text>
 
-          {/* Số lượng tồn kho */}
-          <Typography.Paragraph>Số lượng còn lại: {stockQuantity}</Typography.Paragraph>
+                {/* Giá gốc với dấu gạch chéo */}
+                <Typography.Text
+                  delete
+                  style={{
+                    fontSize: "18px",
+                    color: "gray",
+                  }}
+                >
+                  {productPrice.toLocaleString()} VND
+                </Typography.Text>
+
+                {/* % giảm giá */}
+                <Typography.Text
+                  style={{
+                    fontSize: "16px",
+                    color: "#52c41a",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Giảm {saleForProduct?.phanTramGiam ?? 0}%
+                </Typography.Text>
+              </>
+            ) : (
+              // Nếu không có sale, chỉ hiển thị giá gốc
+              <Typography.Text strong style={{ fontSize: "20px", color: "#d0021b" }}>
+                {productPrice.toLocaleString()} VND
+              </Typography.Text>
+            )}
+          </div>
+
+
+          <Typography.Paragraph
+            style={{
+              color: productDetail.trangThai === 1 ? "green" : "red", // Màu xanh lá cho 'Còn hàng', màu đỏ cho 'Hết hàng'
+              fontWeight: "bold", // Tùy chọn: làm chữ đậm hơn để nổi bật
+            }}
+          >
+            Tình trạng: {productDetail.trangThai === 1 ? "Còn hàng" : "Hết hàng"}
+          </Typography.Paragraph>
+
+          {/* Số lượng tồn kho
+          <Typography.Paragraph>Số lượng còn lại: {stockQuantity}</Typography.Paragraph> */}
 
           {/* Thông tin hỗ trợ */}
           <div style={{ margin: "20px 0", fontSize: "16px", lineHeight: "1.8" }}>
@@ -274,6 +464,7 @@ const ProductDetail = () => {
                   e.target.style.borderColor = "black";
                   e.target.style.color = "white";
                 }}
+                onClick={handleAddToCart} // Thêm sản phẩm vào giỏ hàng
               >
                 Thêm sản phẩm vào giỏ hàng
               </Button>
@@ -325,6 +516,7 @@ const ProductDetail = () => {
 
         {/* Đoạn mô tả */}
         <Typography.Paragraph style={{ fontSize: "16px", lineHeight: "1.8", marginBottom: "20px" }}>
+          {productDetail.moTa}
           Giày sục nam SA42 là một sản phẩm cao cấp mà mọi quý ông nên có trong bộ sưu tập của mình.
           Được làm từ chất liệu da cao cấp và thiết kế hiện đại với gam màu thời thượng, đôi giày này không chỉ đảm bảo sự thoải mái tối đa mà còn là một biểu tượng thời trang đẳng cấp,
           làm nổi bật phong cách của các phái mạnh.
