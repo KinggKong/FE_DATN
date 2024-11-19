@@ -324,11 +324,11 @@ React.useEffect(() => {
             <DemoChangeData data={data} />
           </Card>
         </Col>
-        <Col span={12}>
+        {/* <Col span={12}>
           <Card title="Biểu đồ doanh thu" bordered={false}>
             <DemoLine />
           </Card>
-        </Col>
+        </Col> */}
       </Row>
       <Row gutter={16}>
         <Col span={16}>
