@@ -104,7 +104,7 @@ const itemTabs = [
 
 const ThongKe = () => {
   const [thongKes, setThongKes] = useState({
-    tongDoanhThu: 0, tongSanPhamBan: 0, donThanhCong: 0, donHuy: 0, traHang: 0
+    tongDoanhThu: 0, tongSanPhamBan: 0, donThanhCong: 0, donHuy: 0, traHang: 0, choXacNhan:0
 
   });
 
@@ -115,6 +115,7 @@ React.useEffect(() => {
     { type: 'Đơn thành công', value: thongKes.donThanhCong },
     { type: 'Đơn hủy', value: thongKes.donHuy },
     { type: 'Trả hàng', value: thongKes.traHang },
+    { type: 'Chờ xác nhận', value: thongKes.choXacNhan },
    
   ];
 
@@ -145,7 +146,8 @@ React.useEffect(() => {
       {renderSingleStatisticCard("Sản phẩm bán", thongKes.tongSanPhamBan, 'linear-gradient(to right, #59c173, #a17fe0, #5d26c1)', 0, '')}
       {renderSingleStatisticCard("Đơn thành công", thongKes.donThanhCong, 'linear-gradient(to right, #59c173, #a17fe0, #5d26c1)', 0, '')}
       {renderSingleStatisticCard("Đơn hủy", thongKes.donHuy, 'linear-gradient(to right, #59c173, #a17fe0, #5d26c1)', 0, '')}
-      {renderSingleStatisticCard("Đơn trả", thongKes.traHang, 'linear-gradient(to right, #59c173, #a17fe0, #5d26c1)', 0, '')}
+      {/* {renderSingleStatisticCard("Đơn trả", thongKes.traHang, 'linear-gradient(to right, #59c173, #a17fe0, #5d26c1)', 0, '')} */}
+      {renderSingleStatisticCard("Chờ xác nhận", thongKes.choXacNhan, 'linear-gradient(to right, #59c173, #a17fe0, #5d26c1)', 0, '')}
     </div>
   );
 
