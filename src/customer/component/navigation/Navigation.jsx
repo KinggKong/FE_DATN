@@ -7,11 +7,14 @@ import {
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import CartDrawer from "../cart/CartDrawer";
+import useCartStore from "../cart/useCartStore";
+
 const Navigation = () => {
   const [isOpenDrawer, setOpenDrawer] = useState(false);
   const showDrawer = () => {
     setOpenDrawer(true);
   };
+  const cartCount = useCartStore(state => state.cart.length);
   return (
     <div>
       <p className="flex h-5 items-center justify-center bg-black px-4 text-xs font-medium text-white sm:text-1 sm:px-4 lg:px-6">
@@ -72,7 +75,7 @@ const Navigation = () => {
             placeholder="Tìm kiếm"
             style={{ width: "200px" }}
           />
-          <Badge count={5} style={{ marginRight: "20px" }}>
+          <Badge count={cartCount} style={{ marginRight: "20px" }}>
             <ShoppingCartOutlined
               onClick={() => setOpenDrawer(true)}
               style={{ fontSize: "24px", padding: "0 15px" }}

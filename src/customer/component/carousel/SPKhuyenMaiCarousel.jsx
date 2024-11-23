@@ -41,7 +41,7 @@ const SPKhuyenMaiCarousel = ({data}) => {
       >
         {cardItems.map((product, index) => (
           <div key={index}>
-            <CardItem product={product}  />
+            <CardItem product={product} key={product.id} />
           </div>
         ))}
       </Carousel>
