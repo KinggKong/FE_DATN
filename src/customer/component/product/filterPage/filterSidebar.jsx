@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Collapse, Checkbox, Select, Slider } from "antd";
+import { Collapse, Checkbox, Select, Slider  } from "antd";
 import { getAllDanhMucApi } from "../../../../api/DanhMucService";
 import { getAllThuongHieuApi } from "../../../../api/ThuongHieuService";
 import { getAllChatLieuDeApi } from "../../../../api/ChatLieuDeApi";
 import { getAllChatLieuVaiApi } from "../../../../api/ChatLieuVaiApi";
+import { getMaxPriceApi } from "../../../../api/SanPhamChiTietAPI";
+
+
+import "../../../../assets/style/cssFilterProduct.css";
 
 const { Panel } = Collapse;
 
 const FilterSidebar = ({ onFilter }) => {
     const [selectedCategories, setSelectedCategories] = useState([]);
-    const [priceRange, setPriceRange] = useState([0, 10000000]);
+    const [priceRange, setPriceRange] = useState([0, 0]);
     const [selectedBrands, setSelectedBrands] = useState([]);
     const [selectedChatLieuDe, setSelectedChatLieuDe] = useState([]);
     const [selectedChatLieuVai, setSelectedChatLieuVai] = useState([]);
@@ -17,6 +21,8 @@ const FilterSidebar = ({ onFilter }) => {
     const [brands, setBrands] = useState([]);
     const [chatlieudes, setChatlieudes] = useState([]);
     const [chatlieuvais, setChatlieuvais] = useState([]);
+    const [maxPrice, setMaxPrice] = useState(0);
+     
 
     const fetchCategories = async () => {
         try {
@@ -57,20 +63,51 @@ const FilterSidebar = ({ onFilter }) => {
             console.error("Failed to fetch chatlieuvais: ", error);
         }
     };
+    
+    const fetchMaxPrice = async () => {
+        try {
+            const res = await getMaxPriceApi();
+            const maxPrice = res.data +100000;
+            setMaxPrice(maxPrice);
+        } catch (error) {
+            console.error("Failed to fetch max price: ", error);
+        }
+    };
+            
+
 
     useEffect(() => {
         fetchCategories();
         fetchBrands();
         fetchChatLieuDe();
         fetchChatLieuVai();
-
+        fetchMaxPrice();
     }, []);
+    const handleFilterChange = () => {
+        const filterRequest = {
+            danhMucs: selectedCategories.map((item) => item.id),
+            chatLieuDes: selectedChatLieuDe.map((item) => item.id),
+            chatLieuVais: selectedChatLieuVai.map((item) => item.id),
+            thuongHieu: selectedBrands, // Lấy thương hiệu đầu tiên
+            minPrice: priceRange[0],
+            maxPrice: priceRange[1],
+           
+        };
+
+        // Gọi callback onFilter với dữ liệu đã chuẩn bị
+        onFilter(filterRequest);
+    };
+
+    useEffect(() => {
+        handleFilterChange();
+    }, [selectedCategories, selectedChatLieuDe, selectedChatLieuVai, selectedBrands, priceRange]);
 
     return (
         <div style={{ width: 250, padding: 16 }}>
-            <Collapse defaultActiveKey={["1"]}>
-                {/* Danh mục */}
-                <Panel header="Danh mục" key="1">
+            <Collapse defaultActiveKey={["1","2","3","4","5"]}>
+            <h3 style={{ fontWeight: "bold", marginBottom: "16px" }}> BỘ LỌC TÌM KIẾM</h3>
+                 {/* Danh mục */}
+                 <Panel header="Danh mục" key="1">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {categories.map((category) => (
                             <Checkbox
@@ -80,20 +117,7 @@ const FilterSidebar = ({ onFilter }) => {
                                         ? [...selectedCategories, category]
                                         : selectedCategories.filter((item) => item !== category);
                                     setSelectedCategories(updatedCategories);
-                                    // Log các giá trị trước khi gọi onFilter
-                                    console.log("Updated Categories:", updatedCategories);
-                                    console.log("Price Range:", priceRange);
-                                    console.log("Selected Brands:", selectedBrands);
-                                    console.log("Selected ChatLieuDe:", selectedChatLieuDe);
-                                    console.log("Selected ChatLieuVai:", selectedChatLieuVai);
-                                    onFilter({
-                                        categories: updatedCategories,
-                                        priceRange,
-                                        brands: selectedBrands,
-                                        chatLieuDe: selectedChatLieuDe,
-                                        chatLieuVai: selectedChatLieuVai,
-                                    });
-
+                                    handleFilterChange();
                                 }}
                             >
                                 {category.tenDanhMuc}
@@ -104,49 +128,38 @@ const FilterSidebar = ({ onFilter }) => {
                 {/* Chất liệu đế */}
                 <Panel header="Chất liệu đế" key="2">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {chatlieudes.map((category) => (
+                        {chatlieudes.map((chatLieuDe) => (
                             <Checkbox
-                                key={category.id}
+                                key={chatLieuDe.id}
                                 onChange={(e) => {
-                                    const updatedCategories = e.target.checked
-                                        ? [...selectedChatLieuDe, category]
-                                        : selectedChatLieuDe.filter((item) => item !== category);
-                                    setSelectedChatLieuDe(updatedCategories);
-                                    onFilter({
-                                        categories: selectedCategories,
-                                        priceRange,
-                                        brands: selectedBrands,
-                                        chatLieuDe: updatedCategories,
-                                        chatLieuVai: selectedChatLieuVai,
-                                    });
+                                    const updatedChatLieuDe = e.target.checked
+                                        ? [...selectedChatLieuDe, chatLieuDe]
+                                        : selectedChatLieuDe.filter((item) => item !== chatLieuDe);
+                                    setSelectedChatLieuDe(updatedChatLieuDe);
+                                    handleFilterChange();
                                 }}
                             >
-                                {category.tenChatLieu}
+                                {chatLieuDe.tenChatLieu}
                             </Checkbox>
                         ))}
                     </div>
                 </Panel>
+
                 {/* Chất liệu vải */}
                 <Panel header="Chất liệu vải" key="3">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {chatlieuvais.map((category) => (
+                        {chatlieuvais.map((chatLieuVai) => (
                             <Checkbox
-                                key={category.id}
+                                key={chatLieuVai.id}
                                 onChange={(e) => {
-                                    const updatedCategories = e.target.checked
-                                        ? [...selectedChatLieuVai, category]
-                                        : selectedChatLieuVai.filter((item) => item !== category);
-                                    setSelectedChatLieuVai(updatedCategories);
-                                    onFilter({
-                                        categories: selectedCategories,
-                                        priceRange,
-                                        brands: selectedBrands,
-                                        chatLieuDe: selectedChatLieuDe,
-                                        chatLieuVai: updatedCategories,
-                                    });
+                                    const updatedChatLieuVai = e.target.checked
+                                        ? [...selectedChatLieuVai, chatLieuVai]
+                                        : selectedChatLieuVai.filter((item) => item !== chatLieuVai);
+                                    setSelectedChatLieuVai(updatedChatLieuVai);
+                                    handleFilterChange();
                                 }}
                             >
-                                {category.tenChatLieuVai}
+                                {chatLieuVai.tenChatLieuVai}
                             </Checkbox>
                         ))}
                     </div>
@@ -156,18 +169,12 @@ const FilterSidebar = ({ onFilter }) => {
                 <Panel header="Khoảng giá" key="4">
                     <Slider
                         range
-                        defaultValue={[0, 10000000]}
+                        defaultValue={[0, maxPrice]}
                         min={0}
-                        max={10000000}
+                        max={maxPrice}
                         onChange={(value) => {
                             setPriceRange(value);
-                            onFilter({
-                                categories: selectedCategories,
-                                priceRange: value,
-                                brands: selectedBrands,
-                                chatLieuDe: selectedChatLieuDe,
-                                chatLieuVai: selectedChatLieuVai,
-                            });
+                            handleFilterChange();
                         }}
                     />
                     <div>
@@ -192,13 +199,7 @@ const FilterSidebar = ({ onFilter }) => {
                         placeholder="Chọn thương hiệu"
                         onChange={(value) => {
                             setSelectedBrands(value);
-                            onFilter({
-                                categories: selectedCategories,
-                                priceRange,
-                                brands: value,
-                                chatLieuDe: selectedChatLieuDe,
-                                chatLieuVai: selectedChatLieuVai,
-                            });
+                            handleFilterChange();
                         }}
                     >
                         {brands.map((brand) => (
@@ -209,6 +210,7 @@ const FilterSidebar = ({ onFilter }) => {
                     </Select>
                 </Panel>
             </Collapse>
+           
         </div>
     );
 };
