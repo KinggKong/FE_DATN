@@ -47,7 +47,7 @@ const useCartStore = create((set) => ({
         // Kiểm tra xem sản phẩm có khuyến mãi hay không
         const currentTime = new Date().getTime();
         const isDiscountActive =
-            product.discountEnd && currentTime < new Date(product.discountEnd).getTime();
+            product.thoiGianGiamGia && currentTime < new Date(product.thoiGianGiamGia).getTime();
 
         // Tạo đối tượng sản phẩm với giá
         const productWithPrice = {
@@ -60,7 +60,7 @@ const useCartStore = create((set) => ({
             const existingProduct = state.cart.find(
                 (item) => item.sanPhamChiTietResponse.id === product.sanPhamChiTietResponse.id
             );
-        
+
             if (existingProduct) {
                 return {
                     cart: state.cart.map((item) =>
@@ -81,7 +81,7 @@ const useCartStore = create((set) => ({
                 };
             }
         });
-        
+
 
         // Gửi dữ liệu giỏ hàng chi tiết vào DB thông qua API
         try {
@@ -92,6 +92,9 @@ const useCartStore = create((set) => ({
                 idSanPhamChiTiet: product.id,
                 soLuong: product.quantity || 1,
                 giaTien: productWithPrice.giaTien,
+                thoiGianGiamGia: product.thoiGianGiamGia
+                    ? new Date(product.thoiGianGiamGia).toISOString()
+                    : null,
                 id_khachHang: 1, // ID khách hàng, thay bằng ID của người dùng hiện tại
                 trangThai: 1, // Giả sử trạng thái là 1
             });
@@ -118,12 +121,13 @@ const useCartStore = create((set) => ({
     updateQuantity: async (idSanPhamChiTiet, delta) => {
         try {
             // Gửi yêu cầu cập nhật số lượng qua API
+
             const response = await axios.put(
                 `http://localhost:8080/api/v1/gio-hang-ct/update?idSanPhamChiTiet=${idSanPhamChiTiet}&idGioHang=1&soLuong=${delta}`
             );
-    
+
             console.log("Giỏ hàng đã được cập nhật:", response.data);
-    
+
             // Cập nhật lại trạng thái giỏ hàng trong UI sau khi API phản hồi
             set((state) => ({
                 cart: state.cart.map((item) =>
@@ -155,19 +159,19 @@ const useCartStore = create((set) => ({
         }),
 
 
-        removeFromCart: async (id) => {
-            try {
-                // Gọi API để xóa sản phẩm trong database
-                await axios.delete(`http://localhost:8080/api/v1/gio-hang-ct/san-pham-chi-tiet/${id}?idGioHang=1`); // URL endpoint backend
-        
-                // Cập nhật lại state sau khi xóa thành công
-                set((state) => ({
-                    cart: state.cart.filter((item) => item.sanPhamChiTietResponse.id !== id),
-                }));
-            } catch (error) {
-                console.error("Xóa sản phẩm khỏi giỏ hàng thất bại:", error);
-            }
-        },
+    removeFromCart: async (id) => {
+        try {
+            // Gọi API để xóa sản phẩm trong database
+            await axios.delete(`http://localhost:8080/api/v1/gio-hang-ct/san-pham-chi-tiet/${id}?idGioHang=1`); // URL endpoint backend
+
+            // Cập nhật lại state sau khi xóa thành công
+            set((state) => ({
+                cart: state.cart.filter((item) => item.sanPhamChiTietResponse.id !== id),
+            }));
+        } catch (error) {
+            console.error("Xóa sản phẩm khỏi giỏ hàng thất bại:", error);
+        }
+    },
 
     clearCart: () => set({ cart: [] }),
     getCartTotal: () =>

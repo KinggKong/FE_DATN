@@ -35,15 +35,31 @@ const getAllSanPhamByTenSanPhamApi = (params) => {
   return axiosClient.get(url, { params });
 }
 
-const getAllSanPhamByCustomerApi = (params) => {
-  const url = "/api/v1/sanphams/get-all-customer";
+// const getAllSanPhamByCustomerApi = (params) => {
+//   const url = "/api/v1/sanphams/get-all-customer";
+//   return axiosClient.get(url, { params });
+// }
+
+const getAllSanPhamByCustomerFilterApi = (params) => {
+  const url = "/api/v1/sanphams/get-all-customer-filter";
+  
   return axiosClient.get(url, { params });
-}
+};
+
 
 const getSanPhamByIdDanhMucApi = (id) => {
   const url = `/api/v1/sanphams/get-by-category/${id}`;
   return axiosClient.get(url);
 };
+
+const getSanPhamGiamGiaApi = () => {
+  const url = "/api/v1/sanphams/get-all-customer-sale";
+  return axiosClient.get(url);
+}
+const getSanPhamBanChayApi = () => {
+  const url = "/api/v1/sanphams/get-all-customer-best-sell";
+  return axiosClient.get(url);
+}
 
 
 export {
@@ -53,8 +69,10 @@ export {
   updateSanPhamApi,
   updateProductStautsApi,
   getSanPhamByIdApi,
-  getAllSanPhamByCustomerApi,
+ 
   getAllSanPhamByTenSanPhamApi,
-  getSanPhamByIdDanhMucApi
-
+  getSanPhamByIdDanhMucApi,
+  getAllSanPhamByCustomerFilterApi,
+  getSanPhamGiamGiaApi,
+  getSanPhamBanChayApi
 };
