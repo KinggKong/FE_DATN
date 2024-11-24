@@ -2,6 +2,7 @@ import React from "react";
 import { Card, Image } from "antd";
 import { ShoppingCartOutlined } from "@ant-design/icons";
 import { useNavigate } from 'react-router-dom';
+import { GrLinkNext } from "react-icons/gr";
 
 const CardItem = ({ product }) => {
 
@@ -82,7 +83,7 @@ const CardItem = ({ product }) => {
           <div className="flex justify-between items-center mt-3">
             <span>{product?.giaHienThi}</span>
             <button className="bg-blue-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">
-              <ShoppingCartOutlined />
+            <GrLinkNext />
             </button>
           </div>
         </div>

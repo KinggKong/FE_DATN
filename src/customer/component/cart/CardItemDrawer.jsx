@@ -32,8 +32,8 @@ export default function CardItemDrawer({ product, onQuantityChange, onRemove }) 
       } else {
         setTimeLeft("Flash sale đã kết thúc");
       }
-      
-      
+
+
     }
   };
 
@@ -44,13 +44,14 @@ export default function CardItemDrawer({ product, onQuantityChange, onRemove }) 
   }, []);
   return (
     <div className="flex items-start space-x-4 py-4 border-b border-gray-200">
-      <div className="w-15 h-10 bg-gray-200 rounded-md flex-shrink-0">
+      <div className="bg-gray-200 rounded-md flex-shrink-0" style={{ width: "100px", height: "50px", overflow: "hidden" }}>
         <img
           src={product.sanPhamChiTietResponse.hinhAnhList[0].url || ""}
-          className="w-full h-full"
+          className="w-full h-full object-cover"
           alt={product.name || "Product Image"}
         />
       </div>
+
       <div className="flex-grow">
         <h5 className="text-sm font-semibold text-gray-800 mb-1">
           {product.sanPhamChiTietResponse.tenSanPham || "Tên sản phẩm"}
@@ -92,12 +93,18 @@ export default function CardItemDrawer({ product, onQuantityChange, onRemove }) 
 
           <p className="text-sm font-semibold text-gray-800">
             {/* Kiểm tra nếu giá giảm khác giá gốc mới hiển thị */}
-            {product.sanPhamChiTietResponse.giaBan && product.giaTien < product.sanPhamChiTietResponse.giaBan ? (
+            {(product.sanPhamChiTietResponse.giaBan && product.giaTien < product.sanPhamChiTietResponse.giaBan) || (product.sanPhamChiTietResponse.giaBan && product.discountPrice < product.sanPhamChiTietResponse.giaBan) ? (
               <>
                 {/* Giá giảm */}
-                <span className="text-red-600">
-                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.giaTien)}
-                </span>
+                {(product.discountPrice) ?
+                  <span className="text-red-600">
+                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.discountPrice)}
+                  </span> :
+                  <span className="text-red-600">
+                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.giaTien)}
+                  </span>
+                }
+
 
                 {/* Giá gốc với dấu gạch chéo */}
                 <span className="text-gray-500 line-through ml-2">
