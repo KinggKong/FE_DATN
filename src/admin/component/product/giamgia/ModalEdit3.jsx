@@ -13,9 +13,9 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
   const [giaTriGiamToiDa, setGiaTriGiamToiDa] = useState("");
   const [ngayBatDau, setNgayBatDau] = useState(null);
   const [ngayKetThuc, setNgayKetThuc] = useState(null);
-  const [hinhThucGiam, setHinhThucGiam] = useState(""); 
-  const [soLuong, setSoLuong] = useState(""); 
-  const [trangThai, setTrangThai] = useState(true); 
+  const [hinhThucGiam, setHinhThucGiam] = useState("");
+  const [soLuong, setSoLuong] = useState("");
+  const [trangThai, setTrangThai] = useState(true); // Trạng thái mặc định là hoạt động
 
   const handleConfirmEdit = () => {
     const giaTriGiamFloat = parseFloat(giaTriGiam);
@@ -45,7 +45,16 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       return;
     }
 
-    if (parseFloat(giaTriDonHangToiThieu) <= 0 || parseFloat(giaTriGiamToiDa) <= 0 || parseInt(soLuong, 10) <= 0) {
+    // Kiểm tra số lượng phải lớn hơn hoặc bằng 0, bao gồm 0
+    if (parseInt(soLuong, 10) < 0) {
+      notification.error({
+        message: "Lỗi",
+        description: "Số lượng phải lớn hơn hoặc bằng 0!",
+      });
+      return;
+    }
+
+    if (parseFloat(giaTriDonHangToiThieu) <= 0 || parseFloat(giaTriGiamToiDa) <= 0) {
       notification.error({
         message: "Lỗi",
         description: "Tất cả các giá trị phải lớn hơn 0!",
@@ -61,6 +70,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       return;
     }
 
+    // Gửi thông tin voucher, nếu số lượng là 0 thì trạng thái sẽ là "Không hoạt động"
     handleSubmit(voucher?.id, {
       tenVoucher: newVoucherName,
       maVoucher,
@@ -71,9 +81,18 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       ngayKetThuc: ngayKetThuc ? ngayKetThuc.format('YYYY-MM-DDTHH:mm:ss') : null,
       hinhThucGiam,
       soLuong: parseInt(soLuong, 10),
-      trangThai: trangThai ? 1 : 0,
+      trangThai: soLuong === "0" ? 0 : trangThai ? 1 : 0, // Trạng thái tự động chuyển thành 0 nếu số lượng là 0
     });
   };
+
+  // Cập nhật trạng thái khi số lượng thay đổi
+  useEffect(() => {
+    if (soLuong === "0") {
+      setTrangThai(false); // Đặt trạng thái là không hoạt động khi số lượng là 0
+    } else {
+      setTrangThai(true); // Đặt trạng thái là hoạt động khi số lượng không phải là 0
+    }
+  }, [soLuong]); // Theo dõi thay đổi số lượng
 
   useEffect(() => {
     if (voucher) {

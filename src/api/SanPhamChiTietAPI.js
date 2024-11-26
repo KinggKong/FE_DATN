@@ -43,12 +43,18 @@ const getAllSanPhamChiTietBySanPhamIdApi = (id) => {
     return axiosClient.get(url);
     }
 
+const getMaxPriceApi = () => {
+    const url = `/api/v1/sanphamchitiets/max-price`;
+    return axiosClient.get(url);
+    }
+
 export { getAllSanPhamChiTietApi, deleteSanPhamChiTietApi,
      createSanPhamChiTietApi, updateSanPhamChiTietApi,
       getSanPhamChiTietByIdApi, updateProductStautsApi,
     getSanPhamChiTietByProductIdApi ,
 
     getSanPhamChiTietByIdMauSacAndIdKichThuocApi,
-    getAllSanPhamChiTietBySanPhamIdApi
+    getAllSanPhamChiTietBySanPhamIdApi,
+    getMaxPriceApi
 
     };

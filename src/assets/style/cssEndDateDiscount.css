@@ -1,0 +1,98 @@
+@keyframes slidingText {
+    0% {
+      transform: translateX(100%); /* Bắt đầu từ ngoài bên phải */
+      opacity: 0; /* Chữ tạm thời ẩn */
+    }
+    20% {
+      transform: translateX(0); /* Di chuyển vào vị trí ban đầu */
+      opacity: 1; /* Chữ hiện ra */
+    }
+    80% {
+      transform: translateX(0); /* Giữ nguyên tại vị trí giữa */
+      opacity: 1; /* Giữ chữ hiện */
+    }
+    100% {
+      transform: translateX(-100%); /* Chạy ra khỏi bên trái */
+      opacity: 0; /* Ẩn chữ */
+    }
+  }
+  
+  .sliding-text {
+    display: inline-block; /* Để hỗ trợ hiệu ứng trượt */
+    animation: slidingText 6s ease-in-out infinite; /* Lặp lại mỗi 20 giây */
+    font-weight: bold; /* Làm chữ đậm hơn */
+    font-size: 1rem; /* Tùy chỉnh kích thước chữ */
+    color: #52c41a; /* Màu xanh dương đậm */
+  }
+
+  
+  @keyframes gradientAnimation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  @keyframes shake {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-2px);
+    }
+    75% {
+      transform: translateX(2px);
+    }
+  }
+  
+  .gradient-text {
+    font-size: 16px;
+    font-weight: bold;
+    background: linear-gradient(90deg, #52c41a, #1890ff, #ff4d4f);
+    background-size: 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientAnimation 3s ease infinite;
+  }
+  
+  .shaking-text {
+    animation: shake 0.5s ease-in-out infinite;
+  }
+
+
+  .ribbon {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    background: linear-gradient(90deg, #ff4d4f, #ff7875);
+    color: white;
+    font-weight: bold;
+    padding: 5px 15px;
+    transform: rotate(-15deg); /* Tạo góc nghiêng */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .ribbon::before {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 5px 5px 0 0;
+    border-color: rgba(255, 255, 255, 0.5) transparent transparent transparent;
+  }
+  
+  
+  
+  
+  
+  
+  

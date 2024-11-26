@@ -16,6 +16,8 @@ import SanPhamChiTiet from "../admin/pages/product/SanPhamChiTiet";
 import DotGiamGia from "../admin/pages/giamgia/DotGiamGia";
 import FormAddDotGiamGia from "../admin/component/giamgia/DrawerAdd";
 import ViewEditDotGiamGia from "../admin/component/giamgia/ViewEdit";
+import OrderManagement from "../admin/component/banhang/OrderManagement";
+import OrderDetail from "../admin/component/banhang/OrderDetail";
 
 
 
@@ -87,7 +89,16 @@ const AdminRouters = {
     {
       path:"sale/edit/:id",
       element:<ViewEditDotGiamGia />
+    },  
+    {
+      path:"order-management",
+      element:<OrderManagement />
+    },
+    {
+      path:"order-detail/:id",
+      element:<OrderDetail />
     }
+
 
   ],
 };

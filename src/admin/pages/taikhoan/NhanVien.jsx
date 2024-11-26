@@ -1,7 +1,12 @@
 import React from "react";
+import TableNhanVien from "../../component/product/nhanvien/TableNhanVien";
 
 const NhanVien = () => {
-  return <div>Trang quản lý tài sản nhân viên</div>;
+  return (
+    <div>
+       <TableNhanVien/>
+    </div>
+  )
 };
 
 export default NhanVien;
