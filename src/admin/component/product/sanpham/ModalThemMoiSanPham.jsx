@@ -237,7 +237,7 @@ const ModalThemMoi = ({
           <TextArea
             id="moTa"
             name="moTa"
-            maxLength={100}
+           
             placeholder="Mô tả sản phẩm"
             value={formik.values.moTa}
             onChange={formik.handleChange}

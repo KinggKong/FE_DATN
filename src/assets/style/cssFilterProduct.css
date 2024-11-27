@@ -1,0 +1,13 @@
+  /* Loại bỏ viền của Collapse */
+  .ant-collapse {
+    border: none;
+    background-color: transparent; /* Loại bỏ nền nếu cần */
+  }
+  
+  /* Tiêu đề chính */
+  h3 {
+    font-size: 18px;
+    color: #333;
+    margin: 0 0 16px;
+  }
+    

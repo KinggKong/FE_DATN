@@ -28,9 +28,9 @@
   border-radius: 4%;
 }
 
-.menu-bar {
+.menu-bar  {
   /* height: 88vh; */
-  overflow-y: auto; /* Enables scrolling when content exceeds the height */
+  overflow-y: auto ; /* Enables scrolling when content exceeds the height */
   max-height: 155vh;
   margin-top: 2rem;
   display: flex;

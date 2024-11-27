@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { Button, Flex, Table, Space, notification, Spin, Switch } from "antd";
+import { Tag } from 'antd';
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
-import ModalThemMoiVoucher from "./ModalThemMoiVoucher"; 
+import ModalThemMoiVoucher from "./ModalThemMoiVoucher";
 import TimKiem from "../TimKiem";
-import { getAllVoucherApi, deleteVoucherApi, updateVoucherApi, createVoucherApi } from "../../../../api/VoucherApi"; 
+import { getAllVoucherApi, deleteVoucherApi, updateVoucherApi, createVoucherApi } from "../../../../api/VoucherApi";
 import ModalEdit3 from "./ModalEdit3";
 
 const TableVoucher = () => {
@@ -128,9 +129,9 @@ const TableVoucher = () => {
         return;
       }
 
-      if (!updateVoucher.hinhThucGiam || !updateVoucher.giaTriGiam || 
-          !updateVoucher.giaTriDonHangToiThieu || !updateVoucher.giaTriGiamToiDa || 
-          !updateVoucher.soLuong || !updateVoucher.ngayBatDau || !updateVoucher.ngayKetThuc) {
+      if (!updateVoucher.hinhThucGiam || !updateVoucher.giaTriGiam ||
+        !updateVoucher.giaTriDonHangToiThieu || !updateVoucher.giaTriGiamToiDa ||
+        !updateVoucher.ngayBatDau || !updateVoucher.ngayKetThuc) {
         notification.error({
           message: "Lỗi",
           description: "Tất cả các trường không được để trống!",
@@ -139,8 +140,18 @@ const TableVoucher = () => {
         return;
       }
 
-      if (updateVoucher.loaiGiaTriGiam === '%' && 
-          (updateVoucher.giaTriGiam <= 0 || updateVoucher.giaTriGiam >= 100)) {
+      // Kiểm tra giá trị giảm tối đa không được lớn hơn giá trị đơn hàng tối thiểu
+      if (updateVoucher.giaTriGiamToiDa > updateVoucher.giaTriDonHangToiThieu) {
+        notification.error({
+          message: "Lỗi",
+          description: "Giá trị giảm tối đa không được lớn hơn giá trị đơn hàng tối thiểu!",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (updateVoucher.loaiGiaTriGiam === '%' &&
+        (updateVoucher.giaTriGiam <= 0 || updateVoucher.giaTriGiam >= 100)) {
         notification.error({
           message: "Lỗi",
           description: "Giá trị giảm theo phần trăm phải lớn hơn 0 và nhỏ hơn 100!",
@@ -152,23 +163,23 @@ const TableVoucher = () => {
       const existsByName = await checkVoucherExists(updateVoucher.tenVoucher, 'name');
       const existsByCode = await checkVoucherExists(updateVoucher.maVoucher, 'code');
 
-       if (existsByName) {
-        notification.error({
-          message: "Lỗi",
-          description: "Tên voucher này đã tồn tại!",
-        });
-        setLoading(false);
-        return;
-      }
+      //  if (existsByName) {
+      //   notification.error({
+      //     message: "Lỗi",
+      //     description: "Tên voucher này đã tồn tại!",
+      //   });
+      //   setLoading(false);
+      //   return;
+      // }
 
-      if (existsByCode) {
-        notification.error({
-          message: "Lỗi",
-          description: "Mã voucher này đã tồn tại!",
-        });
-        setLoading(false);
-        return;
-      }
+      // if (existsByCode) {
+      //   notification.error({
+      //     message: "Lỗi",
+      //     description: "Mã voucher này đã tồn tại!",
+      //   });
+      //   setLoading(false);
+      //   return;
+      // }
 
       await updateVoucherApi(id, updateVoucher);
       notification.success({
@@ -199,6 +210,7 @@ const TableVoucher = () => {
   };
 
   const handleConfirmAdd = async (newVoucher) => {
+
     setLoading(true);
     try {
       if (!validateVoucher(newVoucher)) {
@@ -210,6 +222,16 @@ const TableVoucher = () => {
         notification.error({
           message: "Lỗi",
           description: "Giá trị giảm theo phần trăm phải lớn hơn 0 và nhỏ hơn 100!",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Kiểm tra giá trị giảm tối đa không được lớn hơn giá trị đơn hàng tối thiểu
+      if (newVoucher.giaTriGiamToiDa > newVoucher.giaTriDonHangToiThieu) {
+        notification.error({
+          message: "Lỗi",
+          description: "Giá trị giảm tối đa không được lớn hơn giá trị đơn hàng tối thiểu!",
         });
         setLoading(false);
         return;
@@ -266,8 +288,8 @@ const TableVoucher = () => {
       dataIndex: "id",
     },
     {
-      title: "Tên voucher", 
-      dataIndex: "tenVoucher", 
+      title: "Tên voucher",
+      dataIndex: "tenVoucher",
     },
     {
       title: "Mã voucher",
@@ -275,20 +297,58 @@ const TableVoucher = () => {
     },
     {
       title: "Hình thức giảm",
-      dataIndex: "hinhThucGiam", 
+      dataIndex: "hinhThucGiam",
+      render: (text) => {
+        return (
+          <Tag color="green" key={text}>
+            {text}
+          </Tag>
+        );
+      }
     },
     {
-      title: "Giá trị giảm", 
-      dataIndex: "giaTriGiam", 
+      title: "Giá trị giảm",
+      dataIndex: "giaTriGiam",
+      render: (text, record) => {
+        if (record.hinhThucGiam === '%') {
+          return (
+            <Tag color="green" key={text}>
+              {text} %
+            </Tag>
+          );
+        } else if (record.hinhThucGiam === 'VNĐ') {
+          return (
+            <Tag color="green" key={text}>
+              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(text)}
+            </Tag>
+          );
+        }
+        return text;
+      }
     },
     {
       title: "Giá trị đơn hàng tối thiểu",
       dataIndex: "giaTriDonHangToiThieu",
+      render: (text) => {
+        return (
+          <Tag color="green" key={text}>
+            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(text)}
+          </Tag>
+        );
+      }
     },
     {
-      title: "Giá trị giảm tối đa",
+      title: "Giá trị giảm tối đa (VNĐ)",
       dataIndex: "giaTriGiamToiDa",
+      render: (text) => {
+        return (
+          <Tag color="green" key={text}>
+            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(text)}
+          </Tag>
+        );
+      }
     },
+
     {
       title: "Số lượng",
       dataIndex: "soLuong",
