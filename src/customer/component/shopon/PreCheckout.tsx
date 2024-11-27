@@ -155,19 +155,29 @@ export default function PreCheckout() {
                 soTienGiam: 0
             };
 
-            const response = await axios.post('http://localhost:8080/api/v1/shop-on/checkout', hoaDonRequest);
-            if (response.data.code === 1000) {
-                const maHoaDon = response.data.data.maHoaDon;
-                notification.success({
-                    message: "Success",
-                    duration: 4,
-                    pauseOnHover: false,
-                    showProgress: true,
-                    description: `Thanh toán thành công đơn hàng!`,
-                });
-                navigate(`/infor-order?maHoaDon=${maHoaDon}`);
+            let response;
+            if (paymentMethod === 'vnpay') {
+                response = await axios.post('http://localhost:8080/api/payment/submitOrder', hoaDonRequest);
+                if (response.data.code === 1000) {                
+                    window.location.href = response.data.data;
+                } else {
+                    throw new Error('VNPay payment initiation failed');
+                }
             } else {
-                throw new Error('Checkout failed');
+                response = await axios.post('http://localhost:8080/api/v1/shop-on/checkout', hoaDonRequest);
+                if (response.data.code === 1000) {
+                    const maHoaDon = response.data.data.maHoaDon;
+                    notification.success({
+                        message: "Success",
+                        duration: 4,
+                        pauseOnHover: false,
+                        showProgress: true,
+                        description: `Thanh toán thành công đơn hàng!`,
+                    });
+                    navigate(`/infor-order?maHoaDon=${maHoaDon}`);
+                } else {
+                    throw new Error('Checkout failed');
+                }
             }
         } catch (err) {
             message.error('Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.');

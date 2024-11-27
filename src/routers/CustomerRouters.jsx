@@ -6,6 +6,8 @@ import PreCheckout from "../customer/component/shopon/PreCheckout";
 import OrderConfirmation from "../customer/component/shopon/OrderConfirmation";
 import InvoiceLookup from "../customer/component/shopon/InvoiceLookup";
 import GioiThieu from "../customer/component/gioithieu/GioiThieu";
+import FailedPay from "../customer/component/shopon/FailedPay";
+import HandlePayment from "../customer/component/shopon/HandlePayment"
 
 const CustomerRouters = {
   path: "/",
@@ -42,6 +44,14 @@ const CustomerRouters = {
     {
       path: "about",
       element: <GioiThieu />,
+    },
+    {
+      path: "failed-pay",
+      element: <FailedPay/>,
+    },  
+    {
+      path: "hanlde-result-payment",
+      element: <HandlePayment/>,
     },
   ],
 };

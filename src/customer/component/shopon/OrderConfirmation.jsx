@@ -115,6 +115,9 @@ export default function OrderConfirmation() {
                             <Descriptions.Item label={<Text strong>Địa chỉ</Text>}>
                                 {hoaDonResponse.diaChiNhan}
                             </Descriptions.Item>
+                            <Descriptions.Item label={<Text strong>Ghi chú</Text>}>
+                                {hoaDonResponse.ghiChu}
+                            </Descriptions.Item>
                         </Descriptions>
                     </Card>
                 </Col>
