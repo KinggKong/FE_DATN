@@ -11,7 +11,6 @@ export default function PreCheckout() {
     const [paymentMethod, setPaymentMethod] = useState('cod');
     const [form] = Form.useForm();
     const [checkoutData, setCheckoutData] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [ship, setShip] = useState(0);
     const navigate = useNavigate();
@@ -20,12 +19,26 @@ export default function PreCheckout() {
     const [districts, setDistricts] = useState([]);
     const [wards, setWards] = useState([]);
 
+
+    const [loading, setLoading] = useState(true);
+    const [provincesLoading, setProvincesLoading] = useState(false);
+    const [districtsLoading, setDistrictsLoading] = useState(false);
+    const [wardsLoading, setWardsLoading] = useState(false);
+    const [shippingLoading, setShippingLoading] = useState(false);
+    const [checkoutLoading, setCheckoutLoading] = useState(false);
+
     useEffect(() => {
         const fetchData = async () => {
+            setLoading(true)
             try {
                 const response = await axios.get('http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=1');
                 if (response.data.code === 1000) {
-                    setCheckoutData(response.data.data);
+                    if (!response.data.data || !response.data.data.gioHangChiTietList || response.data.data.gioHangChiTietList.length === 0) {                    
+                        navigate('/');
+                        return;
+                    }
+
+                    setCheckoutData(response.data.data);                  
                 } else {
                     throw new Error('Failed to fetch data');
                 }
@@ -41,6 +54,7 @@ export default function PreCheckout() {
     }, []);
 
     const fetchProvinces = async () => {
+        setProvincesLoading(true);
         try {
             const response = await axios.get('http://localhost:8080/api/v1/locations/provinces');
             if (response.data.code === 1000) {
@@ -48,10 +62,13 @@ export default function PreCheckout() {
             }
         } catch (err) {
             console.error('Error fetching provinces:', err);
+        }finally{
+            setProvincesLoading(false);
         }
     };
 
     const fetchDistricts = async (provinceCode) => {
+        setDistrictsLoading(true);
         try {
             const response = await axios.get(`http://localhost:8080/api/v1/locations/districts?provinceCode=${provinceCode}`);
             if (response.data.code === 1000) {
@@ -61,10 +78,13 @@ export default function PreCheckout() {
             }
         } catch (err) {
             console.error('Error fetching districts:', err);
+        }finally{
+            setDistrictsLoading(false);
         }
     };
 
     const fetchWards = async (districtCode) => {
+        setWardsLoading(true);
         try {
             const response = await axios.get(`http://localhost:8080/api/v1/locations/wards?districtCode=${districtCode}`);
             if (response.data.code === 1000) {
@@ -73,10 +93,13 @@ export default function PreCheckout() {
             }
         } catch (err) {
             console.error('Error fetching wards:', err);
+        }finally{
+            setWardsLoading(false);
         }
     };
 
     const calculateShippingCost = async (latitude, longitude) => {
+        setShippingLoading(true);
         const locations = [
             [ 105.74680306431928,21.037955318097737],
             [longitude, latitude],
@@ -118,6 +141,8 @@ export default function PreCheckout() {
         } catch (err) {
             console.error('Error calculating shipping cost:', err);
             message.error('Không thể tính phí vận chuyển. Vui lòng thử lại.');
+        }finally {
+            setShippingLoading(false);
         }
     };
 
@@ -134,6 +159,7 @@ export default function PreCheckout() {
     };
 
     const handleSubmit = async (values) => {
+        setCheckoutLoading(true);
         try {
             const selectedProvince = provinces.find(province => province.code === values.province);
             const selectedDistrict = districts.find(district => district.code === values.district);
@@ -181,6 +207,9 @@ export default function PreCheckout() {
             }
         } catch (err) {
             message.error('Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.');
+            console.log(err);
+        }finally {
+            setCheckoutLoading(false);
         }
     };
 
@@ -195,6 +224,7 @@ export default function PreCheckout() {
     const { gioHangChiTietList, totalPrice } = checkoutData;
 
     return (
+        <Spin spinning={checkoutLoading} tip="Loading...">
         <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-6">
@@ -333,7 +363,7 @@ export default function PreCheckout() {
                                     <p className="text-sm">Số lượng: {item.soLuong}</p>
                                 </div>
                                 <span className="font-semibold">
-                                    {(item.sanPhamChiTietResponse.giaBan * item.soLuong).toLocaleString()}₫
+                                    {(item.giaTien * item.soLuong).toLocaleString()}₫
                                 </span>
                             </div>
                         ))}
@@ -383,6 +413,7 @@ export default function PreCheckout() {
                         <button
                             className="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 transition-colors"
                             onClick={() => form.submit()}
+                            disabled={checkoutLoading}
                         >
                             ĐẶT HÀNG
                         </button>
@@ -390,5 +421,6 @@ export default function PreCheckout() {
                 </div>
             </div>
         </div>
+        </Spin>
     );
 }

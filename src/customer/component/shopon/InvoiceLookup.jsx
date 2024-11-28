@@ -140,7 +140,7 @@ export default function InvoiceLookup() {
               pagination={false}
             />
             <div className="mt-4 text-right">
-              <p><strong>Tổng tiền hàng:</strong> {invoice.hoaDonResponse.tongTien.toLocaleString('vi-VN')} ₫</p>
+              <p><strong>Tổng tiền hàng:</strong> {invoice.tongTienHang.toLocaleString('vi-VN')} ₫</p>
               <p><strong>Phí vận chuyển:</strong> {invoice.hoaDonResponse.tienShip.toLocaleString('vi-VN')} ₫</p>
               <p><strong>Giảm giá:</strong> {invoice.hoaDonResponse.soTienGiam.toLocaleString('vi-VN')} ₫</p>
               <p className="text-xl font-bold">
