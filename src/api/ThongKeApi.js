@@ -12,7 +12,12 @@ const getThongKeDoanhThuSanPham = (params) => {
     const url = "/api/v1/thongke/doanh-thu-san-pham";
     return axiosClient.get(url, { params });
     }
+const getThongKeSanPhamBanChayDoanhThu = (params) => {
+    const url = "/api/v1/thongke/san-pham-ban-chay";
+    return axiosClient.get(url, { params });
+    }
 export { getThongKeApi,
     getThongKeDoanhThu,
     getThongKeDoanhThuSanPham,
+    getThongKeSanPhamBanChayDoanhThu,
  };

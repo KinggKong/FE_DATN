@@ -4,7 +4,7 @@ import CardItem from "../card/CardItem";
 import SPKhuyenMaiCarousel from "../carousel/SPKhuyenMaiCarousel";
 import TitleSanPham from "../title/TitleSanPham";
 import { fake_product } from "../../data/fake_product";
-import { getSanPhamGiamGiaApi,getSanPhamBanChayApi } from "../../../api/SanPhamApi";
+import { getSanPhamGiamGiaApi, getSanPhamBanChayApi } from "../../../api/SanPhamApi";
 import { Link } from "react-router-dom";
 
 const TrangChu = () => {
@@ -101,11 +101,12 @@ const TrangChu = () => {
 
         </div>
       </div>
-
-      <TitleSanPham
+      {(sanPhamGiamGia) ? (<TitleSanPham
         title={"Sản phẩm khuyến mãi"}
         description={"Các sản phẩm đang được khuyến mãi"}
-      />
+      />) : (<></>)}
+
+
 
       <SPKhuyenMaiCarousel data={sanPhamGiamGia} />
 
@@ -122,7 +123,7 @@ const TrangChu = () => {
       <SPKhuyenMaiCarousel data={sanPhamBanChay} />
       <div>
         <Link to="/filter">
-        <button className="btn border rounded-xl px-10 py-2 border-black hover:bg-black hover:text-white  ">Xem Thêm &gt;</button>
+          <button className="btn border rounded-xl px-10 py-2 border-black hover:bg-black hover:text-white  ">Xem Thêm &gt;</button>
         </Link>
       </div>
     </div>

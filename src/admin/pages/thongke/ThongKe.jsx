@@ -1,14 +1,16 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Card, Col, Row, Statistic, message, Select, Space, Typography, DatePicker, TimePicker, Dropdown, Menu, Tabs, Table, Button } from 'antd';
+import { Card, Col, Row, Statistic, message, Select, Space, Typography, DatePicker, TimePicker, Dropdown, Menu, Tabs, Table, Button, Input } from 'antd';
 import moment from 'moment';
 import dayjs from 'dayjs';
 import { DownloadOutlined } from '@ant-design/icons';
 
 import DemoChangeData from './BieuDoTron';
 
-import { getThongKeApi, getThongKeDoanhThu, getThongKeDoanhThuSanPham } from '../../../api/ThongKeApi';
+import { getThongKeApi, getThongKeDoanhThu, getThongKeDoanhThuSanPham, getThongKeSanPhamBanChayDoanhThu } from '../../../api/ThongKeApi';
 import DemoLine from './BieuDoDuong';
+import { getSanPhamChiTietSoLuongApi } from '../../../api/SanPhamChiTietAPI';
+import { exportToExcelWithMultipleSheets } from './exportToExcelWithMultipleSheets ';
 const { RangePicker } = DatePicker;
 const onChange = (date) => {
   if (date) {
@@ -58,50 +60,7 @@ const dataSource = [
   },
 ];
 
-const columns = [
-  {
-    title: 'Thứ hạng',
-    dataIndex: 'thuHang',
-    key: 'thuHang',
-  },
-  {
-    title: 'Tên sản phẩm',
-    dataIndex: 'tenSanPham',
-    key: 'tenSanPham',
-  },
-  {
-    title: 'Doanh số',
-    dataIndex: 'doanhSo',
-    key: 'doanhSo',
-  },
-];
-const columnsSanPhamHetHang = [
 
-  {
-    title: 'Tên sản phẩm',
-    dataIndex: 'tenSanPham',
-    key: 'tenSanPham',
-  },
-  {
-    title: 'Số lượng',
-    dataIndex: 'soLuong',
-    key: 'soLuong',
-  },
-];
-
-const itemTabs = [
-  {
-    key: '1',
-    label: 'Theo doanh số',
-    children: <Table dataSource={dataSource} columns={columns} />,
-  },
-  {
-    key: '2',
-    label: 'Theo số sản phẩm bán',
-    children: 'Content of Tab Pane 2',
-  },
-
-];
 
 const ThongKe = () => {
   const [thongKes, setThongKes] = useState({
@@ -130,6 +89,82 @@ const ThongKe = () => {
   const [ngayKetThuc, setNgayKetThuc] = useState(moment().format('DD/MM/YYYY'));
   const [xAxisType, setXAxisType] = useState('date'); // Kiểu trục x (ngày, tháng, năm).
   const [salesType, setSalesType] = useState('');
+  const [sanPhamBanChay, setSanPhamBanChay] = useState([]);
+  const [sanPhamBanChayDoanhSo, setSanPhamBanChayDoanhSo] = useState([]);
+  const [sanPhamHetHang, setSanPhamHetHang] = useState([]);
+  const [soLuong, setSoLuong] = useState(5);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [totalItems, setTotalItems] = useState(0);
+  const columns = [
+    {
+      title: 'Thứ hạng',
+      dataIndex: 'thuHang',
+      key: 'thuHang',
+    },
+    {
+      title: 'Tên sản phẩm',
+      dataIndex: 'tenSanPham',
+      key: 'tenSanPham',
+    },
+    {
+      title: 'Doanh thu',
+      dataIndex: 'tongDoanhThuFormatted',
+      key: 'tongDoanhThu',
+    },
+  ];
+  const columns2 = [
+    {
+      title: 'Thứ hạng',
+      dataIndex: 'thuHang',
+      key: 'thuHang',
+    },
+    {
+      title: 'Tên sản phẩm',
+      dataIndex: 'tenSanPham',
+      key: 'tenSanPham',
+    },
+    {
+      title: 'Số sản phẩm bán',
+      dataIndex: 'tongSoLuongBan',
+      key: 'tongSoLuongBan',
+    },
+  ];
+  const columnsSanPhamHetHang = [
+
+    {
+      title: 'Tên sản phẩm',
+      dataIndex: 'tenSanPham',
+      key: 'tenSanPham',
+      render: (text, record) => (
+        <>
+          <div><strong>Tên sản phẩm:</strong> {record.tenSanPham}</div>
+          <div><strong>Kích thước:</strong> {record.tenKichThuoc}</div>
+          <div><strong>Màu sắc:</strong> {record.tenMauSac}</div>
+        </>
+      ),
+    },
+    {
+      title: 'Số lượng',
+      dataIndex: 'soLuong',
+      key: 'soLuong',
+    },
+  ];
+
+  const itemTabs = [
+    {
+      key: '1',
+      label: 'Theo doanh số',
+      children: <Table dataSource={sanPhamBanChay} columns={columns} pagination={false} />,
+    },
+    {
+      key: '2',
+      label: 'Theo số sản phẩm bán',
+      children: <Table dataSource={sanPhamBanChayDoanhSo} columns={columns2} pagination={false} />,
+    },
+
+  ];
+
 
 
   // const renderSingleStatisticCard = (title, value, color, precision, prefix) => (
@@ -181,7 +216,7 @@ const ThongKe = () => {
       />
     </Card>
   );
-  
+
 
   const DashboardStatistics = ({ thongKes }) => (
     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -352,7 +387,7 @@ const ThongKe = () => {
       console.error("Failed to fetch data", error);
       message.error("Failed to fetch data");
     }
-  }, [ngayBatDau, ngayKetThuc,salesType]);
+  }, [ngayBatDau, ngayKetThuc, salesType]);
 
   // const fetchDoanhThu = useCallback(async () => {
   //   try {
@@ -450,11 +485,115 @@ const ThongKe = () => {
     }
   }, [ngayBatDau, ngayKetThuc, xAxisType, salesType]);
 
+  const fetchSanPhamBanChay = useCallback(async () => {
+    try {
+      const params = {
+        ngayBatDau,
+        ngayKetThuc,
+        typeSale: salesType
+      };
+      const res = await getThongKeSanPhamBanChayDoanhThu(params);
 
+
+      if (res) {
+        // Thêm thứ hạng và định dạng tiền cho mỗi sản phẩm
+        const dataWithRanking = res.data.map((item, index) => {
+          // Định dạng tổng doanh thu thành tiền Việt Nam
+          const formattedDoanhThu = new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+          }).format(item.tongDoanhThu);
+
+          // Thêm thứ hạng vào sản phẩm
+          return {
+            ...item,
+            thuHang: index + 1, // Thứ hạng dựa trên thứ tự trong mảng
+            tongDoanhThuFormatted: formattedDoanhThu, // Định dạng doanh thu
+          };
+        });
+
+        setSanPhamBanChay(dataWithRanking.slice(0, 10)); // Lưu dữ liệu vào state
+        const sortedData = res.data.sort((a, b) => b.tongSoLuongBan - a.tongSoLuongBan);
+        const dataWithRanking2 = sortedData.map((item, index) => {
+
+
+          return {
+            ...item,
+            thuHang: index + 1, // Thứ hạng dựa trên thứ tự sau khi sắp xếp
+
+          };
+        });
+
+        setSanPhamBanChayDoanhSo(dataWithRanking2.slice(0, 10)); // Lưu dữ liệu vào state
+        console.log('san pham ban chay', dataWithRanking); // Kiểm tra kết quả
+      }
+    } catch (error) {
+      console.error("Failed to fetch data", error);
+      message.error("Failed to fetch data");
+    }
+  }, [ngayBatDau, ngayKetThuc, salesType]);
+
+
+  const fetchSanPhamHetHang = useCallback(async () => {
+    try {
+      const params = {
+        soLuong,
+        pageNumber: page - 1,
+        pageSize,
+      };
+      const res = await getSanPhamChiTietSoLuongApi(params);
+      console.log('san pham het hang', res);
+      if (res) {
+        const dataWithKey = res.data.content.map((item) => ({
+          ...item,
+          key: item.id,
+        }));
+        setSanPhamHetHang(dataWithKey);
+        setTotalItems(res.data.totalElements);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data", error);
+      message.error("Failed to fetch data");
+    }
+  }, [soLuong, page, pageSize]);
   useEffect(() => {
     fetchData();
     fetchDoanhThuVaSanPham();
-  }, [fetchData, fetchDoanhThuVaSanPham]);
+    fetchSanPhamBanChay();
+    fetchSanPhamHetHang();
+  }, [fetchData, fetchDoanhThuVaSanPham, fetchSanPhamBanChay, fetchSanPhamHetHang]);
+
+
+  //Hàm xuất file Excel thống kê tổng hợp
+  const handleExportAllData = () => {
+    // Chuẩn bị dữ liệu doanh thu
+    const flattenedDoanhThu = doanhThu.map((item) => {
+      const { ngay, doanhThuTong, sanPhamDoanhThu } = item;
+      return sanPhamDoanhThu.map((sp) => ({
+        Ngày: ngay,
+        "Doanh thu tổng": doanhThuTong,
+        "Tên sản phẩm": sp.ten_san_pham,
+        "Doanh thu sản phẩm": sp.doanhThu,
+      }));
+    }).flat();
+
+    
+  
+    // Chuẩn bị dữ liệu để export
+    const dataToExport = {
+      "Thống Kê Tổng Hợp": thongKes || [],
+      "Doanh Thu": flattenedDoanhThu || [],
+      "Sản Phẩm Bán Chạy": sanPhamBanChay || [],
+      "Sản Phẩm Hết Hàng": sanPhamHetHang || [],
+    };
+  
+    // Gọi hàm xuất file Excel
+    exportToExcelWithMultipleSheets(dataToExport, "ThongKeTongHop",salesType);
+  };
+  
+  
+  
+
 
   // Hàm xử lý khi chọn kiểu bán hàng (online hoặc offline).
   const handleSalesTypeChange = (value) => {
@@ -487,18 +626,18 @@ const ThongKe = () => {
               </Select>
               {renderPicker()}
             </Space>
-            
+
           </Space>
-            <Space className='ms-3'>
-              <Select value={salesType} onChange={handleSalesTypeChange} style={{ width: 150 }}>
-                <Option value="">Tất cả</Option>
-                <Option value="ONLINE">Bán hàng online</Option>
-                <Option value="OFFLINE">Bán hàng tại quầy</Option>
-              </Select>
-            </Space>
+          <Space className='ms-3'>
+            <Select value={salesType} onChange={handleSalesTypeChange} style={{ width: 150 }}>
+              <Option value="">Tất cả</Option>
+              <Option value="ONLINE">Bán hàng online</Option>
+              <Option value="OFFLINE">Bán hàng tại quầy</Option>
+            </Select>
+          </Space>
         </Col>
         <Col span={12} style={{ textAlign: 'right' }}>
-          <Button icon={<DownloadOutlined />} >
+          <Button icon={<DownloadOutlined />} onClick={handleExportAllData}>
             Tải dữ liệu
           </Button>
         </Col>
@@ -528,15 +667,64 @@ const ThongKe = () => {
       </Row>
       <Row gutter={16}>
         <Col span={16}>
-          <Card title="Thứ hạng sản phẩm" bordered={true}>
+          <Card title={
+           
+              <div>
+                Top 10 sản phẩm bán tiêu biểu trong khoảng thời gian:
+                <strong> {ngayBatDau} </strong>
+                đến
+                <strong> {ngayKetThuc} </strong>
+             
+            </div>
+          }
+            bordered={true}>
             <Tabs defaultActiveKey="1" items={itemTabs} type="card" size="large" />
           </Card>
         </Col>
         <Col span={8}>
-          <Card title="Sản phẩm sắp hết hàng" bordered={true}>
-            <input type="number" placeholder="Số lượng sản phẩm tồn" min={0} />
-            <Table dataSource={dataSource} columns={columnsSanPhamHetHang} />
+          <Card
+            title="Sản phẩm sắp hết hàng"
+            bordered={true}
+            style={{ borderRadius: 8 }}
+          >
+            <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
+              <Col span={12}>
+                <Input
+                  type="number"
+                  placeholder="Nhập số lượng tồn"
+                  min={0}
+                  value={soLuong}
+                  onChange={(e) => setSoLuong(Number(e.target.value))}
+                  style={{ borderRadius: 8 }}
+                  prefix="🔢"
+                />
+              </Col>
+              <Col span={12}>
+                <p style={{ margin: 0, fontStyle: 'italic', color: '#888' }}>
+                  Lọc các sản phẩm có số lượng nhỏ hơn hoặc bằng <strong>{soLuong}</strong>.
+                </p>
+              </Col>
+            </Row>
+            <Table
+              dataSource={sanPhamHetHang}
+              columns={columnsSanPhamHetHang}
+              pagination={{
+                current: page,
+                pageSize: pageSize,
+                total: totalItems,
+                showSizeChanger: true,
+                pageSizeOptions: ["5", "10", "20", "50", "100"],
+                onChange: (page, pageSize) => {
+                  setPage(page);
+                  setPageSize(pageSize);
+                },
+              }}
+
+              style={{ borderRadius: 8 }}
+              bordered
+            />
           </Card>
+
         </Col>
       </Row>
 

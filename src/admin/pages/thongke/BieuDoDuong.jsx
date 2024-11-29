@@ -95,11 +95,23 @@ const DemoLine = ({ data: rawData, xAxisType }) => {
 
       const labels = [...allDates].sort();  // Sắp xếp các ngày theo thứ tự
 
-      // Tạo datasets cho biểu đồ
-      const datasets = Object.keys(productData).map(productName => {
+      // Tính tổng doanh thu cho mỗi sản phẩm
+      const totalProductRevenue = Object.entries(productData).map(([productName, data]) => ({
+        productName,
+        totalRevenue: data.reduce((sum, item) => sum + item.value, 0),
+      }));
+
+      // Lọc ra top 5 sản phẩm có doanh thu cao nhất
+      const top5Products = totalProductRevenue
+        .sort((a, b) => b.totalRevenue - a.totalRevenue)
+        .slice(0, 5)
+        .map(item => item.productName);
+
+      // Tạo datasets cho top 5 sản phẩm
+      const datasets = top5Products.map(productName => {
         const productValues = labels.map(date => {
           const dataForDate = productData[productName].find(item => item.x === date);
-          return dataForDate ? dataForDate.value : 0; // Nếu không có dữ liệu cho ngày đó, trả về 0
+          return dataForDate ? dataForDate.value : 0;
         });
 
         return {
@@ -112,17 +124,16 @@ const DemoLine = ({ data: rawData, xAxisType }) => {
         };
       });
 
-      // Dữ liệu tổng doanh thu
+      // Tổng doanh thu
       const totalRevenueValues = labels.map(date => {
         const totalDataForDate = totalRevenueData.find(item => item.date === date);
-        return totalDataForDate ? totalDataForDate.value : 0; // Nếu không có tổng doanh thu cho ngày đó, trả về 0
+        return totalDataForDate ? totalDataForDate.value : 0;
       });
 
-      // Thêm dòng tổng doanh thu vào datasets
       datasets.push({
         label: 'Tổng Doanh Thu',
         data: totalRevenueValues,
-        borderColor: 'rgba(255, 99, 132, 1)',  // Màu cho tổng doanh thu
+        borderColor: 'rgba(255, 99, 132, 1)',
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         fill: true,
         tension: 0.4,
@@ -133,13 +144,46 @@ const DemoLine = ({ data: rawData, xAxisType }) => {
         datasets,
       });
 
-      // setOptions({
-      //   responsive: true,
-      //   plugins: {
-      //     legend: { position: 'top' },
-      //     title: { display: true, text: 'Thống kê doanh thu sản phẩm và tổng doanh thu theo ngày' },
-      //   },
+
+      // // Tạo datasets cho biểu đồ
+      // const datasets = Object.keys(productData).map(productName => {
+      //   const productValues = labels.map(date => {
+      //     const dataForDate = productData[productName].find(item => item.x === date);
+      //     return dataForDate ? dataForDate.value : 0; // Nếu không có dữ liệu cho ngày đó, trả về 0
+      //   });
+
+      //   return {
+      //     label: productName,
+      //     data: productValues,
+      //     borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
+      //     backgroundColor: 'rgba(75, 192, 192, 0.2)',
+      //     fill: true,
+      //     tension: 0.4,
+      //   };
       // });
+
+      // // Dữ liệu tổng doanh thu
+      // const totalRevenueValues = labels.map(date => {
+      //   const totalDataForDate = totalRevenueData.find(item => item.date === date);
+      //   return totalDataForDate ? totalDataForDate.value : 0; // Nếu không có tổng doanh thu cho ngày đó, trả về 0
+      // });
+
+      // // Thêm dòng tổng doanh thu vào datasets
+      // datasets.push({
+      //   label: 'Tổng Doanh Thu',
+      //   data: totalRevenueValues,
+      //   borderColor: 'rgba(255, 99, 132, 1)',  // Màu cho tổng doanh thu
+      //   backgroundColor: 'rgba(255, 99, 132, 0.2)',
+      //   fill: true,
+      //   tension: 0.4,
+      // });
+
+      // setChartData({
+      //   labels,
+      //   datasets,
+      // });
+
+     
       setOptions({
         responsive: true,
         maintainAspectRatio: true, // Cho phép thay đổi kích thước tự do
