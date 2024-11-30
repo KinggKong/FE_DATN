@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Row, Col, Typography, Card } from "antd";
 import { getViecCanLamApi } from "../../../api/ThongKeApi";
+import { Link } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
@@ -41,9 +42,11 @@ const TongQuan = () => {
   return (
     <div style={{ padding: "20px" }}>
       <Title level={3}>Danh sách việc cần làm</Title>
+
       <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
         {data.map((item, index) => (
           <Col xs={24} sm={12} md={6} key={index}>
+            <Link to="/admin/order-management">
             <Card
               bordered={false}
               style={{
@@ -57,6 +60,7 @@ const TongQuan = () => {
               </Title>
               <Text>{item.label}</Text>
             </Card>
+            </Link>
           </Col>
         ))}
       </Row>

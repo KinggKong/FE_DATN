@@ -100,7 +100,12 @@ const AdminRouters = {
       element:<OrderDetail />
     },
     {
+      
       path: "tong-quan",
+      element: <TongQuan />,
+    },
+    {
+      index: true, 
       element: <TongQuan />,
     }
 
