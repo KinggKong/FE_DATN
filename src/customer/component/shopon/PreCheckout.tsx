@@ -8,7 +8,7 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 export default function PreCheckout() {
-    const [paymentMethod, setPaymentMethod] = useState('cod');
+    const [paymentMethod, setPaymentMethod] = useState('COD');
     const [form] = Form.useForm();
     const [checkoutData, setCheckoutData] = useState(null);
     const [error, setError] = useState(null);
@@ -182,7 +182,7 @@ export default function PreCheckout() {
             };
 
             let response;
-            if (paymentMethod === 'vnpay') {
+            if (paymentMethod === 'VNPAY') {
                 response = await axios.post('http://localhost:8080/api/payment/submitOrder', hoaDonRequest);
                 if (response.data.code === 1000) {                
                     window.location.href = response.data.data;
@@ -397,10 +397,10 @@ export default function PreCheckout() {
                                 className="space-y-4"
                             >
                                 <Space direction="vertical">
-                                    <Radio value="cod">
+                                    <Radio value="COD">
                                         Trả tiền mặt khi nhận hàng
                                     </Radio>
-                                    <Radio value="vnpay">
+                                    <Radio value="VNPAY">
                                         <div className="flex items-center gap-2">
                                             <CreditCard className="w-5 h-5" />
                                             Thanh toán VNPay

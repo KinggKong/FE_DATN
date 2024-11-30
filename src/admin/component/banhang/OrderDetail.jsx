@@ -9,10 +9,9 @@ import {
   Breadcrumb,
   Modal,
   notification,
-  Row,
-  Col,
   Image,
   Empty,
+  Input,
 } from "antd";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
@@ -33,6 +32,8 @@ const OrderDetail = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [nextStatus, setNextStatus] = useState(null);
   const { id } = useParams();
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+  const [cancelNote, setCancelNote] = useState("");
 
   const statusSteps = {
     WAITING: 0,
@@ -105,6 +106,43 @@ const OrderDetail = () => {
       message.error("Không thể tải thông tin đơn hàng: " + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!cancelNote.trim()) {
+      message.error("Vui lòng nhập lý do hủy đơn hàng");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/v1/shop-on/update-status-bill",
+        {
+          idNhanvien: 1,
+          idHoaDon: orderData.hoaDonResponse.id,
+          status: "CANCELLED",
+          ghiChu: cancelNote,
+        }
+      );
+
+      if (response.data.code === 1000) {
+        notification.success({
+          message: "Success",
+          duration: 4,
+          pauseOnHover: false,
+          showProgress: true,
+          description: `Hủy đơn hàng thành công!`,
+        });
+        setCurrentStatus("CANCELLED");
+        setIsCancelModalVisible(false);
+        setCancelNote("");
+        fetchOrderDetail();
+      } else {
+        throw new Error(response.data.message);
+      }
+    } catch (error) {
+      message.error("Không thể hủy đơn hàng: " + error.message);
     }
   };
 
@@ -187,7 +225,7 @@ const OrderDetail = () => {
 
       <div className="flex justify-between mb-6">
         {currentConfig.showCancel && (
-          <Button danger onClick={() => showModal("CANCELLED")}>
+          <Button danger onClick={() => setIsCancelModalVisible(true)}>
             Hủy
           </Button>
         )}
@@ -230,10 +268,21 @@ const OrderDetail = () => {
           <Descriptions.Item label="Hình thức thanh toán">
             {hoaDonResponse.hinhThucThanhToan}
           </Descriptions.Item>
+          {lichSuHoaDonResponses.some(
+            (item) => item.trangThai === "CANCELLED"
+          ) && (
+            <Descriptions.Item label="Ghi chú hủy đơn">
+              {
+                lichSuHoaDonResponses.find(
+                  (item) => item.trangThai === "CANCELLED"
+                )?.ghiChu
+              }
+            </Descriptions.Item>
+          )}
         </Descriptions>
       </Card>
 
-      <Card  className="mb-6" title="THÔNG TIN KHÁCH HÀNG">
+      <Card className="mb-6" title="THÔNG TIN KHÁCH HÀNG">
         <Descriptions column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
           <Descriptions.Item label="Tên khách hàng">
             {hoaDonResponse.tenNguoiNhan}
@@ -298,7 +347,7 @@ const OrderDetail = () => {
       </Card>
 
       <Card
-       className="mb-6"
+        className="mb-6"
         title={<Title level={4}>Lịch sử thanh toán</Title>}
         className="mb-8 shadow-sm"
       >
@@ -390,6 +439,32 @@ const OrderDetail = () => {
           Bạn có chắc chắn muốn thay đổi trạng thái đơn hàng thành "
           {statusConfig[nextStatus]?.title}"?
         </p>
+      </Modal>
+      <Modal
+        title="Hủy đơn hàng"
+        visible={isCancelModalVisible}
+        onOk={handleCancelOrder}
+        onCancel={() => {
+          setIsCancelModalVisible(false);
+          setCancelNote("");
+        }}
+        okText="Xác nhận"
+        cancelText="Đóng"
+      >
+        <div className="space-y-4">
+          <p>Bạn có chắc chắn muốn hủy đơn hàng này?</p>
+          <div>
+            <Text strong className="block mb-2">
+              Lý do hủy đơn hàng
+            </Text>
+            <Input.TextArea
+              rows={4}
+              value={cancelNote}
+              onChange={(e) => setCancelNote(e.target.value)}
+              placeholder="Nhập lý do hủy đơn hàng..."
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   );
