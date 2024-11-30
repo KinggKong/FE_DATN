@@ -24,6 +24,7 @@ export default function OrderConfirmation() {
                 if (response.data.code === 1000) {
                     setOrderData(response.data.data);
                 } else {
+
                     throw new Error('Không thể lấy thông tin đơn hàng');
                 }
             } catch (error) {
@@ -90,6 +91,7 @@ export default function OrderConfirmation() {
                                         <Text>Màu sắc: {item.sanPhamChiTietResponse.tenMauSac}</Text>
                                         <Text>Số lượng: {item.soLuong}</Text>
                                         <Text>Kích thước: {item.sanPhamChiTietResponse.tenKichThuoc}</Text>
+                                        <Text>Giá tiền: {item.giaTien}</Text>
                                     </div>
                                     <Text strong className="mt-2 block">Thành tiền: {(item.giaTien * item.soLuong).toLocaleString()}đ</Text>
                                 </div>
@@ -112,8 +114,11 @@ export default function OrderConfirmation() {
                             <Descriptions.Item label={<Text strong>Email</Text>}>
                                 {hoaDonResponse.email}
                             </Descriptions.Item>
-                            <Descriptions.Item label={<Text strong>Địa chỉ</Text>}>
+                            <Descriptions.Item label={<Text strong>Địa chỉ</Text>}>     
                                 {hoaDonResponse.diaChiNhan}
+                            </Descriptions.Item>
+                            <Descriptions.Item label={<Text strong>Ghi chú</Text>}>
+                                {hoaDonResponse.ghiChu}
                             </Descriptions.Item>
                         </Descriptions>
                     </Card>

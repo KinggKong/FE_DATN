@@ -21,7 +21,7 @@ const Navigation = ({ searchValue, setSearchValue }) => {
   };
   const handleSearchEnter = () => {
     if (searchValue.trim()) {
-      navigate(`/filter?search=${encodeURIComponent(searchValue)}`); // Pass search value as query
+      navigate(`/filter?search=${encodeURIComponent(searchValue)}`); 
     } else {
       navigate("/filter");
     }
@@ -105,7 +105,8 @@ const Navigation = ({ searchValue, setSearchValue }) => {
               href="#responsive-header"
               className="block mt-4 lg:inline-block lg:mt-0  hover:text-slate-500"
             >
-              Giảm giá
+              <Link to={"invoice-lookup"}>Tra cứu đơn hàng</Link>
+        
             </a>
           </div>
         </div>
