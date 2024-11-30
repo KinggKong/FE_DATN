@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { UploadOutlined } from "@ant-design/icons"; 
 import { storage } from '../spct/firebaseConfig'; // Import tệp cấu hình Firebase
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+
 const { Option } = Select;
 
 const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien }) => {
@@ -36,7 +37,7 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
   }, [nhanVien]);
 
   const handleConfirmEdit = () => {
-    // Validate the employee data
+   
     if (!ten || !email || !sdt || !ngaySinh || !idTaiKhoan || !diaChi) {
       notification.error({
         message: "Lỗi",
@@ -45,7 +46,7 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
       return;
     }
 
-    // Validate email
+    
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       notification.error({
@@ -55,17 +56,17 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
       return;
     }
 
-    // Validate phone number
-    const phoneRegex = /^[0-9]{10,}$/;
+    
+    const phoneRegex = /^[0-9]{10,11}$/;
     if (!phoneRegex.test(sdt)) {
       notification.error({
         message: "Lỗi",
-        description: "Số điện thoại không hợp lệ!",
+        description: "Số điện thoại từ 10 - 11 số!",
       });
       return;
     }
 
-    // Handle submit
+   
     handleSubmit(nhanVien?.id, {
       ten,
       email,
@@ -108,6 +109,33 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
     </div>
   );
 
+  // Sửa lại customRequest để upload ảnh lên Firebase
+  const customRequest = async ({ file, onSuccess, onError }) => {
+    try {
+      const storageRef = ref(storage, 'avatars/' + file.name); // Tạo tham chiếu đến Firebase Storage
+      const uploadTask = uploadBytesResumable(storageRef, file); // Upload tệp
+
+      // Lắng nghe sự kiện thay đổi trạng thái upload
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // Có thể thêm logic để hiển thị tiến độ tải lên
+        },
+        (error) => {
+          onError(error); // Nếu có lỗi, gọi onError
+        },
+        async () => {
+          // Sau khi tải lên xong, lấy URL ảnh từ Firebase Storage
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          file.url = downloadURL; // Thêm URL vào đối tượng file
+          onSuccess(file); // Gọi onSuccess để thông báo đã tải lên thành công
+        }
+      );
+    } catch (error) {
+      onError(error); // Gọi onError nếu có lỗi xảy ra
+    }
+  };
+
   return (
     <Modal
       open={isOpen}
@@ -147,7 +175,7 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
       </Row>
 
       <Row className="flex justify-between mb-3">
-      <Col span={11}>
+        <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Ngày sinh
           </label>
@@ -170,7 +198,6 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
       </Row>
 
       <Row className="flex justify-between mb-3">
-        
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Giới tính
@@ -188,13 +215,12 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
         </Col>
         <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span>  Địa chỉ
+            <span className="text-red-600">*</span> Địa chỉ
           </label>
           <Input
             value={diaChi}
             onChange={(e) => setDiaChi(e.target.value)}
-            placeholder="Nhập  địa chỉ"
-           
+            placeholder="Nhập địa chỉ"
           />
         </Col>
       </Row>
@@ -233,7 +259,7 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
             fileList={fileList}
             onChange={handleChange}
             onPreview={handlePreview}
-            customRequest={() => {}}
+            customRequest={customRequest} // Sử dụng customRequest để upload ảnh lên Firebase
           >
             {fileList.length >= 1 ? null : uploadButton}
           </Upload>
@@ -249,6 +275,5 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
     </Modal>
   );
 };
-
 
 export default ModalEditNhanVien;

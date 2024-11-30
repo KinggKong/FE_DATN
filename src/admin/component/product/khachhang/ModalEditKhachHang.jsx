@@ -13,11 +13,12 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
   const [email, setEmail] = useState("");
   const [sdt, setSdt] = useState("");
   const [ngaySinh, setNgaySinh] = useState(null);
-  const [gioiTinh, setGioiTinh] = useState(true); // true for male, false for female
-  const [trangThai, setTrangThai] = useState(true); // Default to active
-  const [idTaiKhoan, setIdTaiKhoan] = useState(""); // Account ID
-  const [idDiaChi, setIdDiaChi] = useState(""); // Address ID
-  const [fileList, setFileList] = useState([]); // State để lưu file tải lên (avatar)
+  const [gioiTinh, setGioiTinh] = useState(true); 
+  const [trangThai, setTrangThai] = useState(true); 
+  const [idTaiKhoan, setIdTaiKhoan] = useState(""); 
+  const [idDiaChi, setIdDiaChi] = useState(""); 
+  const [fileList, setFileList] = useState([]); 
+  const [ngayTao, setNgayTao] = useState(null); 
 
   useEffect(() => {
     if (khachHang) {
@@ -26,19 +27,20 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
       setEmail(khachHang.email);
       setSdt(khachHang.sdt);
       setNgaySinh(moment(khachHang.ngaySinh));
-      setGioiTinh(khachHang.gioiTinh);  // true for male, false for female
+      setNgayTao(moment(khachHang.ngayTao)); 
+      setGioiTinh(khachHang.gioiTinh);  
       setIdTaiKhoan(khachHang.idTaiKhoan);
       setIdDiaChi(khachHang.idDiaChi);
-      setTrangThai(khachHang.trangThai === 1); // Assuming 1 means active
-      // Set fileList nếu khách hàng đã có avatar
+      setTrangThai(khachHang.trangThai === 1);
+    
       if (khachHang.avatar) {
-        setFileList([{ url: khachHang.avatar }]); // Giả sử avatar là URL của ảnh
+        setFileList([{ url: khachHang.avatar }]); 
       }
     }
   }, [khachHang]);
 
   const handleConfirmEdit = () => {
-    // Validate the customer data
+
     if (!ten || !ma || !email || !sdt || !ngaySinh || !idTaiKhoan || !idDiaChi) {
       notification.error({
         message: "Lỗi",
@@ -47,7 +49,6 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
       return;
     }
 
-    // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       notification.error({
@@ -57,17 +58,17 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
       return;
     }
 
-    // Validate phone number
-    const phoneRegex = /^[0-9]{10,}$/;
+    
+    const phoneRegex = /^[0-9]{10,11}$/;
     if (!phoneRegex.test(sdt)) {
       notification.error({
         message: "Lỗi",
-        description: "Số điện thoại không hợp lệ!",
+        description: "Vui lòng nhập số điện thoại hợp lệ (10-11)!",
       });
       return;
     }
 
-    // Handle submit
+   
     handleSubmit(khachHang?.id, {
       ten,
       ma,
@@ -78,12 +79,12 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
       trangThai: trangThai ? 1 : 0,
       idTaiKhoan,
       idDiaChi,
-      avatar: fileList.length > 0 && fileList[0].url ? fileList[0].url : "", // Lưu URL avatar
+      avatar: fileList.length > 0 && fileList[0].url ? fileList[0].url : "", 
     });
   };
 
   const handleChange = ({ fileList: newFileList }) => {
-    setFileList(newFileList); // Cập nhật fileList khi người dùng thay đổi ảnh
+    setFileList(newFileList); 
   };
 
   const handlePreview = async (file) => {
@@ -94,7 +95,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
     setPreviewOpen(true);
   };
 
-  // Hàm chuyển file sang base64 (dùng cho việc xem trước ảnh)
+ 
   const getBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -102,6 +103,30 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
       reader.onload = () => resolve(reader.result);
       reader.onerror = (error) => reject(error);
     });
+  };
+
+ 
+  const customRequest = async ({ file, onSuccess, onError }) => {
+    try {
+      const storageRef = ref(storage, 'avatars/' + file.name);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+         
+        },
+        (error) => {
+          onError(error);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          onSuccess(null, file);
+          setFileList([{ url: downloadURL }]);  
+        }
+      );
+    } catch (error) {
+      onError(error);
+    }
   };
 
   const uploadButton = (
@@ -227,9 +252,11 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
 
       <Row className="flex justify-between mb-3">
         <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Trạng thái
-          </label>
+          <label className="text-sm block mb-2">Ngày tạo</label>
+          <Input value={ngayTao ? ngayTao.format('DD/MM/YYYY') : ''} disabled />
+        </Col>
+        <Col span={11}>
+          <label className="text-sm block mb-2">Trạng thái</label>
           <Switch
             checked={trangThai}
             onChange={(checked) => setTrangThai(checked)}
@@ -239,7 +266,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
         </Col>
       </Row>
 
-      {/* Cột Upload ảnh */}
+  
       <Row className="flex justify-between mb-3">
         <Col span={24}>
           <label className="text-sm block mb-2">Avatar</label>
@@ -248,7 +275,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
             fileList={fileList}
             onChange={handleChange}
             onPreview={handlePreview}
-            customRequest={() => {}}
+            customRequest={customRequest}
           >
             {fileList.length >= 1 ? null : uploadButton}
           </Upload>

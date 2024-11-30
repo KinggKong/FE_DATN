@@ -9,8 +9,8 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 const { Option } = Select;
 
 const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => {
-  const [ten, setten] = useState("");
-  const [ma, setma] = useState("");
+  const [ten, setTen] = useState("");
+  const [ma, setMa] = useState("");
   const [email, setEmail] = useState("");
   const [sdt, setSdt] = useState("");
   const [ngaySinh, setNgaySinh] = useState(null);
@@ -43,12 +43,12 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       return;
     }
 
-    // Kiểm tra số điện thoại (ví dụ: chỉ chấp nhận số có ít nhất 10 chữ số)
-    const phoneRegex = /^[0-9]{10,}$/;
+    // Kiểm tra số điện thoại 
+    const phoneRegex = /^[0-9]{10,11}$/;
     if (!phoneRegex.test(sdt)) {
       notification.error({
         message: "Lỗi",
-        description: "Vui lòng nhập số điện thoại hợp lệ!",
+        description: "Vui lòng nhập số điện thoại hợp lệ (10-11)!",
       });
       return;
     }
@@ -104,6 +104,30 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
     </div>
   );
 
+  // Custom request for Firebase Storage upload
+  const customRequest = async ({ file, onSuccess, onError }) => {
+    try {
+      const storageRef = ref(storage, 'avatars/' + file.name);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          // Optional: Handle progress if needed
+        },
+        (error) => {
+          onError(error);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          onSuccess(null, file);
+          setFileList([{ url: downloadURL }]);  // Update fileList with the URL of the uploaded image
+        }
+      );
+    } catch (error) {
+      onError(error);
+    }
+  };
+
   return (
     <Modal
       open={isOpen}
@@ -126,7 +150,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
           </label>
           <Input
             value={ten}
-            onChange={(e) => setten(e.target.value)}
+            onChange={(e) => setTen(e.target.value)}
             placeholder="Nhập vào tên khách hàng"
           />
         </Col>
@@ -136,7 +160,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
           </label>
           <Input
             value={ma}
-            onChange={(e) => setma(e.target.value)}
+            onChange={(e) => setMa(e.target.value)}
             placeholder="Nhập mã khách hàng"
           />
         </Col>
@@ -249,7 +273,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
             fileList={fileList}
             onChange={handleChange}
             onPreview={handlePreview}
-            customRequest={() => {}}
+            customRequest={customRequest} // Use custom request for Firebase upload
           >
             {fileList.length >= 1 ? null : uploadButton}
           </Upload>

@@ -1,7 +1,7 @@
-import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select, Button, Upload, Image } from "antd";
-import { IoMdAddCircleOutline } from "react-icons/io";
+import moment from 'moment';
+import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select, Upload, Image } from "antd";
+import { FaUserPlus } from "react-icons/fa";
 import { useState } from "react";
-import moment from "moment";
 import { UploadOutlined } from "@ant-design/icons";
 import { storage } from '../spct/firebaseConfig'; // Import tệp cấu hình Firebase
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
@@ -13,68 +13,60 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
   const [email, setEmail] = useState("");
   const [sdt, setSdt] = useState("");
   const [ngaySinh, setNgaySinh] = useState(null);
-  const [gioiTinh, setGioiTinh] = useState(true);  
-  const [trangThai, setTrangThai] = useState(true);
-  const [idTaiKhoan, setIdTaiKhoan] = useState("");  
-  const [diaChi, setDiaChi] = useState("");  // Thêm state cho địa chỉ
+  const [gioiTinh, setGioiTinh] = useState(true); 
+  const [trangThai, setTrangThai] = useState(true); 
+  const [idTaiKhoan, setIdTaiKhoan] = useState(""); 
+  const [diaChi, setDiaChi] = useState(""); 
   const [fileList, setFileList] = useState([]);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState('');
 
-  const handleConfirmAdd = async () => {
-    // Kiểm tra dữ liệu đầu vào
+  const handleConfirmAdd = () => {
+   
     if (!ten || !email || !sdt || !ngaySinh || !idTaiKhoan || !diaChi) {
       notification.error({
         message: "Lỗi",
-        description: "Vui lòng điền đầy đủ thông tin!",
+        description: "Vui lòng điền đầy đủ các trường!",
       });
       return;
     }
 
-    // Kiểm tra định dạng email
+   
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       notification.error({
         message: "Lỗi",
-        description: "Vui lòng nhập đúng định dạng email!",
+        description: "Email không hợp lệ!",
       });
       return;
     }
 
-    // Kiểm tra số điện thoại
-    const phoneRegex = /^[0-9]{10,}$/;
+   
+    const phoneRegex = /^[0-9]{10,11}$/;
     if (!phoneRegex.test(sdt)) {
       notification.error({
         message: "Lỗi",
-        description: "Vui lòng nhập số điện thoại hợp lệ!",
+        description: "Số điện thoại từ 10 - 11 số!",
       });
       return;
     }
 
-    // Nếu có ảnh, upload và lưu URL
-    let avatarUrl = "";
-    if (fileList.length > 0 && fileList[0].status === 'done') {
-      avatarUrl = fileList[0].url;  // Lưu URL ảnh
-    }
-
-    // Gọi hàm handleSubmit để truyền dữ liệu
+   
     handleSubmit({
       ten,
       email,
       sdt,
       ngaySinh: ngaySinh ? ngaySinh.format('YYYY-MM-DD') : null,
-      gioiTinh,  // Đảm bảo là true hoặc false
+      gioiTinh,
       trangThai: trangThai ? 1 : 0,
       idTaiKhoan,
-      diaChi,  // Thêm địa chỉ vào dữ liệu gửi lên
-      avatar: avatarUrl,  // Lưu URL avatar
+      diaChi,
+      avatar: fileList.length > 0 && fileList[0].url ? fileList[0].url : "", // Lưu URL avatar
     });
   };
 
-  // Xử lý thay đổi tệp tải lên
-  const handleChange = ({ fileList: newFileList }) => setFileList(newFileList);
+  const handleChange = ({ fileList: newFileList }) => {
+    setFileList(newFileList); // Cập nhật fileList khi người dùng thay đổi ảnh
+  };
 
-  // Xử lý xem trước ảnh
   const handlePreview = async (file) => {
     if (!file.url && !file.preview) {
       file.preview = await getBase64(file.originFileObj);
@@ -83,7 +75,7 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
     setPreviewOpen(true);
   };
 
-  // Hàm chuyển đổi file sang base64
+  // Hàm chuyển file sang base64 (dùng cho việc xem trước ảnh)
   const getBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -93,7 +85,6 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
     });
   };
 
-  // Tạo nút upload
   const uploadButton = (
     <div>
       <UploadOutlined />
@@ -101,12 +92,39 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
     </div>
   );
 
+  // Sửa lại customRequest để upload ảnh lên Firebase
+  const customRequest = async ({ file, onSuccess, onError }) => {
+    try {
+      const storageRef = ref(storage, 'avatars/' + file.name); // Tạo tham chiếu đến Firebase Storage
+      const uploadTask = uploadBytesResumable(storageRef, file); // Upload tệp
+
+      // Lắng nghe sự kiện thay đổi trạng thái upload
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // Có thể thêm logic để hiển thị tiến độ tải lên
+        },
+        (error) => {
+          onError(error); // Nếu có lỗi, gọi onError
+        },
+        async () => {
+          // Sau khi tải lên xong, lấy URL ảnh từ Firebase Storage
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          file.url = downloadURL; // Thêm URL vào đối tượng file
+          onSuccess(file); // Gọi onSuccess để thông báo đã tải lên thành công
+        }
+      );
+    } catch (error) {
+      onError(error); // Gọi onError nếu có lỗi xảy ra
+    }
+  };
+
   return (
     <Modal
       open={isOpen}
       title={
         <span className="flex">
-          <IoMdAddCircleOutline style={{ color: "green", marginRight: 8, fontSize: "1.5rem" }} />
+          <FaUserPlus style={{ color: "blue", marginRight: 8, fontSize: "1.5rem" }} />
           Thêm mới {title}
         </span>
       }
@@ -124,7 +142,7 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
           <Input
             value={ten}
             onChange={(e) => setTen(e.target.value)}
-            placeholder="Nhập vào tên nhân viên"
+            placeholder="Nhập tên nhân viên"
           />
         </Col>
         <Col span={11}>
@@ -142,22 +160,22 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
       <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Số điện thoại
-          </label>
-          <Input
-            value={sdt}
-            onChange={(e) => setSdt(e.target.value)}
-            placeholder="Nhập số điện thoại"
-          />
-        </Col>
-        <Col span={11}>
-          <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Ngày sinh
           </label>
           <DatePicker
             style={{ width: "100%" }}
             value={ngaySinh}
             onChange={(date) => setNgaySinh(date)}
+          />
+        </Col>
+        <Col span={11}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Số điện thoại
+          </label>
+          <Input
+            value={sdt}
+            onChange={(e) => setSdt(e.target.value)}
+            placeholder="Nhập số điện thoại"
           />
         </Col>
       </Row>
@@ -175,22 +193,10 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
           >
             <Option value="Nam">Nam</Option>
             <Option value="Nữ">Nữ</Option>
+            <Option value="Khác">Khác</Option>
           </Select>
         </Col>
         <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> ID Tài khoản
-          </label>
-          <Input
-            value={idTaiKhoan}
-            onChange={(e) => setIdTaiKhoan(e.target.value)}
-            placeholder="Nhập ID tài khoản" type="number"
-          />
-        </Col>
-      </Row>
-
-      <Row className="flex justify-between mb-3">
-      <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Địa chỉ
           </label>
@@ -198,6 +204,20 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
             value={diaChi}
             onChange={(e) => setDiaChi(e.target.value)}
             placeholder="Nhập địa chỉ"
+          />
+        </Col>
+      </Row>
+
+      <Row className="flex justify-between mb-3">
+        <Col span={11}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Tài khoản
+          </label>
+          <Input
+            value={idTaiKhoan}
+            onChange={(e) => setIdTaiKhoan(e.target.value)}
+            placeholder="Nhập ID tài khoản"
+            type="number"
           />
         </Col>
         <Col span={11}>
@@ -213,29 +233,20 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
         </Col>
       </Row>
 
-      
-    
-
       {/* Cột Upload ảnh */}
       <Row className="flex justify-between mb-3">
         <Col span={24}>
           <label className="text-sm block mb-2">Ảnh đại diện</label>
           <Upload
+            customRequest={customRequest}
             listType="picture-card"
             fileList={fileList}
             onChange={handleChange}
             onPreview={handlePreview}
-            customRequest={() => {}}
+            accept="image/*"
           >
             {fileList.length >= 1 ? null : uploadButton}
           </Upload>
-          {fileList.length > 0 && fileList[0].url && (
-            <Image
-              src={fileList[0].url}
-              alt="Avatar"
-              style={{ width: 100, height: 100, objectFit: 'cover', marginTop: 10 }}
-            />
-          )}
         </Col>
       </Row>
     </Modal>
