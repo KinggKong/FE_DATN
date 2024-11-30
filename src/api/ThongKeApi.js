@@ -16,8 +16,13 @@ const getThongKeSanPhamBanChayDoanhThu = (params) => {
     const url = "/api/v1/thongke/san-pham-ban-chay";
     return axiosClient.get(url, { params });
     }
+const getViecCanLamApi = () =>{
+    const url = "/api/v1/thongke/viec-can-lam";
+    return axiosClient.get(url);
+}
 export { getThongKeApi,
     getThongKeDoanhThu,
     getThongKeDoanhThuSanPham,
     getThongKeSanPhamBanChayDoanhThu,
+    getViecCanLamApi
  };

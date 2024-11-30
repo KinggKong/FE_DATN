@@ -11,6 +11,7 @@ import { getThongKeApi, getThongKeDoanhThu, getThongKeDoanhThuSanPham, getThongK
 import DemoLine from './BieuDoDuong';
 import { getSanPhamChiTietSoLuongApi } from '../../../api/SanPhamChiTietAPI';
 import { exportToExcelWithMultipleSheets } from './exportToExcelWithMultipleSheets ';
+const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const onChange = (date) => {
   if (date) {
@@ -607,7 +608,8 @@ const ThongKe = () => {
 
   return (
     <div>
-      <h1>Trang thống kê</h1>
+       <Title level={5}>Trang thống kê</Title>
+      
       <Row gutter={16}>
         <Col span={12}>
 

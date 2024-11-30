@@ -196,7 +196,7 @@ const ProductDetail = () => {
     try {
       const res = await getSanPhamByIdDanhMucApi(idDanhMuc);
       console.log("danh muc",res);
-      const filteredProducts = res.data.filter((product) => product.id !== id);
+      const filteredProducts = res.data.filter((product) => product.id !== id && product.soLuongSanPhamChiTiet>0);
       console.log("danh muc fiter",filteredProducts);
       setRelatedProducts(filteredProducts);
     }

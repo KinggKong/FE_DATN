@@ -79,8 +79,12 @@ const FilterProduct = () => {
       console.log("filter", filter);
       const res = await getAllSanPhamByCustomerFilterApi(filter);
       console.log(res);
-      setProducts(res.data.content);
-      setTotalItems(res.data.totalElements);
+      // Lọc bỏ sản phẩm có soLuongSanPhamChiTiet = 0
+      const locProduct = res.data.content.filter(
+        (product) => product.soLuongSanPhamChiTiet > 0
+      );
+      setProducts(locProduct);
+      setTotalItems(locProduct.length);
       console.log(products);
 
     } catch (error) {
@@ -159,8 +163,8 @@ const FilterProduct = () => {
           <FilterSidebar onFilter={setFilteredProducts} />
         </Sider>
 
-        <Content  style={{ backgroundColor: "white" }}>
-          <div style={{ textAlign: "start", minHeight: "20px"}}>
+        <Content style={{ backgroundColor: "white" }}>
+          <div style={{ textAlign: "start", minHeight: "20px" }}>
 
 
             <div className='mt-2 ms-5'>
