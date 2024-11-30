@@ -36,6 +36,12 @@ const getAllNhanVienByTenApi = (params) => {
   return axiosClient.get(url, { params });
 };
 
+// Tạo mới tài khoản
+const createTaiKhoanApi = (params) => {
+  const url = "/api/v1/taikhoans";
+  return axiosClient.post(url, params);
+};
+
 export {
   getAllNhanVienApi,
   deleteNhanVienApi,
@@ -43,4 +49,5 @@ export {
   updateNhanVienApi,
   getNhanVienByIdApi,
   getAllNhanVienByTenApi,
+  createTaiKhoanApi
 };

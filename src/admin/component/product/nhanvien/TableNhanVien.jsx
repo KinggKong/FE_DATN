@@ -226,10 +226,6 @@ const TableNhanVien = () => {
       render: (text) => (text ? 'Nam' : 'Nữ'),
     },
     {
-      title: "ID Tài khoản",
-      dataIndex: "idTaiKhoan",
-    },
-    {
       title: "Trạng thái",
       dataIndex: "trangThai",
       render: (text, record) => (

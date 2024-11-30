@@ -21,7 +21,7 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
 
   const handleConfirmAdd = () => {
    
-    if (!ten || !email || !sdt || !ngaySinh || !idTaiKhoan || !diaChi) {
+    if (!ten || !email || !sdt || !ngaySinh ) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ các trường!",
@@ -209,17 +209,7 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
       </Row>
 
       <Row className="flex justify-between mb-3">
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Tài khoản
-          </label>
-          <Input
-            value={idTaiKhoan}
-            onChange={(e) => setIdTaiKhoan(e.target.value)}
-            placeholder="Nhập ID tài khoản"
-            type="number"
-          />
-        </Col>
+       
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Trạng thái
