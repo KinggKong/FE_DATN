@@ -443,7 +443,7 @@ const DrawerAdd = ({
                 <Select
                   showSearch
                   onChange= {handleProductChange}
-                  placeholder="Search to Select"
+                  placeholder="Chọn sản phẩm"
                   optionFilterProp="label"
                   filterSort={(optionA, optionB) =>
                     (optionA?.label ?? '').toLowerCase().localeCompare((optionB?.label ?? '').toLowerCase())
