@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
+import { message } from "antd";
 
 const useCartStore = create((set) => ({
     cart: [],
@@ -61,15 +62,36 @@ const useCartStore = create((set) => ({
                 (item) => item.sanPhamChiTietResponse.id === product.sanPhamChiTietResponse.id
             );
 
+            // if (existingProduct) {
+            //     return {
+            //         cart: state.cart.map((item) =>
+            //             item.sanPhamChiTietResponse.id === product.sanPhamChiTietResponse.id
+            //                 ? { ...item, soLuong: item.soLuong + product.soLuong }
+            //                 : item
+            //         ),
+            //     };
+            const soLuongHienTai = existingProduct ? existingProduct.soLuong : 0;
+            const soLuongConLai = product.sanPhamChiTietResponse.soLuong; // Số lượng còn lại của sản phẩm từ API
+            const soLuongMuonThem = product.soLuong || 1;
+
+            if (soLuongHienTai + soLuongMuonThem > soLuongConLai) {
+                message.error(
+                    `Không thể thêm sản phẩm. Số lượng yêu cầu (${soLuongHienTai + soLuongMuonThem}) vượt quá số lượng còn lại (${soLuongConLai}).`
+                );
+                return { cart: state.cart }; // Giữ nguyên giỏ hàng nếu không hợp lệ
+            }
+
             if (existingProduct) {
+                message.success("Đã thêm sản phẩm vào giỏ hàng!");
                 return {
                     cart: state.cart.map((item) =>
                         item.sanPhamChiTietResponse.id === product.sanPhamChiTietResponse.id
-                            ? { ...item, soLuong: item.soLuong + product.soLuong }
+                            ? { ...item, soLuong: item.soLuong + soLuongMuonThem }
                             : item
                     ),
                 };
             } else {
+                message.success("Đã thêm sản phẩm vào giỏ hàng!");
                 return {
                     cart: [
                         ...state.cart,

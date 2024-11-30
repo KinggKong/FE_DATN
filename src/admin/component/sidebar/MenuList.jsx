@@ -34,7 +34,8 @@ const MenuList = ({ darkTheme }) => {
         className="menu-bar"
       >
         <Menu.Item key="home" icon={<FaEye />}>
-          Tổng quan
+        <Link to={"tong-quan"}>Tổng quan</Link>
+          
         </Menu.Item>
 
         <Menu.Item key="activity" icon={<MdLocalShipping />}>

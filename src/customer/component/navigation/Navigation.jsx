@@ -36,7 +36,10 @@ const Navigation = ({ searchValue, setSearchValue }) => {
         const response = await getAllSanPhamByCustomerFilterApi({ tenSanPham: value });
         console.log(response);
         const filteredSuggestions = response.data.content;  // Giả sử API trả về danh sách sản phẩm
-        setSuggestions(filteredSuggestions);
+        const locProduct = filteredSuggestions.filter(
+          (product) => product.soLuongSanPhamChiTiet > 0
+        );
+        setSuggestions(locProduct);
         setDropdownVisible(true);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu từ API:", error);

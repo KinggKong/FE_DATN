@@ -129,7 +129,7 @@ const ProductDetail = () => {
 
 
     addToCart(productToAdd); // Thêm sản phẩm vào giỏ hàng
-    message.success("Đã thêm sản phẩm vào giỏ hàng!");
+   
     
 
 
@@ -140,6 +140,7 @@ const ProductDetail = () => {
     const productDetailItem = productDetail?.sanPhamChiTietList?.find(
       (item) => item.id === id
     );
+    console.log("ProductDetail", productDetailItem);
     return productDetailItem ? productDetailItem : null;
   }
 
@@ -195,7 +196,7 @@ const ProductDetail = () => {
     try {
       const res = await getSanPhamByIdDanhMucApi(idDanhMuc);
       console.log("danh muc",res);
-      const filteredProducts = res.data.filter((product) => product.id !== id);
+      const filteredProducts = res.data.filter((product) => product.id !== id && product.soLuongSanPhamChiTiet>0);
       console.log("danh muc fiter",filteredProducts);
       setRelatedProducts(filteredProducts);
     }
@@ -210,7 +211,7 @@ const ProductDetail = () => {
 
     fetchProduct();
     fetchSaleForProduct(productDetailId);
-    fetchProductByCategory(productDetail?.danhMuc?.id);
+    
     console.log("Id spct", productDetailId);
   }, [id]);
   useEffect(() => {
