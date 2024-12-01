@@ -349,7 +349,7 @@ const FormAddDotGiamGia = () => {
                                     <span style={{ marginRight: '10px' }}>Trạng thái:</span>
                                     <Switch
                                         checkedChildren="Đang diễn ra"
-                                        unCheckedChildren="Ngừng hoạt động"
+                                        unCheckedChildren="Không hoạt động"
                                         defaultChecked={true} // Hoặc false tùy vào trạng thái ban đầu bạn muốn
                                         onChange={(checked) => {
                                             // Cập nhật giá trị vào form
