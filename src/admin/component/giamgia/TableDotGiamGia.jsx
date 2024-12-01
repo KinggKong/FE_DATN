@@ -125,7 +125,7 @@ const TableDotGiamGia = () => {
                 let color = trangThai == 1 ? 'green' : 'volcano';
                 return (
                     <Tag color={color} key={trangThai}>
-                        {trangThai === 1 ? 'ĐANG DIỄN RA' : 'NGỪNG HOẠT ĐỘNG'}
+                        {trangThai === 1 ? 'ĐANG DIỄN RA' : 'KHÔNG HOẠT ĐỘNG'}
                     </Tag>
                 );
             },
