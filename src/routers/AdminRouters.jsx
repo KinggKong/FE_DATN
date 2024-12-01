@@ -12,7 +12,14 @@ import KhachHang from "../admin/pages/taikhoan/KhachHang";
 import ThongKe from "../admin/pages/thongke/ThongKe"
 import MauSac from "../admin/pages/product/MauSac";
 import SanPhamChiTiet from "../admin/pages/product/SanPhamChiTiet";
-import FormWithColors from "../admin/component/product/spct/FormAddSPCT";
+
+import DotGiamGia from "../admin/pages/giamgia/DotGiamGia";
+import FormAddDotGiamGia from "../admin/component/giamgia/DrawerAdd";
+import ViewEditDotGiamGia from "../admin/component/giamgia/ViewEdit";
+import OrderManagement from "../admin/component/banhang/OrderManagement";
+import OrderDetail from "../admin/component/banhang/OrderDetail";
+
+
 
 const AdminRouters = {
   path: "/admin/",
@@ -70,10 +77,29 @@ const AdminRouters = {
       path:"sanphamchitiet",
       element:<SanPhamChiTiet />
     },
+
     {
-      path:"sanphamchitiet/add",
-      element:<FormWithColors/>
+      path:"sale",
+      element:<DotGiamGia />
+    },
+    {
+      path:"sale/add",
+      element:<FormAddDotGiamGia />
+    },
+    {
+      path:"sale/edit/:id",
+      element:<ViewEditDotGiamGia />
+    },  
+    {
+      path:"order-management",
+      element:<OrderManagement />
+    },
+    {
+      path:"order-detail/:id",
+      element:<OrderDetail />
     }
+
+
   ],
 };
 

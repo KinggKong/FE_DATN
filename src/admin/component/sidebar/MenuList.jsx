@@ -11,6 +11,7 @@ import { FaEye } from "react-icons/fa6";
 import { MdLocalShipping } from "react-icons/md";
 import { IoExitOutline } from "react-icons/io5";
 import { GiConverseShoe } from "react-icons/gi";
+import { GiRunningShoe } from "react-icons/gi";
 import { MdAutoFixHigh } from "react-icons/md";
 import { MdDiscount } from "react-icons/md";
 import { MdCategory } from "react-icons/md";
@@ -20,6 +21,9 @@ import { SlSizeFullscreen } from "react-icons/sl";
 import { LiaShoePrintsSolid } from "react-icons/lia";
 import { FaRegUser } from "react-icons/fa";
 import { FaUserCircle } from "react-icons/fa";
+import { BiSolidDiscount } from "react-icons/bi";
+import { CiDiscount1 } from "react-icons/ci";
+import { FaFileInvoice } from "react-icons/fa";
 
 const MenuList = ({ darkTheme }) => {
   return (
@@ -37,6 +41,10 @@ const MenuList = ({ darkTheme }) => {
           <Link to={"banhang"}>Bán hàng</Link>
         </Menu.Item>
 
+        <Menu.Item key="ordermanagement" icon={<FaFileInvoice />}>
+          <Link to={"order-management"}>Danh sách hóa đơn</Link>
+        </Menu.Item>
+
         <Menu.SubMenu
           key="submn1"
           icon={<ProductOutlined />}
@@ -44,6 +52,9 @@ const MenuList = ({ darkTheme }) => {
         >
           <Menu.Item key="sub1-t1" icon={<GiConverseShoe />}>
             <Link to={"sanpham"}>Sản phẩm</Link>
+          </Menu.Item>
+          <Menu.Item key="sub1-t2" icon={<GiRunningShoe />}>
+            <Link to={"sanphamchitiet"}>Sản phẩm chi tiết</Link>
           </Menu.Item>
           <Menu.SubMenu
             key="sub1-t2"
@@ -87,10 +98,19 @@ const MenuList = ({ darkTheme }) => {
         <Menu.Item key="progress" icon={<AreaChartOutlined />}>
           <Link to={"thongke"}>Thống kê</Link>
         </Menu.Item>
-
-        <Menu.Item key="discount" icon={<MdDiscount />}>
-          <Link to={"giamgia"}>Giảm giá</Link>
-        </Menu.Item>
+        <Menu.SubMenu
+          key="submn3"
+          icon={<BiSolidDiscount />}
+          title="Giảm giá"
+        >
+           <Menu.Item key="sub3-t1" icon={<MdDiscount />}>
+          <Link to={"giamgia"}>Phiếu giảm giá</Link>
+          </Menu.Item>
+          <Menu.Item key="sub3-t2" icon={<CiDiscount1 />}>
+          <Link to={"sale"}>Đợt giảm giá</Link>
+          </Menu.Item>
+        </Menu.SubMenu>
+       
 
         <Menu.Item key="setting" icon={<SettingOutlined />}>
           Cài đặt

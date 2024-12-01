@@ -7,6 +7,7 @@ import {
   Input,
   InputNumber,
   Modal,
+  Popconfirm,
   Row,
   Select,
   Slider,
@@ -17,12 +18,7 @@ import {
   Tag,
   Typography,
 } from "antd";
-import {
-  ExclamationCircleOutlined,
-  MinusOutlined,
-  PlusOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
+import { MinusOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { IoQrCodeSharp } from "react-icons/io5";
 import { Option } from "antd/es/mentions";
@@ -47,14 +43,13 @@ import { getAllSanPhamChiTietApi } from "../../../../api/SanPhamChiTietAPI";
 import TabPane from "antd/es/tabs/TabPane";
 import { getAllKhachHang } from "../../../../api/KhachHang";
 import axiosClient from "../../../../api/axiosClient";
+import { getLSTTByIDHD } from "../../../../api/LichSuThanhToan";
 
 const ShoppingCart = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isModalVisibleQR, setIsModalVisibleQR] = useState(false);
   const { Title, Text } = Typography;
   const [isShow, setIsShow] = useState(false);
-  const [modal, contextHolder] = Modal.useModal();
-
   const [form] = Form.useForm();
   const API_HOST = "https://provinces.open-api.vn/api/";
   const [provinces, setProvinces] = useState([]);
@@ -79,13 +74,44 @@ const ShoppingCart = () => {
   const [hoaDonChiTiet, setHoaDonChiTiet] = useState(null);
   const [lichSuThanhToan, setLichSuThanhToan] = useState(null);
 
-  const [selectedMethod, setSelectedMethod] = useState(null);
-  // const [modalPaymentAmount, setModalPaymentAmount] = useState(0);
+  const [selectedMethod, setSelectedMethod] = useState("cash");
+
+  const [confirmPayments, setConfirmPaymets] = useState(false);
+
+  const confirmPaymentShow = () => {
+    setConfirmPaymets(true);
+  };
+
+  const confirmPaymentHide = () => {
+    setConfirmPaymets(false);
+  };
+
+  const [openThanhToan, setOpenThanhToan] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+ 
+  const handleThanhToanOk = async () => {
+    setConfirmLoading(true);
+    setTimeout(() => {
+      setOpenThanhToan(false);
+      setConfirmLoading(false);
+    }, 2000);
+    await createLSTT();
+  };
+  const handleThanhToanCancel = () => {
+    console.log("Clicked cancel button");
+    setOpenThanhToan(false);
+  };
 
   const handleButtonClick = async (method) => {
+    setOpenThanhToan(true);
     setSelectedMethod(method);
-    // await createLSTT();
   };
+
+  useEffect(() => {
+    if (currentInvoice && currentInvoice.tongTien) {
+      setModalPaymentAmount(currentInvoice.tongTien);
+    }
+  }, [currentInvoice]);
 
   const createLSTT = async () => {
     const payload = {
@@ -105,11 +131,9 @@ const ShoppingCart = () => {
           "Lịch sử thanh toán đã được tạo thành công:",
           response.data
         );
-        // Xử lý kết quả ở đây (có thể hiển thị thông báo thành công hoặc cập nhật state)
       }
     } catch (error) {
       console.error("Lỗi khi tạo lịch sử thanh toán:", error);
-      // Xử lý lỗi (có thể hiển thị thông báo lỗi cho người dùng)
     }
   };
 
@@ -148,13 +172,13 @@ const ShoppingCart = () => {
     setLoading(true);
     try {
       const res = await getAllKhachHang();
-      console.log(res); // Kiểm tra kết quả trả về từ API
+      console.log(res);
 
       // Kiểm tra dữ liệu trả về
       if (res?.data && Array.isArray(res.data)) {
         const dataWithKey = res.data.map((item) => ({
           ...item,
-          key: item.id, // Thêm 'key' cho mỗi item để React có thể nhận diện các hàng
+          key: item.id,
         }));
         setCustomer(dataWithKey);
       } else {
@@ -186,6 +210,7 @@ const ShoppingCart = () => {
   // const handleButtonClick = (method) => {
   //   setSelectedMethod(method);
   // };
+
   useEffect(() => {
     axios.get(`${API_HOST}?depth=1`).then((response) => {
       setProvinces(response.data);
@@ -240,40 +265,62 @@ const ShoppingCart = () => {
     setIsShow(false);
   };
 
-  const handleXacNhanThanhToan = async (id) => {
-   
-    if (currentInvoice.tongTien === null) {
-      toast.warning("Thanh toán thất bại vui lòng chọn sản phẩm !");
-      return Promise.reject("Tổng tiền bằng 0");
-    }
-    
+  const [activeTab, setActiveTab] = useState(
+    invoices.length > 0 ? invoices[0].id : "noInvoice"
+  );
 
+  useEffect(() => {
+    if (activeTab !== "noInvoice") {
+      getOrderById(activeTab); // Tải dữ liệu hóa đơn đầu tiên khi component mount
+    }
+  }, [activeTab]);
+
+
+  const handleXacNhanThanhToan = async (id) => {
+    setLoading(true);
     try {
-      if(modalPaymentAmount < currentInvoice?.tongTien){
-        toast.warning("Vui lòng thành toán đơn hàng !");
-      }else{
-      await confirmPayment(id);
-      await fetchData();
-      toast.success("Thanh toán thành công !");
+      if (!currentInvoice) {
+        setConfirmPaymets(false);
+        toast.warning("Vui lòng chọn hóa đơn");
+        return; // Dừng lại nếu không có hóa đơn
+      }
+
+      if (partialPayment !== currentInvoice.tongTien) {
+        setConfirmPaymets(false);
+        toast.warning("Vui lòng thanh toán đơn hàng!");
+        return;
+      }
+
+      const res = await confirmPayment(id);
+      console.log(res);
+
+      if (res?.code === 200) {
+        setInvoices((prevInvoices) => {
+          const newInvoices = prevInvoices.filter(
+            (invoice) => invoice.id !== id
+          );
+          if (newInvoices.length > 0 && newInvoices[0]?.id) {
+            setActiveTab(newInvoices[0]?.id);
+          } else {
+            setActiveTab("noInvoice");
+          }
+          return newInvoices;
+        });
+
+        toast.success("Thanh toán hóa đơn thành công!");
+        setConfirmPaymets(false);
+        // currentInvoice.tongTien = 0;
+        setPartialPayment(0);
       }
     } catch (error) {
-      console.error("Lỗi trong quá trình thanh toán:", error);
-      toast.error("Có lỗi xảy ra trong quá trình thanh toán.");
-      return Promise.reject(error); // Trả về lỗi nếu có
+      console.log(error);
+      toast.error("Đã có lỗi xảy ra khi thanh toán");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const confirm = () => {
-    modal.confirm({
-      title: "Xác nhận thanh toán",
-      icon: <ExclamationCircleOutlined />,
-      okText: "Xác nhận",
-      cancelText: "Hủy",
-      onOk: () => {
-        return handleXacNhanThanhToan(currentInvoice.id); // Trả về Promise từ hàm xử lý
-      },
-    });
-  };
+  
 
   const [shipping, setShipping] = useState(false);
   const [partialPayment, setPartialPayment] = useState(0);
@@ -405,9 +452,36 @@ const ShoppingCart = () => {
   };
 
   // Xử lý kết quả khi quét thành công
-  const handleScanSuccess = (decodedText) => {
+  const handleScanSuccess = async (decodedText) => {
     console.log("QR Code scanned:", decodedText);
-    // Xử lý thêm sản phẩm vào giỏ hàng bằng `decodedText` nếu cần
+    const data = JSON.parse(decodedText);
+
+    if (!currentInvoice) {
+      toast.warning("Vui lòng chọn hóa đơn!");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const payload = {
+        idHoaDon: currentInvoice?.id,
+        idSanPhamChiTiet: data?.id,
+        soLuong: 1,
+      };
+      console.log(payload);
+
+      await createHoaDonChiTiet(payload);
+      await fetchDataSpct();
+      await getOrderById(currentInvoice.id);
+
+      toast.success("Đã thêm sản phẩm vào hóa đơn!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Số lượng vượt quá trong kho.");
+      setQuantity(1);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Đóng Modal khi hủy
@@ -415,6 +489,7 @@ const ShoppingCart = () => {
     setIsModalVisible(false);
   };
   const handleCancelModalAddSPCT = () => {
+    setQuantity(1);
     setIsModalOpen(false);
   };
   const handleCancelQR = () => {
@@ -450,7 +525,7 @@ const ShoppingCart = () => {
   }, [fetchDataSpct]);
 
   const fetchData = async () => {
-    setLoading(true);
+    // setLoading(true);
     try {
       const res = await getAllHoaDon();
       if (res && res.data) {
@@ -477,7 +552,6 @@ const ShoppingCart = () => {
         toast.warning("Đã đạt giới hạn 5 hóa đơn! Không thể tạo hóa đơn mới.");
         return;
       }
-
       await createHoaDon();
       toast.success("Tạo hóa đơn mới thành công !");
       await fetchData();
@@ -488,14 +562,16 @@ const ShoppingCart = () => {
   };
 
   const getOrderById = useCallback(async (id) => {
+   
     setLoading(true);
     try {
       const res = await getHoaDonById(id);
       if (res?.data) {
         setCurrentInvoice(res.data);
         console.log(res.data);
-
         const details = await getAllHdctByIdHoaDon(id);
+        // add 9:27 pm test
+        // getLSTTByOrderId(id);
         if (details && details.data) {
           setInvoiceDetails(details.data);
           console.log(details.data);
@@ -508,11 +584,31 @@ const ShoppingCart = () => {
       }
     } catch (error) {
       console.error("Error fetching order:", error);
-      toast.error("Lỗi khi lấy thông tin hóa đơn.");
     } finally {
       setLoading(false);
     }
   }, []);
+
+  
+
+  const getLSTTByOrderId = async (orderId) => {
+    setLoading(true);
+    try {
+      if(!currentInvoice) {
+        toast.warning("Vui lòng chọn hóa đơn !");
+        return;
+      }
+      const res = await getLSTTByIDHD(orderId);
+      if (res?.data) {
+        setLichSuThanhToan(res.data)
+      }
+
+    } catch (error) {
+      console.error("Error fetching order:", error);
+    }finally{
+      setLoading(false)
+    }
+  }
 
   const paymentHistory = [
     {
@@ -541,67 +637,6 @@ const ShoppingCart = () => {
     },
   ];
 
-  // const invoiceColumns = [
-  //   {
-  //     title: "STT",
-  //     render: (_, __, index) => index + 1,
-  //   },
-  //   {
-  //     title: "Tên sản phẩm",
-  //     dataIndex: "tenSanPhamChiTiet",
-  //     render: (text, record) => (
-  //       // <div style={{ display: "flex", alignItems: "center" }}>
-  //       //   <img
-  //       //     src={record.hinhAnh} // Thêm ảnh nếu có
-  //       //     alt={record.tenSanPhamChiTiet}
-  //       //     style={{ width: 50, marginRight: 10 }}
-  //       //   />
-  //       <div>
-  //         <div>{record.tenSanPhamChiTiet}</div>
-  //       </div>
-  //       // </div>
-  //     ),
-  //   },
-  //   {
-  //     title: "Số lượng",
-  //     dataIndex: "soLuong",
-  //     render: (text, record) => (
-  //       <div style={{ display: "flex", alignItems: "center" }}>
-  //         <Button
-  //           icon={<MinusOutlined />}
-  //           onClick={() => updateQuantity("minus", record)}
-  //           disabled={record.soLuong <= 1}
-  //         />
-  //         <InputNumber
-  //           min={1}
-  //           value={record.soLuong}
-  //           onChange={(value) => updateQuantity({ ...record, soLuong: value })}
-  //           style={{ width: 60, margin: "0 10px" }}
-  //         />
-  //         <Button
-  //           icon={<PlusOutlined />}
-  //           onClick={() => updateQuantity("plus", record)}
-  //         />
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     title: "Tổng tiền",
-  //     dataIndex: "tongTien",
-  //     render: (text, record) => {
-  //       <span>{record.tongTien}</span>
-  //     },
-  //   },
-  //   {
-  //     title: "Thao tác",
-  //     render: (_, record) => (
-  //       <Button type="link" danger onClick={() => handleDelete(record.id)}>
-  //         <MdDelete style={{ fontSize: "20px" }} />
-  //       </Button>
-  //     ),
-  //   },
-  // ];
-
   const invoiceColumns = [
     {
       title: "STT",
@@ -629,8 +664,9 @@ const ShoppingCart = () => {
           <InputNumber
             min={1}
             value={record.soLuong}
-            onChange={(value) => updateQuantity({ ...record, soLuong: value })}
             style={{ width: 60, margin: "0 10px" }}
+            onChange={(value) => handleQuantityChange(value, record)}
+            onBlur={(e) => handleBlur(e, record)}
           />
           <Button
             icon={<PlusOutlined />}
@@ -643,8 +679,9 @@ const ShoppingCart = () => {
       title: "Tổng tiền",
       dataIndex: "tongTien",
       render: (text, record) => {
-        // Trả về giá trị tongTien hoặc giá trị mặc định nếu không có
-        return <span>{(record.soLuong * record.giaBan).toLocaleString()} VND</span>;
+        return (
+          <span>{(record.soLuong * record.giaBan).toLocaleString()} VND</span>
+        );
       },
     },
     {
@@ -677,7 +714,7 @@ const ShoppingCart = () => {
           ? hoaDonChiTiet.map((item) =>
               item.id === record.id ? { ...item, ...response.data } : item
             )
-          : []; // Giữ nguyên hoặc khởi tạo mảng rỗng nếu không hợp lệ
+          : [];
 
         setHoaDonChiTiet(updatedData);
         await getOrderById(currentInvoice?.id);
@@ -692,24 +729,78 @@ const ShoppingCart = () => {
     }
   };
 
+  const [errorShown, setErrorShown] = useState(false); // Trạng thái kiểm soát thông báo lỗi
+
+  const handleQuantityChange = async (value, record) => {
+    if (value <= 0 || value === "" || value == null) {
+      return;
+    }
+    if (value === record.soLuong) {
+      return;
+    }
+
+    try {
+      const payload = {
+        idSanPhamChiTiet: record?.idSanPhamChiTiet,
+        idHoaDon: currentInvoice?.id,
+        method: value > record.soLuong ? "plus" : "minus",
+        soLuong: Math.abs(value - record.soLuong),
+      };
+      console.log(payload);
+
+      const response = await axiosClient.put(
+        `/api/v1/hdct/update-soLuong/${record.id}`,
+        payload
+      );
+
+      if (response?.data) {
+        const updatedData = Array.isArray(hoaDonChiTiet)
+          ? hoaDonChiTiet.map((item) =>
+              item.id === record.id ? { ...item, ...response.data } : item
+            )
+          : [];
+
+        setHoaDonChiTiet(updatedData);
+        await getOrderById(currentInvoice?.id);
+        await fetchDataSpct();
+        // toast.success("Cập nhật số lượng thành công!");
+      } else {
+        toast.error("Cập nhật thất bại!");
+      }
+    } catch (error) {
+      if (!errorShown) {
+        // Hiển thị lỗi chỉ một lần
+        toast.error("Số lượng vượt quá trong kho !");
+        setErrorShown(true); // Đặt cờ lỗi đã hiển thị
+      }
+      console.error("Error updating quantity:", error);
+    } finally {
+      setTimeout(() => setErrorShown(false), 3000); // Đặt lại trạng thái sau 3 giây
+    }
+  };
+
+  const handleBlur = async (e, record) => {
+    const value = e.target.value;
+    if (value === "" || value <= 0) {
+      toast.error("Giá trị số lượng không hợp lệ");
+      e.target.value = record.soLuong;
+    } else {
+      await handleQuantityChange(Number(value), record);
+    }
+  };
+
   const handleDelete = async (id) => {
     try {
       console.log("Delete record:", id);
-
-      // Gọi API xóa
       await deleteHdctById(id);
 
-      // Xóa khỏi danh sách hiển thị
       setInvoiceDetails((prevDetails) =>
         prevDetails.filter((record) => record.id !== id)
       );
-
-      // Cập nhật thông tin tổng hóa đơn
       const updatedInvoice = getHoaDonById(currentInvoice?.id);
       setCurrentInvoice(updatedInvoice);
       getOrderById(currentInvoice?.id);
       await fetchDataSpct();
-
       toast.success("Xóa hóa đơn chi tiết thành công!");
     } catch (error) {
       console.error("Error deleting invoice detail:", error);
@@ -717,11 +808,8 @@ const ShoppingCart = () => {
     }
   };
 
-  //demo
-
   const [selectedSpct, setSelectedSpct] = useState(null);
 
-  // Set selectedSpct when a user selects a product
   const handleProductSelect = (product) => {
     console.log(product);
 
@@ -730,11 +818,11 @@ const ShoppingCart = () => {
 
   const addSpctToHoaDon = async () => {
     if (!currentInvoice) {
-      toast.warning("Vui lòng chọn hóa đơn !");
+      toast.warning("Vui lòng chọn hóa đơn!");
       return;
     }
     if (!selectedSpct) {
-      toast.warning("Vui lòng chọn sản phẩm !");
+      toast.warning("Vui lòng chọn sản phẩm!");
       return;
     }
 
@@ -745,13 +833,16 @@ const ShoppingCart = () => {
         idSanPhamChiTiet: selectedSpct.id,
         soLuong: quantity,
       };
+
       await createHoaDonChiTiet(payload);
       await fetchDataSpct();
       await getOrderById(currentInvoice.id);
+
       toast.success("Đã thêm sản phẩm vào hóa đơn!");
     } catch (error) {
       console.error(error);
-      toast.error("Lỗi khi thêm sản phẩm vào hóa đơn.");
+      toast.error("Số lượng vượt quá trong kho.");
+      setQuantity(1);
     } finally {
       setLoading(false);
     }
@@ -759,7 +850,7 @@ const ShoppingCart = () => {
 
   return (
     <div style={{ padding: 20 }}>
-      <div style={{ marginBottom: 20, textAlign: "right" }}>
+      {/* <div style={{ marginBottom: 20, textAlign: "right", margin: '20px' }}>
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -767,13 +858,59 @@ const ShoppingCart = () => {
         >
           Tạo hóa đơn
         </Button>
+         <Button type="primary" onClick={showQrScanner}>
+            <IoQrCodeSharp />
+            QR Code
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={showModal}>
+            Thêm sản phẩm
+          </Button>
+      </div> */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          gap: "20px",
+          marginBottom: "20px",
+          padding: "10px 20px",
+        }}
+      >
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={handleCreateNewOrder}
+        >
+          Tạo hóa đơn
+        </Button>
+        <Button
+          type="primary"
+          onClick={showQrScanner}
+          style={{ display: "flex", alignItems: "center", gap: "5px" }}
+        >
+          <IoQrCodeSharp />
+          QR Code
+        </Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={showModal}>
+          Thêm sản phẩm
+        </Button>
       </div>
-      <Tabs type="card" defaultActiveKey="1" onChange={getOrderById}>
+
+      <Tabs
+        type="card"
+        activeKey={activeTab}
+        onChange={(key) => {
+          setActiveTab(key);
+          getOrderById(key);
+        }}
+      >
         {invoices.length > 0 ? (
           invoices.map((invoice) => (
-            <TabPane tab={`Hóa đơn ${invoice.key}`} key={invoice.key}>
+            <TabPane tab={`Hóa đơn ${invoice.id}`} key={invoice.id}>
               <div>
-                <Button type="primary">Danh sách</Button>
+                <Button type="primary" style={{ marginBottom: "10px" }}>
+                  Danh sách
+                </Button>
                 <Table
                   columns={invoiceColumns}
                   dataSource={invoiceDetails}
@@ -785,7 +922,7 @@ const ShoppingCart = () => {
             </TabPane>
           ))
         ) : (
-          <TabPane tab="Hóa đơn" key={currentInvoice?.id}>
+          <TabPane tab="Hóa đơn" key="noInvoice">
             <Text
               type="danger"
               style={{
@@ -799,7 +936,7 @@ const ShoppingCart = () => {
           </TabPane>
         )}
       </Tabs>
-      {/* Nút hành động khác */}
+
       <div
         style={{
           marginBottom: 20,
@@ -807,7 +944,7 @@ const ShoppingCart = () => {
           justifyContent: "space-between",
         }}
       >
-        <Space>
+        {/* <Space>
           <Button type="primary" onClick={showQrScanner}>
             <IoQrCodeSharp />
             QR Code
@@ -815,7 +952,7 @@ const ShoppingCart = () => {
           <Button type="primary" icon={<PlusOutlined />} onClick={showModal}>
             Thêm sản phẩm
           </Button>
-        </Space>
+        </Space> */}
       </div>
       {/* Tổng tiền */}
       <div style={{ textAlign: "right", marginTop: 20 }}>
@@ -832,22 +969,36 @@ const ShoppingCart = () => {
         <Button type="primary" onClick={showModalKhachHang}>
           Chọn tài khoản
         </Button>
+        <Modal
+          title={`Xác nhận thanh toán hóa đơn ${currentInvoice?.id}`}
+          visible={confirmPayments}
+          onCancel={confirmPaymentHide}
+          onClick={confirmPaymentShow}
+          onOk={() => {
+            handleXacNhanThanhToan(currentInvoice?.id);
+          }}
+        ></Modal>
       </div>
       <p style={{ fontSize: "20px", fontWeight: "bolder", marginTop: "" }}>
         Tài khoản
       </p>
       <Divider />
-      {currentInvoice?.tenKhachHang ? (
+      {currentInvoice?.tenKhachHang &&
+      currentInvoice.tenKhachHang !== "Khách lẻ" ? (
         <div>
           <div>
             <span>Tên khách hàng</span>: {currentInvoice.tenKhachHang}
           </div>
-          <div>
-            <span>Số điện thoại</span>: {currentInvoice.sdt}
-          </div>
-          <div>
-            <span>Email</span>: {currentInvoice.email}
-          </div>
+          {currentInvoice?.sdt && (
+            <div>
+              <span>Số điện thoại</span>: {currentInvoice.sdt}
+            </div>
+          )}
+          {currentInvoice?.email && (
+            <div>
+              <span>Email</span>: {currentInvoice.email}
+            </div>
+          )}
         </div>
       ) : (
         <div>
@@ -867,15 +1018,14 @@ const ShoppingCart = () => {
       >
         <div id="reader" style={{ width: "100%" }}></div>
       </Modal>
-      <Modal
+      {/* <Modal
         title="Thêm sản phẩm"
         visible={isShow}
         onOk={handleOk}
         onCancel={handleCancelAddSPCT}
-        width={1000} // Tăng độ rộng của modal
-        bodyStyle={{ padding: "20px" }} // Thêm padding để nội dung có không gian
+        width={1000} 
+        bodyStyle={{ padding: "20px" }} 
       >
-        {/* Filter and Table Content */}
         <div
           style={{
             display: "flex",
@@ -926,12 +1076,118 @@ const ShoppingCart = () => {
           columns={columnsSPCT}
           dataSource={sanPhamChiTiet}
           rowKey="key"
-          pagination={false}
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: totalItems,
+            showSizeChanger: true,
+            pageSizeOptions: ["5","10", "20", "50", "100"],
+            onChange: (page, pageSize) => {
+                setCurrentPage(page);
+                setPageSize(pageSize);
+            },
+        }}
           onRow={(record) => ({
             onClick: () => handleProductSelect(record),
           })}
         />
+      </Modal> */}
+
+      <Modal
+        title="Thêm sản phẩm"
+        visible={isShow}
+        onOk={handleOk}
+        onCancel={handleCancelAddSPCT}
+        width={1000}
+        bodyStyle={{
+          padding: "20px",
+          height: "55vh", // Cố định chiều cao Modal
+          overflow: "hidden", // Đảm bảo Modal không mở rộng
+          display: "flex", // Sử dụng flex để kiểm soát bố cục nội dung
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "10px",
+            marginBottom: "20px",
+          }}
+        >
+          <Input
+            placeholder="Nhập tên sản phẩm"
+            prefix={<SearchOutlined />}
+            style={{ width: "730px" }}
+          />
+          <Button type="primary">Tìm kiếm</Button>
+          <Button>Reset</Button>
+          <Select placeholder="Chất Liệu" style={{ width: "150px" }}>
+            <Option value="All">Tất cả</Option>
+            <Option value="Leather">Da</Option>
+            <Option value="Synthetic">Nhân tạo</Option>
+          </Select>
+          <Select placeholder="Thương Hiệu" style={{ width: "150px" }}>
+            <Option value="All">Tất cả</Option>
+            <Option value="Kappa">Kappa</Option>
+            <Option value="Nike">Nike</Option>
+          </Select>
+          <Select placeholder="Giới Tính" style={{ width: "150px" }}>
+            <Option value="All">Tất cả</Option>
+            <Option value="Male">Nam</Option>
+            <Option value="Female">Nữ</Option>
+          </Select>
+          <Select placeholder="Kích cỡ" style={{ width: "150px" }}>
+            <Option value="All">Tất cả</Option>
+            <Option value="36">36</Option>
+            <Option value="37">37</Option>
+          </Select>
+          <Select placeholder="Màu Sắc" style={{ width: "150px" }}>
+            <Option value="All">Tất cả</Option>
+            <Option value="Maroon">Maroon</Option>
+            <Option value="Red">Red</Option>
+          </Select>
+          <div style={{ width: "300px" }}>
+            <span>Khoảng giá:</span>
+            <Slider range min={0} max={10000000} step={500000} />
+          </div>
+        </div>
+
+        <div
+          style={{
+            flex: 1, // Chiếm không gian còn lại của Modal
+            overflowY: "auto", // Kích hoạt cuộn dọc cho vùng bảng
+          }}
+        >
+          <Table
+            columns={columnsSPCT}
+            dataSource={sanPhamChiTiet}
+            rowKey="key"
+            pagination={{
+              current: currentPage,
+              pageSize: pageSize,
+              total: totalItems,
+              onChange: (page, pageSize) => {
+                setCurrentPage(page);
+                setPageSize(pageSize);
+              },
+            }}
+            onRow={(record) => ({
+              onClick: () => handleProductSelect(record),
+            })}
+          />
+        </div>
+
+        {/* CSS để ẩn thanh cuộn */}
+        <style>
+          {`
+      div[style*="overflow-y: auto"]::-webkit-scrollbar {
+        display: none; /* Ẩn thanh cuộn trên Chrome, Safari */
+      }
+    `}
+        </style>
       </Modal>
+
       <Modal
         title="Thanh toán"
         visible={isModalVisible}
@@ -979,6 +1235,13 @@ const ShoppingCart = () => {
               </Button>
             </Button.Group>
           </Form.Item>
+          <Modal
+        title="Xác nhận thanh toán !"
+        open={openThanhToan}
+        onOk={handleThanhToanOk}
+        confirmLoading={confirmLoading}
+        onCancel={handleThanhToanCancel}
+      ></Modal>
 
           <Form.Item label="Số tiền khách thanh toán">
             <Input
@@ -988,15 +1251,15 @@ const ShoppingCart = () => {
                   ? currentInvoice.tongTien.toLocaleString() + " VND"
                   : "0.0 VND"
               }
-              onChange={(e) => setModalPaymentAmount(Number(e.target.value))}
+              onChange={() => setModalPaymentAmount(currentInvoice?.tongTien)}
               placeholder="Nhập số tiền thanh toán"
             />
           </Form.Item>
           <Divider />
           {/*<Text strong style={{ color: 'red' }}>Tiền thiếu: {remainingAmount.toLocaleString()} VND</Text>*/}
           <Table
-            // columns={paymentHistory}
-            // dataSource={sanPhamChiTiet}
+            columns={paymentHistory}
+            dataSource={lichSuThanhToan}
             pagination={false}
             locale={{ emptyText: "No data" }}
             style={{ marginTop: 16 }}
@@ -1212,11 +1475,10 @@ const ShoppingCart = () => {
                 color: "white",
                 marginLeft: "400px",
               }}
-              onClick={confirm}
+              onClick={confirmPaymentShow}
             >
               Xác nhận thanh toán
             </Button>
-            {contextHolder}
           </Form>
           <Modal
             title="Khách hàng"
@@ -1237,12 +1499,24 @@ const ShoppingCart = () => {
           <Modal
             title="Số lượng sản phẩm"
             open={isModalOpen}
-            onOk={handleOkAddSPCT}
+            onOk={() => {
+              if (quantity < 1) {
+                toast.error("Số lượng phải lớn hơn hoặc bằng 1 !");
+                setIsModalOpen(false);
+                setQuantity(1);
+                return;
+              } else if (quantity > sanPhamChiTiet?.soLuong) {
+                toast.error("Số lượng vượt quá trong kho !");
+                setIsModalOpen(false);
+                setQuantity(1);
+              }
+              handleOkAddSPCT();
+            }}
             onCancel={handleCancelModalAddSPCT}
           >
             <InputNumber
-              min={1}
-              defaultValue={1}
+              // min={1}
+              value={quantity}
               onChange={(value) => setQuantity(value)}
             />
           </Modal>
