@@ -241,10 +241,6 @@ const TableKhachHang = () => {
         dataIndex: "gioiTinh",
         render: (text) => (text ? 'Nam' : 'Nữ'), // Giới tính là boolean, true = Nam, false = Nữ
       },
-      {
-        title: "ID Tài khoản",
-        dataIndex: "idTaiKhoan",
-      },
     {
       title: "Trạng thái",
       dataIndex: "trangThai",
