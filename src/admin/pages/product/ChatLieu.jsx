@@ -1,10 +1,10 @@
 import React from 'react'
+import TableChatLieuVai from '../../component/product/chatlieuvai/TableChatLieuVai'
 
 const ChatLieu = () => {
   return (
-    <div>
-      
-      Trang quản lý chất liệu giày
+    <div>     
+      <TableChatLieuVai/>
     </div>
   )
 }

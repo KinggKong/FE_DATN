@@ -18,6 +18,7 @@ import FormAddDotGiamGia from "../admin/component/giamgia/DrawerAdd";
 import ViewEditDotGiamGia from "../admin/component/giamgia/ViewEdit";
 import OrderManagement from "../admin/component/banhang/OrderManagement";
 import OrderDetail from "../admin/component/banhang/OrderDetail";
+import TongQuan from "../admin/pages/thongke/TongQuan";
 
 
 
@@ -97,6 +98,15 @@ const AdminRouters = {
     {
       path:"order-detail/:id",
       element:<OrderDetail />
+    },
+    {
+      
+      path: "tong-quan",
+      element: <TongQuan />,
+    },
+    {
+      index: true, 
+      element: <TongQuan />,
     }
 
 

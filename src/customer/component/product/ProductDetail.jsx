@@ -92,7 +92,7 @@ const ProductDetail = () => {
         finalDiscountPrice = basePrice * (1 - saleForProduct.phanTramGiam / 100); // Giá sau khi giảm
         setDiscountEndDate(saleForProduct.thoiGianKetThuc); // Cập nhật thời gian kết thúc giảm giá
       }
-
+      
       setProductPrice(finalPrice); // Cập nhật giá gốc
       setProductDiscountPrice(finalDiscountPrice); // Cập nhật giá sau giảm
 
@@ -114,7 +114,7 @@ const ProductDetail = () => {
       name: productDetail.tenSanPham,
       giaTien: productPrice,
       discountPrice: productDiscountPrice, // Giá sau giảm
-      discountEnd: discountEndDate, // Thời gian kết thúc giảm giá (ISO format)
+      thoiGianGiamGia: discountEndDate, // Thời gian kết thúc giảm giá (ISO format)
       selectedColor,
       selectedSize,
       nameColor,
@@ -129,7 +129,7 @@ const ProductDetail = () => {
 
 
     addToCart(productToAdd); // Thêm sản phẩm vào giỏ hàng
-    message.success("Đã thêm sản phẩm vào giỏ hàng!");
+   
     
 
 
@@ -140,6 +140,7 @@ const ProductDetail = () => {
     const productDetailItem = productDetail?.sanPhamChiTietList?.find(
       (item) => item.id === id
     );
+    console.log("ProductDetail", productDetailItem);
     return productDetailItem ? productDetailItem : null;
   }
 
@@ -194,8 +195,10 @@ const ProductDetail = () => {
   const fetchProductByCategory = async (idDanhMuc) => {
     try {
       const res = await getSanPhamByIdDanhMucApi(idDanhMuc);
-      console.log(res);
-      setRelatedProducts(res.data);
+      console.log("danh muc",res);
+      const filteredProducts = res.data.filter((product) => product.id !== id && product.soLuongSanPhamChiTiet>0);
+      console.log("danh muc fiter",filteredProducts);
+      setRelatedProducts(filteredProducts);
     }
     catch (error) {
       console.log('Failed to fetch product detail: ', error);
@@ -208,6 +211,7 @@ const ProductDetail = () => {
 
     fetchProduct();
     fetchSaleForProduct(productDetailId);
+    
     console.log("Id spct", productDetailId);
   }, [id]);
   useEffect(() => {
@@ -354,6 +358,7 @@ const ProductDetail = () => {
 
                 {/* % giảm giá */}
                 <Typography.Text
+                className="gradient-text shaking-text"
                   style={{
                     fontSize: "16px",
                     color: "#52c41a",

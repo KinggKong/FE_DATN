@@ -1,9 +1,10 @@
 import React from 'react'
+import TableKhachHang from '../../component/product/khachhang/TableKhachHang'
 
 const KhachHang = () => {
   return (
     <div>
-        Trang quản lý tài khoản khách hàng
+       <TableKhachHang/>
     </div>
   )
 }

@@ -273,10 +273,18 @@ const DrawerAdd = ({
 
 
   
-  const productOptions = products.map((product) => ({
-    value: product.id, // Hoặc giá trị mà bạn muốn lấy khi chọn sản phẩm
-    label: product.tenSanPham, // Hiển thị tên sản phẩm
+  // const productOptions = products.map((product) => ({
+  //   value: product.id, // Hoặc giá trị mà bạn muốn lấy khi chọn sản phẩm
+  //   label: product.tenSanPham, // Hiển thị tên sản phẩm
+  // }));
+  const productOptions = products
+  .filter((product) => product.trangThai === 1) // Chỉ lấy các sản phẩm có trạng thái = 1
+  .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)) // Sắp xếp theo updatedAt giảm dần
+  .map((product) => ({
+    value: product.id, // Giá trị của tùy chọn
+    label: product.tenSanPham, // Tên sản phẩm hiển thị
   }));
+
 
   const columns = [
     {
@@ -435,7 +443,7 @@ const DrawerAdd = ({
                 <Select
                   showSearch
                   onChange= {handleProductChange}
-                  placeholder="Search to Select"
+                  placeholder="Chọn sản phẩm"
                   optionFilterProp="label"
                   filterSort={(optionA, optionB) =>
                     (optionA?.label ?? '').toLowerCase().localeCompare((optionB?.label ?? '').toLowerCase())

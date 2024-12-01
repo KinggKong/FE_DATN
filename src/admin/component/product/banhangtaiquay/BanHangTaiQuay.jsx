@@ -7,11 +7,9 @@ import {
   Input,
   InputNumber,
   Modal,
-  Popconfirm,
   Row,
   Select,
   Slider,
-  Space,
   Switch,
   Table,
   Tabs,
@@ -43,7 +41,6 @@ import { getAllSanPhamChiTietApi } from "../../../../api/SanPhamChiTietAPI";
 import TabPane from "antd/es/tabs/TabPane";
 import { getAllKhachHang } from "../../../../api/KhachHang";
 import axiosClient from "../../../../api/axiosClient";
-import { getLSTTByIDHD } from "../../../../api/LichSuThanhToan";
 
 const ShoppingCart = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -88,7 +85,7 @@ const ShoppingCart = () => {
 
   const [openThanhToan, setOpenThanhToan] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
- 
+
   const handleThanhToanOk = async () => {
     setConfirmLoading(true);
     setTimeout(() => {
@@ -275,7 +272,6 @@ const ShoppingCart = () => {
     }
   }, [activeTab]);
 
-
   const handleXacNhanThanhToan = async (id) => {
     setLoading(true);
     try {
@@ -306,10 +302,8 @@ const ShoppingCart = () => {
           }
           return newInvoices;
         });
-
         toast.success("Thanh toán hóa đơn thành công!");
         setConfirmPaymets(false);
-        // currentInvoice.tongTien = 0;
         setPartialPayment(0);
       }
     } catch (error) {
@@ -319,8 +313,6 @@ const ShoppingCart = () => {
       setLoading(false);
     }
   };
-
-  
 
   const [shipping, setShipping] = useState(false);
   const [partialPayment, setPartialPayment] = useState(0);
@@ -343,9 +335,20 @@ const ShoppingCart = () => {
     },
     {
       title: "Ảnh",
-      dataIndex: "image",
+      dataIndex: "hinhAnhList",
       key: "image",
-      render: (text) => <img src={text} alt="Product" style={{ width: 50 }} />,
+      render: (hinhAnhList) => {
+        if (hinhAnhList && hinhAnhList.length > 0) {
+          return (
+            <img
+              src={hinhAnhList[0].url}
+              alt="Hình ảnh sản phẩm"
+              style={{ height: "100px", width: "auto" }}
+            />
+          );
+        }
+        return <span>Không có hình ảnh</span>;
+      },
     },
     { title: "Tên Sản Phẩm", dataIndex: "tenSanPham", key: "name" },
     {
@@ -562,7 +565,6 @@ const ShoppingCart = () => {
   };
 
   const getOrderById = useCallback(async (id) => {
-   
     setLoading(true);
     try {
       const res = await getHoaDonById(id);
@@ -589,26 +591,24 @@ const ShoppingCart = () => {
     }
   }, []);
 
-  
+  // const getLSTTByOrderId = async (orderId) => {
+  //   setLoading(true);
+  //   try {
+  //     if(!currentInvoice) {
+  //       toast.warning("Vui lòng chọn hóa đơn !");
+  //       return;
+  //     }
+  //     const res = await getLSTTByIDHD(orderId);
+  //     if (res?.data) {
+  //       setLichSuThanhToan(res.data)
+  //     }
 
-  const getLSTTByOrderId = async (orderId) => {
-    setLoading(true);
-    try {
-      if(!currentInvoice) {
-        toast.warning("Vui lòng chọn hóa đơn !");
-        return;
-      }
-      const res = await getLSTTByIDHD(orderId);
-      if (res?.data) {
-        setLichSuThanhToan(res.data)
-      }
-
-    } catch (error) {
-      console.error("Error fetching order:", error);
-    }finally{
-      setLoading(false)
-    }
-  }
+  //   } catch (error) {
+  //     console.error("Error fetching order:", error);
+  //   }finally{
+  //     setLoading(false)
+  //   }
+  // }
 
   const paymentHistory = [
     {
@@ -641,6 +641,22 @@ const ShoppingCart = () => {
     {
       title: "STT",
       render: (_, __, index) => index + 1,
+    },
+    {
+      title: "Hình ảnh",
+      dataIndex: "hinhAnhList",
+      render: (hinhAnhList) => {
+        if (hinhAnhList && hinhAnhList.length > 0) {
+          return (
+            <img
+              src={hinhAnhList[0].url}
+              alt="Hình ảnh sản phẩm"
+              style={{ height: "100px", width: "auto" }}
+            />
+          );
+        }
+        return <span>Không có hình ảnh</span>; // Hiển thị nếu không có hình ảnh
+      },
     },
     {
       title: "Tên sản phẩm",
@@ -1236,12 +1252,12 @@ const ShoppingCart = () => {
             </Button.Group>
           </Form.Item>
           <Modal
-        title="Xác nhận thanh toán !"
-        open={openThanhToan}
-        onOk={handleThanhToanOk}
-        confirmLoading={confirmLoading}
-        onCancel={handleThanhToanCancel}
-      ></Modal>
+            title="Xác nhận thanh toán !"
+            open={openThanhToan}
+            onOk={handleThanhToanOk}
+            confirmLoading={confirmLoading}
+            onCancel={handleThanhToanCancel}
+          ></Modal>
 
           <Form.Item label="Số tiền khách thanh toán">
             <Input

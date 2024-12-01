@@ -2,9 +2,10 @@ import React from "react";
 import { Card, Image } from "antd";
 import { ShoppingCartOutlined } from "@ant-design/icons";
 import { useNavigate } from 'react-router-dom';
+import { GrLinkNext } from "react-icons/gr";
 
 const CardItem = ({ product }) => {
-  
+
   const navigate = useNavigate();
   const handleCardClick = (id) => {
     navigate(`/detail/${id}`); // Điều hướng tới trang chi tiết
@@ -56,14 +57,23 @@ const CardItem = ({ product }) => {
         />}
 
       >
+
+        {/* Hiển thị phần trăm giảm giá */}
         {product?.phanTramGiamGia && (
-          <div
-            className="absolute top-2 left-2 bg-red-500 text-white font-bold py-1 px-2 rounded-md"
-            style={{ zIndex: 1 }}
-          >
-            {product.phanTramGiamGia}%
+          <div className="ribbon">
+            -{product.phanTramGiamGia}%
           </div>
         )}
+
+        {product?.soLuongBan > 0 && (
+          <div className="absolute top-2 right-2 bg-green-700 text-white px-2 py-1 rounded-full text-sm">
+            {product.soLuongBan} lượt bán
+          </div>
+        )}
+        
+
+
+
         <div className="text-start" onClick={() => handleCardClick(product.id)}>
           <h3 className="text-[15px] font-bold">
             {product?.tenSanPham}
@@ -73,7 +83,7 @@ const CardItem = ({ product }) => {
           <div className="flex justify-between items-center mt-3">
             <span>{product?.giaHienThi}</span>
             <button className="bg-blue-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">
-              <ShoppingCartOutlined />
+            <GrLinkNext />
             </button>
           </div>
         </div>
