@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, DatePicker, Tabs, Badge, Button, Dropdown, Space, Menu, message, Modal, notification } from 'antd';
-import { SearchOutlined, CalendarOutlined, MoreOutlined, FileTextOutlined, TruckOutlined } from '@ant-design/icons';
+import { SearchOutlined, CalendarOutlined, MoreOutlined, FileTextOutlined, TruckOutlined,PrinterOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,6 +20,43 @@ export default function OrderManagement() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const navigate = useNavigate();
+
+
+
+    const handleGenerateInvoice = async (orderCode) => {
+        try {
+            const response = await axios.get(`http://localhost:8080/api/invoice/generate?maHoaDon=${orderCode}`, {
+                responseType: 'blob',
+            });
+            
+          
+            const file = new Blob([response.data], { type: 'application/pdf' });
+            
+            
+            const fileURL = URL.createObjectURL(file);
+            const link = document.createElement('a');
+            link.href = fileURL;
+            link.setAttribute('download', `invoice-${orderCode}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            notification.success({
+                message: "Thành công",
+                description: `Đã tạo hóa đơn cho đơn hàng ${orderCode}`,
+                duration: 4,
+                placement: 'topRight',
+            });
+        } catch (error) {
+            console.error('Error generating invoice:', error);
+            notification.error({
+                message: "Lỗi",
+                description: `Không thể tạo hóa đơn: ${error.message}`,
+                duration: 4,
+                placement: 'topRight',
+            });
+        }
+    };
 
     const statusMap = {
         'all': '',
@@ -157,9 +194,14 @@ export default function OrderManagement() {
             <Menu.Item key="view" icon={<FileTextOutlined />} onClick={() => navigate(`/admin/order-detail/${record.key}`)}>
                 Xem chi tiết
             </Menu.Item>
-            <Menu.Item key="update" icon={<TruckOutlined />} onClick={() => showModal(record)}>
+            {/* <Menu.Item key="update" icon={<TruckOutlined />} onClick={() => showModal(record)}>
                 Cập nhật trạng thái
-            </Menu.Item>
+            </Menu.Item>         */}
+              {record.status !== 'DONE' && record.status !== 'CANCELLED' && (
+                <Menu.Item key="update" icon={<TruckOutlined />} onClick={() => showModal(record)}>
+                    Cập nhật trạng thái
+                </Menu.Item>
+            )}
         </Menu>
     );
 
@@ -221,7 +263,17 @@ export default function OrderManagement() {
                     <Dropdown overlay={actionMenu(record)} trigger={['click']}>
                         <Button icon={<MoreOutlined />} />
                     </Dropdown>
-                    <Button icon={<FileTextOutlined />} className="text-blue-600" onClick={() => navigate(`/admin/order-detail/${record.key}`)} />
+                    {/* <Button icon={<FileTextOutlined />} className="text-blue-600" onClick={() => navigate(`/admin/order-detail/${record.key}`)} /> */}
+
+                    {record.status === 'DONE' && (
+                        <Button 
+                            icon={<PrinterOutlined />} 
+                            className="text-green-600" 
+                            onClick={() => handleGenerateInvoice(record.orderCode)}
+                        >
+                            Xuất hóa đơn
+                        </Button>
+                    )}
                 </Space>
             )
         }

@@ -13,7 +13,7 @@ const ForgotPassword = () => {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:8085/v1/api/auth/forgot-password?email=${encodeURIComponent(values.email)}`);
+      const response = await axios.get(`http://localhost:8080/v1/api/auth/forgot-password?email=${encodeURIComponent(values.email)}`);
       
       console.log('Password reset request response:', response.data);
       message.success('Password reset link sent to your email!');
