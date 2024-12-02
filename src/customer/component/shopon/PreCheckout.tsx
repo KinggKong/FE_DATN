@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useCallback } from 'react';
 import axios from 'axios';
 import { Form, Input, Radio, Space, Spin, Image, message, notification, Select } from 'antd';
 import { CreditCard, Truck, Tag } from 'lucide-react';
@@ -32,47 +32,54 @@ export default function PreCheckout() {
 
 
     
-    useEffect(() => {
+    // useEffect(() => {
+    //     const storedUserInfo = localStorage.getItem("userInfo");
+    //     if (storedUserInfo) {
+    //       const parsedUserInfo = JSON.parse(storedUserInfo);
+    //       setUserInfo(parsedUserInfo);
+    //       console.log('Stored user info:', storedUserInfo);
+    //       console.log('Parsed user info:', parsedUserInfo);
+    //     }
+    //   }, []);
+
+
+    const fetchData = useCallback(async (userId) => {
+        setLoading(true);
+        try {
+          console.log('Fetching data for userId:', userId);
+          const response = await axios.get(`http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userId}`);
+          if (response.data.code === 1000) {
+            if (!response.data.data || !response.data.data.gioHangChiTietList || response.data.data.gioHangChiTietList.length === 0) {
+              navigate('/');
+              return;
+            }
+            setCheckoutData(response.data.data);
+          } else {
+            throw new Error('Failed to fetch data');
+          }
+        } catch (err) {
+          setError('An error occurred while fetching data');
+          console.error('Error:', err);
+        } finally {
+          setLoading(false);
+        }
+      }, [navigate]);
+
+
+      useEffect(() => {
         const storedUserInfo = localStorage.getItem("userInfo");
         if (storedUserInfo) {
           const parsedUserInfo = JSON.parse(storedUserInfo);
           setUserInfo(parsedUserInfo);
           console.log('Stored user info:', storedUserInfo);
           console.log('Parsed user info:', parsedUserInfo);
+          fetchData(parsedUserInfo.id);
+        } else {
+          console.log('No stored user info, using default userId: 1');
+          fetchData(1);
         }
-      }, []);
-
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const userId = userInfo && userInfo.id ? userInfo.id : 1;
-            // if (!userInfo || !userInfo.id) {
-            //     console.log('User info not available yet');
-            //     return;
-            //   }
-            setLoading(true)
-            try {
-                const response = await axios.get(`http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userId}`);
-                if (response.data.code === 1000) {
-                    if (!response.data.data || !response.data.data.gioHangChiTietList || response.data.data.gioHangChiTietList.length === 0) {                    
-                        navigate('/');
-                        return;
-                    }
-
-                    setCheckoutData(response.data.data);                  
-                } else {
-                    throw new Error('Failed to fetch data');
-                }
-            } catch (err) {
-                setError('An error occurred while fetching data');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
         fetchProvinces();
-    }, [userInfo]);
+      }, [fetchData]);
 
     const fetchProvinces = async () => {
         setProvincesLoading(true);
