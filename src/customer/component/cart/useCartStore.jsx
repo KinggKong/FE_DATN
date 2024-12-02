@@ -1,50 +1,19 @@
 import { create } from "zustand";
 import axios from "axios";
 import { message } from "antd";
+import { useEffect } from "react";
+
 
 const useCartStore = create((set) => ({
+
+
     cart: [],
 
-    //   addToCart: (product) =>
-    //     set((state) => {
-    //       const currentTime = new Date().getTime();
-
-    //       const isDiscountActive =
-    //         product.discountEnd && currentTime < new Date(product.discountEnd).getTime();
-
-    //       const productWithPrice = {
-    //         ...product,
-    //         quantity: product.quantity || 1, // Khởi tạo số lượng mặc định là 1
-    //         finalPrice: isDiscountActive ? product.discountPrice : product.price,
-    //       };
-
-    //       const existingProduct = state.cart.find(
-    //         (item) =>
-    //           item.id === product.id &&
-    //           item.selectedColor === product.selectedColor &&
-    //           item.selectedSize === product.selectedSize
-    //       );
-
-    //       if (existingProduct) {
-    //         return {
-    //           cart: state.cart.map((item) =>
-    //             item.id === product.id &&
-    //             item.selectedColor === product.selectedColor &&
-    //             item.selectedSize === product.selectedSize
-    //               ? { ...item, quantity: item.quantity + product.quantity }
-    //               : item
-    //           ),
-    //         };
-    //       } else {
-    //         return {
-
-    //             cart: [...state.cart, productWithPrice] };
-    //       }
-
-
-    //     }),
     // Hàm thêm sản phẩm vào giỏ hàng và lưu vào DB
     addToCart: async (product) => {
+        // Lấy thông tin người dùng từ localStorage
+        const storedUserInfo = localStorage.getItem("userInfo");
+        const userInfo = storedUserInfo ? JSON.parse(storedUserInfo) : null;
         // Kiểm tra xem sản phẩm có khuyến mãi hay không
         const currentTime = new Date().getTime();
         const isDiscountActive =
@@ -107,15 +76,15 @@ const useCartStore = create((set) => ({
 
         // Gửi dữ liệu giỏ hàng chi tiết vào DB thông qua API
         try {
-            
-            if(product.sanPhamChiTietResponse.soLuong < product.soLuong){
+
+            if (product.sanPhamChiTietResponse.soLuong < product.soLuong) {
                 message.error("Số lượng sản phẩm trong kho không đủ!");
                 return;
             }
 
 
             const response = await axios.post("http://localhost:8080/api/v1/gio-hang-ct", {
-                idGioHang: 1, // ID giỏ hàng, thay bằng ID của người dùng hiện tại
+                idGioHang: userInfo.idGioHang, // ID giỏ hàng, thay bằng ID của người dùng hiện tại
                 idSanPhamChiTiet: product.id,
                 soLuong: product.quantity || 1,
                 giaTien: productWithPrice.giaTien,
@@ -133,9 +102,12 @@ const useCartStore = create((set) => ({
     },
 
     // Cập nhật lại cart từ API
-    fetchCart: async (idGioHang) => {
+    fetchCart: async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/v1/gio-hang-ct?idGioHang=${1}`);
+            // Lấy thông tin người dùng từ localStorage
+            const storedUserInfo = localStorage.getItem("userInfo");
+            const userInfo = storedUserInfo ? JSON.parse(storedUserInfo) : null;
+            const response = await axios.get(`http://localhost:8080/api/v1/gio-hang-ct?idGioHang=${userInfo.idGioHang}`);
             if (response.data && response.data.data) {
                 set({ cart: response.data.data });
             }
@@ -147,10 +119,12 @@ const useCartStore = create((set) => ({
 
     updateQuantity: async (idSanPhamChiTiet, delta) => {
         try {
+            const storedUserInfo = localStorage.getItem("userInfo");
+            const userInfo = storedUserInfo ? JSON.parse(storedUserInfo) : null;
             // Gửi yêu cầu cập nhật số lượng qua API
 
             const response = await axios.put(
-                `http://localhost:8080/api/v1/gio-hang-ct/update?idSanPhamChiTiet=${idSanPhamChiTiet}&idGioHang=1&soLuong=${delta}`
+                `http://localhost:8080/api/v1/gio-hang-ct/update?idSanPhamChiTiet=${idSanPhamChiTiet}&idGioHang=${userInfo.idGioHang}&soLuong=${delta}`
             );
 
             console.log("Giỏ hàng đã được cập nhật:", response.data);
@@ -188,8 +162,11 @@ const useCartStore = create((set) => ({
 
     removeFromCart: async (id) => {
         try {
+            const storedUserInfo = localStorage.getItem("userInfo");
+            const userInfo = storedUserInfo ? JSON.parse(storedUserInfo) : null;
+            
             // Gọi API để xóa sản phẩm trong database
-            await axios.delete(`http://localhost:8080/api/v1/gio-hang-ct/san-pham-chi-tiet/${id}?idGioHang=1`); // URL endpoint backend
+            await axios.delete(`http://localhost:8080/api/v1/gio-hang-ct/san-pham-chi-tiet/${id}?idGioHang=${userInfo.idGioHang}`); // URL endpoint backend
 
             // Cập nhật lại state sau khi xóa thành công
             set((state) => ({
@@ -205,7 +182,8 @@ const useCartStore = create((set) => ({
         state.cart.reduce((total, item) => total + item.finalPrice * item.quantity, 0),
     getCartCount: () => {
         return useCartStore.getState().cart.length;
-    }
+    },
+    
 
 }));
 
