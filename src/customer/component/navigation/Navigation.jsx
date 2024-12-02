@@ -1,9 +1,11 @@
-import React, { useState } from "react";
-import { Input, Badge, Dropdown, Avatar,Menu } from "antd";
+import { useState,useEffect  } from "react";
+import { Input, Badge, Dropdown, Avatar,Menu,Button } from "antd";
 import {
   UserOutlined,
   ShoppingCartOutlined,
   SearchOutlined,
+  HistoryOutlined,
+  LogoutOutlined
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import CartDrawer from "../cart/CartDrawer";
@@ -15,6 +17,7 @@ const Navigation = ({ searchValue, setSearchValue }) => {
   const [isOpenDrawer, setOpenDrawer] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [isDropdownVisible, setDropdownVisible] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
   const showDrawer = () => {
     setOpenDrawer(true);
@@ -54,6 +57,36 @@ const Navigation = ({ searchValue, setSearchValue }) => {
     navigate(`/detail/${id}`); // Điều hướng tới trang chi tiết sản phẩm với ID tương ứng
     setDropdownVisible(false); // Đóng dropdown khi chọn item
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("userInfo");
+    setIsLoggedIn(false);
+    navigate("/auth/login");
+  };
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    setIsLoggedIn(!!accessToken);
+  }, []);
+
+  const userMenu = (
+    <Menu>
+      <Menu.Item key="profile">
+        <Link to="/profile">
+          <UserOutlined /> Hồ sơ
+        </Link>
+      </Menu.Item>
+      <Menu.Item key="purchase-history">
+        <Link to="/purchase-history">
+          <HistoryOutlined /> Lịch sử mua hàng
+        </Link>
+      </Menu.Item>
+      <Menu.Item key="logout" onClick={handleLogout}>
+        <LogoutOutlined /> Đăng xuất
+      </Menu.Item>
+    </Menu>
+  );
   
   const cartCount = useCartStore(state => state.cart.length);
   return (
@@ -161,17 +194,16 @@ const Navigation = ({ searchValue, setSearchValue }) => {
               style={{ fontSize: "24px", padding: "0 15px" }}
             />
           </Badge>
-          <Dropdown
-            menu={{
-              items: [
-                { key: "profile", label: "Hồ sơ" },
-                { key: "settings", label: "Cài đặt" },
-                { key: "logout", label: "Đăng xuất" },
-              ],
-            }}
-          >
-            <Avatar icon={<UserOutlined />} />
-          </Dropdown>
+
+         {isLoggedIn ? (
+            <Dropdown overlay={userMenu}>
+              <Avatar icon={<UserOutlined />} />
+            </Dropdown>
+          ) : (
+            <Link to="/login">
+              <Button type="primary">Đăng nhập</Button>
+            </Link>
+          )}
         </div>
       </nav>
       <CartDrawer showDrawer={setOpenDrawer} isOpenDrawer={isOpenDrawer} />
