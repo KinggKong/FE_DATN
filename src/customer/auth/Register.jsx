@@ -34,18 +34,16 @@ const Register = () => {
         name: values.name,
         email: values.email,
         code: values.code,
-        password: values.password,
-        dob: values.dob.format('YYYY-MM-DD'),
-        gender: parseInt(values.gender)
+        password: values.password,  
       };
 
       const response = await axios.post(
-        "http://localhost:8085/v1/api/auth/sign-up",
+        "http://localhost:8080/api/v1/auth/sign-up",
         signupRequest
       );
       console.log("Signup Success:", response.data);
       message.success("Signup successful!");
-      navigate("/login");
+      navigate("/auth/login");
     } catch (error) {
       console.error("Error during signup:", error);
       if (error.response && error.response.data) {
@@ -72,9 +70,9 @@ const Register = () => {
       }
   
       setIsEmailSending(true);
-      const response = await axios.post("http://localhost:8085/v1/api/auth/via-email", email, {
+      const response = await axios.post("http://localhost:8080/api/v1/auth/via-email", {"email":email}, {
         headers: {
-          "Content-Type": "text/plain"
+          "Content-Type": "application/json"
         }
       });
   
@@ -178,42 +176,7 @@ const Register = () => {
             ]}
           >
             <Input.Password prefix={<LockOutlined />} placeholder="Confirm Password" className="rounded-md" />
-          </Form.Item>
-
-          <Form.Item
-            name="dob"
-            rules={[
-              { required: true, message: 'Please select your date of birth!' },
-              () => ({
-                validator(_, value) {
-                  if (!value) {
-                    return Promise.reject(new Error('Date of birth is required'));
-                  }
-                  const today = moment();
-                  const birthDate = moment(value);
-                  const age = today.diff(birthDate, 'years');
-                  if (age > 18) {
-                    return Promise.reject(new Error('You must be at least 18 years old!'));
-                  }
-                  return Promise.resolve();
-                },
-              }),
-            ]}
-          >
-            <DatePicker className="w-full rounded-md" placeholder="Date of Birth" />
-          </Form.Item>
-
-          <Form.Item
-            name="gender"
-            rules={[{ required: true, message: 'Please select your gender!' }]}
-          >
-            <Select placeholder="Select your gender" className="rounded-md">
-              <Option value="0">Male</Option>
-              <Option value="1">Female</Option>
-              <Option value="2">Other</Option>
-            </Select>
-          </Form.Item>
-
+          </Form.Item>      
           <Form.Item>
             <Button 
               type="primary" 
