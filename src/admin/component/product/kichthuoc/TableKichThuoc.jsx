@@ -86,7 +86,13 @@ const TableKichThuoc = () => {
       await fetchData();
     } catch (error) {
       console.error("Failed to delete item", error);
-    }
+      notification.error({
+          message: "Error",
+          description: "Failed to delete item",
+      });
+  }finally {
+      setLoading(false);
+  }
   };
 
   const handleEdit1 = (record) => {
