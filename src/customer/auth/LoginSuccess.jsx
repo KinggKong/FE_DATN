@@ -19,7 +19,7 @@ const LoginSuccess = () => {
 
         if (response.data) {
           
-          localStorage.setItem("userInfo", JSON.stringify(response.data));
+          localStorage.setItem("userInfo", JSON.stringify(response.data.data));
           message.success("Đăng nhập thành công!");
           navigate("/"); 
         }

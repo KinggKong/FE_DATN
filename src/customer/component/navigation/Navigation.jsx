@@ -200,7 +200,7 @@ const Navigation = ({ searchValue, setSearchValue }) => {
               <Avatar icon={<UserOutlined />} />
             </Dropdown>
           ) : (
-            <Link to="/login">
+            <Link to="/auth/login">
               <Button type="primary">Đăng nhập</Button>
             </Link>
           )}
