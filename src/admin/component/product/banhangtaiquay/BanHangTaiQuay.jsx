@@ -134,7 +134,7 @@ const ShoppingCart = () => {
     }
   };
 
-  // Xử lý thay đổi số tiền thanh toán
+  
   const handlePaymentAmountChange = (e) => {
     setModalPaymentAmount(Number(e.target.value));
   };
