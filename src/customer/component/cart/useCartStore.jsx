@@ -107,6 +107,11 @@ const useCartStore = create((set) => ({
 
         // Gửi dữ liệu giỏ hàng chi tiết vào DB thông qua API
         try {
+            
+            if(product.sanPhamChiTietResponse.soLuong < product.soLuong){
+                message.error("Số lượng sản phẩm trong kho không đủ!");
+                return;
+            }
 
 
             const response = await axios.post("http://localhost:8080/api/v1/gio-hang-ct", {

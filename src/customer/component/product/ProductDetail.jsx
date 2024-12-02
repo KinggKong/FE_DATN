@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Image, Typography, Button, Radio, InputNumber, Card, Breadcrumb,message } from "antd";
+import { Row, Col, Image, Typography, Button, Radio, InputNumber, Card, Breadcrumb, message } from "antd";
 import { useParams } from 'react-router-dom';
 import { getSanPhamByIdApi, getSanPhamByIdDanhMucApi } from "../../../api/SanPhamApi";
 import CardItem from "../card/CardItem";
 import SPKhuyenMaiCarousel from "../carousel/SPKhuyenMaiCarousel";
 import { Link } from "react-router-dom";
-import { SyncOutlined, TrophyOutlined, CarOutlined, CreditCardOutlined } from "@ant-design/icons";
+import { SyncOutlined, TrophyOutlined, CarOutlined, CreditCardOutlined, WalletOutlined, EnvironmentOutlined, SafetyOutlined, GiftOutlined } from "@ant-design/icons";
 import useCartStore from "../cart/useCartStore";
 import { getSaleCTByPrDtApi } from "../../../api/SaleCTApi";
 const ProductDetail = () => {
@@ -28,24 +28,24 @@ const ProductDetail = () => {
 
   const features = [
     {
-      icon: <SyncOutlined style={{ fontSize: "30px", color: "#FFC107" }} />,
-      title: "Miễn Phí Giao Hàng",
-      description: "Trên Toàn Quốc",
+      icon: <GiftOutlined style={{ fontSize: "30px", color: "#4CAF50" }} />,
+      title: "Ưu Đãi Đặc Biệt",
+      description: "Dành Riêng Cho Thành Viên",
     },
     {
-      icon: <TrophyOutlined style={{ fontSize: "30px", color: "#FFC107" }} />,
-      title: "Hỗ Trợ Bảo Hành",
-      description: "Từ 1 Đến 5 Năm",
+      icon: <SafetyOutlined style={{ fontSize: "30px", color: "#4CAF50" }} />,
+      title: "An Toàn Thanh Toán",
+      description: "Bảo Mật Mọi Giao Dịch",
     },
     {
-      icon: <CarOutlined style={{ fontSize: "30px", color: "#FFC107" }} />,
-      title: "Đổi Hàng Miễn Phí",
-      description: "Trong 30 Ngày",
+      icon: <EnvironmentOutlined style={{ fontSize: "30px", color: "#4CAF50" }} />,
+      title: "Giao Hàng Nhanh",
+      description: "Chỉ Trong 24 Giờ",
     },
     {
-      icon: <CreditCardOutlined style={{ fontSize: "30px", color: "#FFC107" }} />,
-      title: "Hoàn Tiền 100%",
-      description: "Nếu Sản Phẩm Lỗi",
+      icon: <WalletOutlined style={{ fontSize: "30px", color: "#FF5722" }} />,
+      title: "Giá Cả Hợp Lý",
+      description: "Cạnh Tranh Nhất Thị Trường",
     },
   ];
 
@@ -66,7 +66,7 @@ const ProductDetail = () => {
   const handleColorChange = (colorId) => {
     const color = productDetail.sanPhamChiTietList?.find((item) => item.id_mauSac === colorId);
     if (color) {
-      setSelectedImage(color.hinhAnhList[0].url); // Lấy ảnh đầu tiên của màu
+      setSelectedImage(colorId.hinhAnhList?.[0].url || "");
       setSelectedColor(colorId);
       setNameColor(color.tenMauSac); // Cập nhật tên màu
       updatePrice(selectedSize, colorId); // Cập nhật giá khi thay đổi màu
@@ -92,7 +92,7 @@ const ProductDetail = () => {
         finalDiscountPrice = basePrice * (1 - saleForProduct.phanTramGiam / 100); // Giá sau khi giảm
         setDiscountEndDate(saleForProduct.thoiGianKetThuc); // Cập nhật thời gian kết thúc giảm giá
       }
-      
+
       setProductPrice(finalPrice); // Cập nhật giá gốc
       setProductDiscountPrice(finalDiscountPrice); // Cập nhật giá sau giảm
 
@@ -129,8 +129,8 @@ const ProductDetail = () => {
 
 
     addToCart(productToAdd); // Thêm sản phẩm vào giỏ hàng
-   
-    
+
+
 
 
   }
@@ -195,9 +195,9 @@ const ProductDetail = () => {
   const fetchProductByCategory = async (idDanhMuc) => {
     try {
       const res = await getSanPhamByIdDanhMucApi(idDanhMuc);
-      console.log("danh muc",res);
-      const filteredProducts = res.data.filter((product) => product.id !== id && product.soLuongSanPhamChiTiet>0);
-      console.log("danh muc fiter",filteredProducts);
+      console.log("danh muc", res);
+      const filteredProducts = res.data.filter((product) => product.id !== id && product.soLuongSanPhamChiTiet > 0);
+      console.log("danh muc fiter", filteredProducts);
       setRelatedProducts(filteredProducts);
     }
     catch (error) {
@@ -211,7 +211,7 @@ const ProductDetail = () => {
 
     fetchProduct();
     fetchSaleForProduct(productDetailId);
-    
+
     console.log("Id spct", productDetailId);
   }, [id]);
   useEffect(() => {
@@ -358,7 +358,7 @@ const ProductDetail = () => {
 
                 {/* % giảm giá */}
                 <Typography.Text
-                className="gradient-text shaking-text"
+                  className="gradient-text shaking-text"
                   style={{
                     fontSize: "16px",
                     color: "#52c41a",
@@ -379,11 +379,11 @@ const ProductDetail = () => {
 
           <Typography.Paragraph
             style={{
-              color: productDetail.trangThai === 1 ? "green" : "red", // Màu xanh lá cho 'Còn hàng', màu đỏ cho 'Hết hàng'
+              color: productDetail.trangThai === 1 && stockQuantity >0  ? "green" : "red", // Màu xanh lá cho 'Còn hàng', màu đỏ cho 'Hết hàng'
               fontWeight: "bold", // Tùy chọn: làm chữ đậm hơn để nổi bật
             }}
           >
-            Tình trạng: {productDetail.trangThai === 1 ? "Còn hàng" : "Hết hàng"}
+            Tình trạng: {productDetail.trangThai === 1 && stockQuantity >0  ? "Còn hàng" : "Hết hàng"}
           </Typography.Paragraph>
 
           {/* Số lượng tồn kho
@@ -392,11 +392,11 @@ const ProductDetail = () => {
           {/* Thông tin hỗ trợ */}
           <div style={{ margin: "20px 0", fontSize: "16px", lineHeight: "1.8" }}>
             <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
-              <li>♻️ Hỗ trợ đổi size miễn phí trong vòng 30 ngày</li>
-              <li>🔰 Bảo hành sản phẩm đến 1 năm</li>
-              <li>🚚 Giao hàng nhanh toàn quốc</li>
-              <li>💎 Kiểm tra hàng và thanh toán khi nhận hàng</li>
-              <li>🎁 Bộ sản phẩm bao gồm: Hộp, Giấy Lót, Thẻ Bảo Hành, Thẻ Hướng Dẫn Bảo Quản</li>
+              <li>🔒 Bảo mật thông tin khách hàng tuyệt đối</li>
+              <li>🚛 Giao hàng toàn quốc chỉ từ 2-5 ngày làm việc</li>
+              <li>📋 Xuất hóa đơn VAT theo yêu cầu</li>
+              <li>📞 Hỗ trợ khách hàng qua hotline 24/7: <b>1800 9999</b></li>
+              <li>💼 Bộ sản phẩm bao gồm: Hóa đơn, Hướng Dẫn Sử Dụng</li>
             </ul>
           </div>
 
@@ -448,7 +448,7 @@ const ProductDetail = () => {
 
           {/* Nút mua hàng */}
           <Row gutter={[16, 16]}>
-            <Col span={12}>
+            <Col span={24}>
               <Button
                 type="primary"
                 block
@@ -474,7 +474,7 @@ const ProductDetail = () => {
                 Thêm sản phẩm vào giỏ hàng
               </Button>
             </Col>
-            <Col span={12}>
+            {/* <Col span={12}>
               <Button
                 type="primary"
                 block
@@ -498,7 +498,7 @@ const ProductDetail = () => {
               >
                 MUA NGAY VỚI GIÁ {productPrice.toLocaleString()} VND
               </Button>
-            </Col>
+            </Col> */}
           </Row>
 
         </Col>
