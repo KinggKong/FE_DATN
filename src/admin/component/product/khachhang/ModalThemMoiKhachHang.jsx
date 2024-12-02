@@ -17,15 +17,13 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
   const [gioiTinh, setGioiTinh] = useState(true);  
   const [ngayTao, setNgayTao] = useState(moment()); 
   const [trangThai, setTrangThai] = useState(true);
-  const [idTaiKhoan, setIdTaiKhoan] = useState("");  
-  const [idDiaChi, setIdDiaChi] = useState("");  
   const [fileList, setFileList] = useState([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
 
   const handleConfirmAdd = () => {
     // Kiểm tra dữ liệu đầu vào
-    if (!ten || !ma || !email || !sdt || !ngaySinh || !idTaiKhoan || !idDiaChi) {
+    if (!ten || !ma || !email || !sdt || !ngaySinh ) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ thông tin!",
@@ -68,8 +66,6 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       gioiTinh,  // Đảm bảo là true hoặc false
       ngayTao: ngayTao.format('YYYY-MM-DD'), // Lưu ngày tạo
       trangThai: trangThai ? 1 : 0,
-      idTaiKhoan,
-      idDiaChi,
       avatar: avatarUrl,  // Lưu URL avatar
     });
   };
@@ -217,28 +213,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
         </Col>
       </Row>
 
-      <Row className="flex justify-between mb-3">
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> ID Tài khoản
-          </label>
-          <Input
-            value={idTaiKhoan}
-            onChange={(e) => setIdTaiKhoan(e.target.value)}
-            placeholder="Nhập ID tài khoản" type="number"
-          />
-        </Col>
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> ID Địa chỉ
-          </label>
-          <Input
-            value={idDiaChi}
-            onChange={(e) => setIdDiaChi(e.target.value)}
-            placeholder="Nhập ID địa chỉ" type="number"
-          />
-        </Col>
-      </Row>
+      
 
       <Row className="flex justify-between mb-3">
         <Col span={11}>
