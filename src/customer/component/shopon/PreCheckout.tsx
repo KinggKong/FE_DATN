@@ -28,20 +28,7 @@ export default function PreCheckout() {
     const [shippingLoading, setShippingLoading] = useState(false);
     const [checkoutLoading, setCheckoutLoading] = useState(false);
     const [userInfo, setUserInfo] = useState(null);
-    const {fetchCart } = useCartStore();
-
-
-    
-    // useEffect(() => {
-    //     const storedUserInfo = localStorage.getItem("userInfo");
-    //     if (storedUserInfo) {
-    //       const parsedUserInfo = JSON.parse(storedUserInfo);
-    //       setUserInfo(parsedUserInfo);
-    //       console.log('Stored user info:', storedUserInfo);
-    //       console.log('Parsed user info:', parsedUserInfo);
-    //     }
-    //   }, []);
-
+    const { fetchCart } = useCartStore();
 
     const fetchData = useCallback(async (userId) => {
         setLoading(true);
@@ -90,7 +77,7 @@ export default function PreCheckout() {
             }
         } catch (err) {
             console.error('Error fetching provinces:', err);
-        }finally{
+        } finally {
             setProvincesLoading(false);
         }
     };
@@ -106,7 +93,7 @@ export default function PreCheckout() {
             }
         } catch (err) {
             console.error('Error fetching districts:', err);
-        }finally{
+        } finally {
             setDistrictsLoading(false);
         }
     };
@@ -121,7 +108,7 @@ export default function PreCheckout() {
             }
         } catch (err) {
             console.error('Error fetching wards:', err);
-        }finally{
+        } finally {
             setWardsLoading(false);
         }
     };
@@ -129,7 +116,7 @@ export default function PreCheckout() {
     const calculateShippingCost = async (latitude, longitude) => {
         setShippingLoading(true);
         const locations = [
-            [ 105.74680306431928,21.037955318097737],
+            [105.74680306431928, 21.037955318097737],
             [longitude, latitude],
         ];
         const requestData = {
@@ -169,7 +156,7 @@ export default function PreCheckout() {
         } catch (err) {
             console.error('Error calculating shipping cost:', err);
             message.error('Không thể tính phí vận chuyển. Vui lòng thử lại.');
-        }finally {
+        } finally {
             setShippingLoading(false);
         }
     };
@@ -199,12 +186,12 @@ export default function PreCheckout() {
                 diaChiNhan: `${values.address}, ${selectedWard ? selectedWard.fullName : ''}, ${selectedDistrict ? selectedDistrict.fullName : ''}, ${selectedProvince ? selectedProvince.fullName : ''}`,
                 sdt: values.sdt,
                 tongTien: checkoutData.totalPrice + ship,
-                tienSauGiam: checkoutData.totalPrice + ship, 
+                tienSauGiam: checkoutData.totalPrice + ship,
                 tienShip: ship,
                 ghiChu: values.ghiChu,
                 email: values.email,
                 idKhachHang: values.idKhachHang,
-                idVoucher: null, 
+                idVoucher: null,
                 hinhThucThanhToan: paymentMethod,
                 soTienGiam: 0
             };
@@ -212,7 +199,7 @@ export default function PreCheckout() {
             let response;
             if (paymentMethod === 'VNPAY') {
                 response = await axios.post('http://localhost:8080/api/payment/submitOrder', hoaDonRequest);
-                if (response.data.code === 1000) {                
+                if (response.data.code === 1000) {
                     window.location.href = response.data.data;
                 } else {
                     throw new Error('VNPay payment initiation failed');
@@ -237,7 +224,7 @@ export default function PreCheckout() {
         } catch (err) {
             message.error('Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.');
             console.log(err);
-        }finally {
+        } finally {
             setCheckoutLoading(false);
         }
     };
@@ -254,202 +241,202 @@ export default function PreCheckout() {
 
     return (
         <Spin spinning={checkoutLoading} tip="Loading...">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-            <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                    <h2 className="text-2xl font-semibold">THÔNG TIN THANH TOÁN</h2>
-                    <Form
-                        form={form}
-                        layout="vertical"
-                        className="space-y-4"
-                        initialValues={{
-                            tenNguoiNhan: checkoutData.gioHangChiTietList[0].gioHang.khachHang.ten,
-                            sdt: checkoutData.gioHangChiTietList[0].gioHang.khachHang.sdt,
-                            idKhachHang: checkoutData.gioHangChiTietList[0].gioHang.khachHang.id,
-                            email: checkoutData.gioHangChiTietList[0].gioHang.khachHang.email,
-                            idGioHang: checkoutData.idGioHang,
-                        }}
-                        onFinish={handleSubmit}
-                    >
-                        <Form.Item name="idGioHang" hidden>
-                            <Input type="hidden" />
-                        </Form.Item>
-                        <Form.Item name="idKhachHang" hidden>
-                            <Input type="hidden" />
-                        </Form.Item>
-                        <Form.Item
-                            label="Tên"
-                            name="tenNguoiNhan"
-                            required
-                            rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
+            <div className="max-w-7xl mx-auto px-4 py-8">
+                <div className="grid md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-semibold">THÔNG TIN THANH TOÁN</h2>
+                        <Form
+                            form={form}
+                            layout="vertical"
+                            className="space-y-4"
+                            initialValues={{
+                                tenNguoiNhan: checkoutData.gioHangChiTietList[0].gioHang.khachHang.ten,
+                                sdt: checkoutData.gioHangChiTietList[0].gioHang.khachHang.sdt,
+                                idKhachHang: checkoutData.gioHangChiTietList[0].gioHang.khachHang.id,
+                                email: checkoutData.gioHangChiTietList[0].gioHang.khachHang.email,
+                                idGioHang: checkoutData.idGioHang,
+                            }}
+                            onFinish={handleSubmit}
                         >
-                            <Input size="large" />
-                        </Form.Item>
-
-                        <Form.Item
-                            label="Số điện thoại"
-                            name="sdt"
-                            required
-                            rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}
-                        >
-                            <Input size="large" />
-                        </Form.Item>
-
-                        <Form.Item
-                            label="Tỉnh/Thành phố"
-                            name="province"
-                            required
-                            rules={[{ required: true, message: 'Vui lòng chọn Tỉnh/Thành phố' }]}
-                        >
-                            <Select size="large" onChange={handleProvinceChange}>
-                                {provinces.map(province => (
-                                    <Option key={province.code} value={province.code}>{province.fullName}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-
-                        <Form.Item
-                            label="Quận/Huyện"
-                            name="district"
-                            required
-                            rules={[{ required: true, message: 'Vui lòng chọn Quận/Huyện' }]}
-                        >
-                            <Select size="large" onChange={handleDistrictChange}>
-                                {districts.map(district => (
-                                    <Option key={district.code} value={district.code}>{district.fullName}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-
-                        <Form.Item
-                            label="Phường/Xã"
-                            name="ward"
-                            required
-                            rules={[{ required: true, message: 'Vui lòng chọn Phường/Xã' }]}
-                        >
-                            <Select size="large">
-                                {wards.map(ward => (
-                                    <Option key={ward.code} value={ward.code}>{ward.fullName}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-
-                        <Form.Item
-                            label="Địa chỉ chi tiết"
-                            name="address"
-                            required
-                            rules={[{ required: true, message: 'Vui lòng nhập địa chỉ chi tiết' }]}
-                        >
-                            <Input size="large" />
-                        </Form.Item>
-
-                        <Form.Item
-                            label="Địa chỉ email (tùy chọn)"
-                            name="email"
-                        >
-                            <Input size="large" />
-                        </Form.Item>
-
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-semibold">THÔNG TIN BỔ SUNG</h3>
-                            <Form.Item
-                                label="Ghi chú đơn hàng (tùy chọn)"
-                                name="ghiChu"
-                            >
-                                <TextArea
-                                    rows={4}
-                                    placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
-                                />
+                            <Form.Item name="idGioHang" hidden>
+                                <Input type="hidden" />
                             </Form.Item>
-                        </div>
-                    </Form>
-                </div>
+                            <Form.Item name="idKhachHang" hidden>
+                                <Input type="hidden" />
+                            </Form.Item>
+                            <Form.Item
+                                label="Tên"
+                                name="tenNguoiNhan"
+                                required
+                                rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
+                            >
+                                <Input size="large" />
+                            </Form.Item>
 
-                <div className="bg-gray-50 p-6 rounded-lg space-y-6">
-                    <h2 className="text-2xl font-semibold">ĐƠN HÀNG CỦA BẠN</h2>
+                            <Form.Item
+                                label="Số điện thoại"
+                                name="sdt"
+                                required
+                                rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}
+                            >
+                                <Input size="large" />
+                            </Form.Item>
 
-                    <div className="space-y-4">
-                        <div className="flex justify-between pb-4 border-b">
-                            <span className="font-medium">SẢN PHẨM</span>
-                            <span className="font-medium">TẠM TÍNH</span>
-                        </div>
+                            <Form.Item
+                                label="Tỉnh/Thành phố"
+                                name="province"
+                                required
+                                rules={[{ required: true, message: 'Vui lòng chọn Tỉnh/Thành phố' }]}
+                            >
+                                <Select size="large" onChange={handleProvinceChange}>
+                                    {provinces.map(province => (
+                                        <Option key={province.code} value={province.code}>{province.fullName}</Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
 
-                        {gioHangChiTietList.map((item) => (
-                            <div key={item.id} className="flex items-start space-x-4 py-4 border-b">
-                                <Image
-                                    src={item.sanPhamChiTietResponse.hinhAnhList[0].url}
-                                    alt={item.sanPhamChiTietResponse.tenSanPham}
-                                    width={80}
-                                    height={80}
-                                    className="object-cover rounded"
-                                />
-                                <div className="flex-grow">
-                                    <h3 className="font-semibold">{item.sanPhamChiTietResponse.tenSanPham}</h3>
-                                    <p className="text-sm text-gray-600">
-                                        Màu: {item.sanPhamChiTietResponse.tenMauSac},
-                                        Kích cỡ: {item.sanPhamChiTietResponse.tenKichThuoc}
-                                    </p>
-                                    <p className="text-sm">Số lượng: {item.soLuong}</p>
-                                </div>
-                                <span className="font-semibold">
-                                    {(item.giaTien * item.soLuong).toLocaleString()}₫
-                                </span>
+                            <Form.Item
+                                label="Quận/Huyện"
+                                name="district"
+                                required
+                                rules={[{ required: true, message: 'Vui lòng chọn Quận/Huyện' }]}
+                            >
+                                <Select size="large" onChange={handleDistrictChange}>
+                                    {districts.map(district => (
+                                        <Option key={district.code} value={district.code}>{district.fullName}</Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+
+                            <Form.Item
+                                label="Phường/Xã"
+                                name="ward"
+                                required
+                                rules={[{ required: true, message: 'Vui lòng chọn Phường/Xã' }]}
+                            >
+                                <Select size="large">
+                                    {wards.map(ward => (
+                                        <Option key={ward.code} value={ward.code}>{ward.fullName}</Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+
+                            <Form.Item
+                                label="Địa chỉ chi tiết"
+                                name="address"
+                                required
+                                rules={[{ required: true, message: 'Vui lòng nhập địa chỉ chi tiết' }]}
+                            >
+                                <Input size="large" />
+                            </Form.Item>
+
+                            <Form.Item
+                                label="Địa chỉ email (tùy chọn)"
+                                name="email"
+                            >
+                                <Input size="large" />
+                            </Form.Item>
+
+                            <div className="space-y-4">
+                                <h3 className="text-xl font-semibold">THÔNG TIN BỔ SUNG</h3>
+                                <Form.Item
+                                    label="Ghi chú đơn hàng (tùy chọn)"
+                                    name="ghiChu"
+                                >
+                                    <TextArea
+                                        rows={4}
+                                        placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
+                                    />
+                                </Form.Item>
                             </div>
-                        ))}
+                        </Form>
+                    </div>
 
-                        <div className="flex justify-between items-center py-4 border-b">
-                            <div className="flex items-center gap-2">
-                                <Truck className="w-5 h-5" />
-                                <span>Phí vận chuyển</span>
-                            </div>
-                            <span>{ship.toLocaleString()}₫</span>
-                        </div>
-
-                        <div className="flex justify-between items-center py-4 border-b">
-                            <div className="flex items-center gap-2">
-                                <Tag className="w-5 h-5" />
-                                <span>Giảm giá</span>
-                            </div>
-                            <span className="text-red-500">0₫</span>
-                        </div>
-
-                        <div className="flex justify-between font-bold text-lg">
-                            <span>Tổng</span>
-                            <span>{(totalPrice + ship).toLocaleString()}₫</span>
-                        </div>
+                    <div className="bg-gray-50 p-6 rounded-lg space-y-6">
+                        <h2 className="text-2xl font-semibold">ĐƠN HÀNG CỦA BẠN</h2>
 
                         <div className="space-y-4">
-                            <h3 className="font-semibold">Phương thức thanh toán</h3>
-                            <Radio.Group
-                                value={paymentMethod}
-                                onChange={e => setPaymentMethod(e.target.value)}
-                                className="space-y-4"
-                            >
-                                <Space direction="vertical">
-                                    <Radio value="COD">
-                                        Trả tiền mặt khi nhận hàng
-                                    </Radio>
-                                    <Radio value="VNPAY">
-                                        <div className="flex items-center gap-2">
-                                            <CreditCard className="w-5 h-5" />
-                                            Thanh toán VNPay
-                                        </div>
-                                    </Radio>
-                                </Space>
-                            </Radio.Group>
-                        </div>
+                            <div className="flex justify-between pb-4 border-b">
+                                <span className="font-medium">SẢN PHẨM</span>
+                                <span className="font-medium">TẠM TÍNH</span>
+                            </div>
 
-                        <button
-                            className="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 transition-colors"
-                            onClick={() => form.submit()}
-                            disabled={checkoutLoading}
-                        >
-                            ĐẶT HÀNG
-                        </button>
+                            {gioHangChiTietList.map((item) => (
+                                <div key={item.id} className="flex items-start space-x-4 py-4 border-b">
+                                    <Image
+                                        src={item.sanPhamChiTietResponse.hinhAnhList[0].url}
+                                        alt={item.sanPhamChiTietResponse.tenSanPham}
+                                        width={80}
+                                        height={80}
+                                        className="object-cover rounded"
+                                    />
+                                    <div className="flex-grow">
+                                        <h3 className="font-semibold">{item.sanPhamChiTietResponse.tenSanPham}</h3>
+                                        <p className="text-sm text-gray-600">
+                                            Màu: {item.sanPhamChiTietResponse.tenMauSac},
+                                            Kích cỡ: {item.sanPhamChiTietResponse.tenKichThuoc}
+                                        </p>
+                                        <p className="text-sm">Số lượng: {item.soLuong}</p>
+                                    </div>
+                                    <span className="font-semibold">
+                                        {(item.giaTien * item.soLuong).toLocaleString()}₫
+                                    </span>
+                                </div>
+                            ))}
+
+                            <div className="flex justify-between items-center py-4 border-b">
+                                <div className="flex items-center gap-2">
+                                    <Truck className="w-5 h-5" />
+                                    <span>Phí vận chuyển</span>
+                                </div>
+                                <span>{ship.toLocaleString()}₫</span>
+                            </div>
+
+                            <div className="flex justify-between items-center py-4 border-b">
+                                <div className="flex items-center gap-2">
+                                    <Tag className="w-5 h-5" />
+                                    <span>Giảm giá</span>
+                                </div>
+                                <span className="text-red-500">0₫</span>
+                            </div>
+
+                            <div className="flex justify-between font-bold text-lg">
+                                <span>Tổng</span>
+                                <span>{(totalPrice + ship).toLocaleString()}₫</span>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h3 className="font-semibold">Phương thức thanh toán</h3>
+                                <Radio.Group
+                                    value={paymentMethod}
+                                    onChange={e => setPaymentMethod(e.target.value)}
+                                    className="space-y-4"
+                                >
+                                    <Space direction="vertical">
+                                        <Radio value="COD">
+                                            Trả tiền mặt khi nhận hàng
+                                        </Radio>
+                                        <Radio value="VNPAY">
+                                            <div className="flex items-center gap-2">
+                                                <CreditCard className="w-5 h-5" />
+                                                Thanh toán VNPay
+                                            </div>
+                                        </Radio>
+                                    </Space>
+                                </Radio.Group>
+                            </div>
+
+                            <button
+                                className="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 transition-colors"
+                                onClick={() => form.submit()}
+                                disabled={checkoutLoading}
+                            >
+                                ĐẶT HÀNG
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         </Spin>
     );
 }

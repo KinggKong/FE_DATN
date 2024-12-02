@@ -8,6 +8,7 @@ import InvoiceLookup from "../customer/component/shopon/InvoiceLookup";
 import GioiThieu from "../customer/component/gioithieu/GioiThieu";
 import FailedPay from "../customer/component/shopon/FailedPay";
 import HandlePayment from "../customer/component/shopon/HandlePayment"
+import AccountInfo from "../customer/component/profile/AccountInfo";
 
 const CustomerRouters = {
   path: "/",
@@ -52,6 +53,10 @@ const CustomerRouters = {
     {
       path: "hanlde-result-payment",
       element: <HandlePayment/>,
+    },
+    {
+      path: "profile",
+      element: <AccountInfo />,
     }
   ],
 };
