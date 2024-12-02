@@ -53,12 +53,12 @@ const TableKhachHang = () => {
     }
   }, [currentPage, pageSize, valueSearch]);
 
-// Hàm tải ảnh lên Firebase và trả về URL ảnh
- const uploadImageToFirebase = (file) => {
+  // Hàm tải ảnh lên Firebase và trả về URL ảnh
+  const uploadImageToFirebase = (file) => {
     return new Promise((resolve, reject) => {
       const storageRef = ref(storage, `images/${file.name}`); // Tạo tham chiếu tới vị trí lưu trữ trong Firebase
       const uploadTask = uploadBytesResumable(storageRef, file);
-  
+
       // Theo dõi tiến trình tải lên
       uploadTask.on(
         "state_changed",
@@ -122,7 +122,7 @@ const TableKhachHang = () => {
     }
   };
 
-  
+
   const handleEdit = (record) => {
     setEditItem(record);
     setIsModalEditOpen(true);
@@ -131,36 +131,54 @@ const TableKhachHang = () => {
   const handleConfirmEdit = async (id, updatedKhachHang, avatarFile) => {
     setLoading(true);
     try {
+      // Kiểm tra trùng mã khách hàng, email và số điện thoại
+      const existingKhachHang = dataSource.find(
+        (item) =>
+          (item.id !== id && item.ma === updatedKhachHang.ma) ||
+          (item.id !== id && item.email === updatedKhachHang.email) ||
+          (item.id !== id && item.sdt === updatedKhachHang.sdt)
+      );
+
+      if (existingKhachHang) {
+        // Thông báo nếu có trùng lặp
+        notification.error({
+          message: "Lỗi",
+          description: "Mã khách hàng, Email hoặc SĐT đã tồn tại",
+        });
+        return; // Dừng việc cập nhật
+      }
+
       // Nếu có ảnh mới, tải lên Firebase và lấy URL
       let avatarUrl = updatedKhachHang.avatar;
       if (avatarFile) {
         avatarUrl = await uploadImageToFirebase(avatarFile); // Tải lên Firebase và lấy URL
       }
-  
+
       // Cập nhật thông tin khách hàng
       const updatedKhachHangWithAvatar = { ...updatedKhachHang, avatar: avatarUrl };
-  
+
       // Gửi dữ liệu lên API để cập nhật khách hàng
       await updateKhachHangApi(id, updatedKhachHangWithAvatar);
-  
+
       notification.success({
         message: "Success",
         description: `Updated customer ${updatedKhachHang.ten} successfully!`,
       });
-  
+
       setIsModalEditOpen(false);
       await fetchData();
     } catch (error) {
       console.error("Failed to update customer", error);
       notification.error({
         message: "Error",
-        description: "Mã, Email, SĐT đã tồn tại",
+        description: "Có lỗi khi cập nhật khách hàng",
       });
     } finally {
       setLoading(false);
     }
   };
-  
+
+
   const handleAdd = () => {
     setIsModalAddOpen(true);
   };
@@ -168,36 +186,54 @@ const TableKhachHang = () => {
   const handleConfirmAdd = async (newKhachHang, avatarFile) => {
     setLoading(true);
     try {
+      // Kiểm tra trùng mã khách hàng, email và số điện thoại
+      const existingKhachHang = dataSource.find(
+        (item) =>
+          item.ma === newKhachHang.ma ||
+          item.email === newKhachHang.email ||
+          item.sdt === newKhachHang.sdt
+      );
+
+      if (existingKhachHang) {
+        // Thông báo nếu có trùng lặp
+        notification.error({
+          message: "Lỗi",
+          description: "Mã khách hàng, Email hoặc SĐT đã tồn tại",
+        });
+        return; // Dừng việc thêm mới khách hàng
+      }
+
       // Tải ảnh lên Firebase (nếu có file ảnh)
       let avatarUrl = '';
       if (avatarFile) {
         avatarUrl = await uploadImageToFirebase(avatarFile); // Tải lên Firebase và lấy URL
       }
-  
+
       // Tạo đối tượng khách hàng mới
       const newKhachHangWithAvatar = { ...newKhachHang, avatar: avatarUrl };
-  
+
       // Gửi dữ liệu lên API tạo khách hàng mới
       await createKhachHangApi(newKhachHangWithAvatar);
-  
+
       notification.success({
         message: "Success",
         description: `Added new customer ${newKhachHang.ten} successfully!`,
       });
-  
+
       setIsModalAddOpen(false);
       await fetchData();
     } catch (error) {
       console.error("Failed to create new customer", error);
       notification.error({
         message: "Error",
-        description: "Email, SĐT , Mã không được trùng nhau",
+        description: "Có lỗi khi thêm khách hàng mới",
       });
     } finally {
       setLoading(false);
     }
   };
-  
+
+
 
   const columns = [
     {
@@ -205,16 +241,16 @@ const TableKhachHang = () => {
       dataIndex: "id",
     },
     {
-        title: "Hình ảnh",
-        dataIndex: "avatar",
-        render: (avatarUrl) => (
-          avatarUrl ? (
-            <Avatar src={avatarUrl} alt="avatar" size={64} />
-          ) : (
-            <Avatar icon="user" size={64} />
-          )
-        ),
-      },
+      title: "Hình ảnh",
+      dataIndex: "avatar",
+      render: (avatarUrl) => (
+        avatarUrl ? (
+          <Avatar src={avatarUrl} alt="avatar" size={64} />
+        ) : (
+          <Avatar icon="user" size={64} />
+        )
+      ),
+    },
     {
       title: "Tên khách hàng",
       dataIndex: "ten",
@@ -237,10 +273,10 @@ const TableKhachHang = () => {
       render: (text) => new Date(text).toLocaleDateString(),
     },
     {
-        title: "Giới tính",
-        dataIndex: "gioiTinh",
-        render: (text) => (text ? 'Nam' : 'Nữ'), // Giới tính là boolean, true = Nam, false = Nữ
-      },
+      title: "Giới tính",
+      dataIndex: "gioiTinh",
+      render: (text) => (text ? 'Nam' : 'Nữ'), // Giới tính là boolean, true = Nam, false = Nữ
+    },
     {
       title: "Trạng thái",
       dataIndex: "trangThai",
@@ -269,7 +305,7 @@ const TableKhachHang = () => {
         />
       ),
     },
-    
+
     {
       title: "Thao tác",
       dataIndex: "thaotac",

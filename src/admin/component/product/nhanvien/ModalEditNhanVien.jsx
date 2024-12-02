@@ -13,10 +13,10 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
   const [email, setEmail] = useState("");
   const [sdt, setSdt] = useState("");
   const [ngaySinh, setNgaySinh] = useState(null);
-  const [gioiTinh, setGioiTinh] = useState(true); // true for male, false for female
-  const [trangThai, setTrangThai] = useState(true); // Default to active
-  const [diaChi, setDiaChi] = useState(""); // Address ID
-  const [fileList, setFileList] = useState([]); // State để lưu file tải lên (avatar)
+  const [gioiTinh, setGioiTinh] = useState(true); 
+  const [trangThai, setTrangThai] = useState(true); 
+  const [diaChi, setDiaChi] = useState(""); 
+  const [fileList, setFileList] = useState([]); 
 
   useEffect(() => {
     if (nhanVien) {
@@ -24,10 +24,10 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
       setEmail(nhanVien.email);
       setSdt(nhanVien.sdt);
       setNgaySinh(moment(nhanVien.ngaySinh));
-      setGioiTinh(nhanVien.gioiTinh);  // true for male, false for female
+      setGioiTinh(nhanVien.gioiTinh); 
       setDiaChi(nhanVien.diaChi);
-      setTrangThai(nhanVien.trangThai === 1); // Assuming 1 means active
-      // Set fileList nếu nhân viên đã có avatar
+      setTrangThai(nhanVien.trangThai === 1); 
+     
       if (nhanVien.avatar) {
         setFileList([{ url: nhanVien.avatar }]); // Giả sử avatar là URL của ảnh
       }
@@ -54,6 +54,14 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
       return;
     }
 
+    const age = moment().diff(ngaySinh, 'years');
+    if (age < 16) {
+      notification.error({
+        message: "Lỗi",
+        description: "Nhân viên phải từ 16 tuổi trở lên!",
+      });
+      return;
+    }
     
     const phoneRegex = /^[0-9]{10,11}$/;
     if (!phoneRegex.test(sdt)) {
