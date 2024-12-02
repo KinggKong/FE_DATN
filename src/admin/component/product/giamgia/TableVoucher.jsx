@@ -50,11 +50,24 @@ const TableVoucher = () => {
     }
   }, [currentPage, pageSize, valueSearch]);
 
-  const checkVoucherExists = async (value, type) => {
-    const params = { tenVoucher: type === 'name' ? value : undefined, maVoucher: type === 'code' ? value : undefined };
+  const checkVoucherExists = async (value, type, excludeId) => {
+    const params = {
+      tenVoucher: type === 'name' ? value : undefined,
+      maVoucher: type === 'code' ? value : undefined
+    };
+  
     const res = await getAllVoucherApi(params);
-    return res.data.content.some(item => type === 'name' ? item.tenVoucher === value : item.maVoucher === value);
+  
+    return res.data.content.some(item => {
+      if (type === 'name') {
+        return item.tenVoucher === value && item.id !== excludeId;
+      } else if (type === 'code') {
+        return item.maVoucher === value && item.id !== excludeId;
+      }
+      return false;
+    });
   };
+  
 
   useEffect(() => {
     fetchData();
@@ -128,7 +141,7 @@ const TableVoucher = () => {
         setLoading(false);
         return;
       }
-
+  
       if (!updateVoucher.hinhThucGiam || !updateVoucher.giaTriGiam ||
         !updateVoucher.giaTriDonHangToiThieu || !updateVoucher.giaTriGiamToiDa ||
         !updateVoucher.ngayBatDau || !updateVoucher.ngayKetThuc) {
@@ -139,7 +152,7 @@ const TableVoucher = () => {
         setLoading(false);
         return;
       }
-
+  
       // Kiểm tra giá trị giảm tối đa không được lớn hơn giá trị đơn hàng tối thiểu
       if (updateVoucher.giaTriGiamToiDa > updateVoucher.giaTriDonHangToiThieu) {
         notification.error({
@@ -149,7 +162,7 @@ const TableVoucher = () => {
         setLoading(false);
         return;
       }
-
+  
       if (updateVoucher.loaiGiaTriGiam === '%' &&
         (updateVoucher.giaTriGiam <= 0 || updateVoucher.giaTriGiam >= 100)) {
         notification.error({
@@ -159,28 +172,29 @@ const TableVoucher = () => {
         setLoading(false);
         return;
       }
-
-      const existsByName = await checkVoucherExists(updateVoucher.tenVoucher, 'name');
-      const existsByCode = await checkVoucherExists(updateVoucher.maVoucher, 'code');
-
-      //  if (existsByName) {
-      //   notification.error({
-      //     message: "Lỗi",
-      //     description: "Tên voucher này đã tồn tại!",
-      //   });
-      //   setLoading(false);
-      //   return;
-      // }
-
-      // if (existsByCode) {
-      //   notification.error({
-      //     message: "Lỗi",
-      //     description: "Mã voucher này đã tồn tại!",
-      //   });
-      //   setLoading(false);
-      //   return;
-      // }
-
+  
+      // Kiểm tra tên và mã voucher, nhưng loại trừ voucher hiện tại bằng cách truyền thêm id
+      const existsByName = await checkVoucherExists(updateVoucher.tenVoucher, 'name', id);
+      const existsByCode = await checkVoucherExists(updateVoucher.maVoucher, 'code', id);
+  
+      if (existsByName) {
+        notification.error({
+          message: "Lỗi",
+          description: "Tên voucher này đã tồn tại!",
+        });
+        setLoading(false);
+        return;
+      }
+  
+      if (existsByCode) {
+        notification.error({
+          message: "Lỗi",
+          description: "Mã voucher này đã tồn tại!",
+        });
+        setLoading(false);
+        return;
+      }
+  
       await updateVoucherApi(id, updateVoucher);
       notification.success({
         message: "Success",
@@ -204,6 +218,8 @@ const TableVoucher = () => {
       setLoading(false);
     }
   };
+  
+
 
   const handleAdd = () => {
     setIsModalAddOpen(true);

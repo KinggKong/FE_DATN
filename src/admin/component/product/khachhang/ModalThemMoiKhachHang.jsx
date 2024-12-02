@@ -51,6 +51,15 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       return;
     }
 
+    // Kiểm tra ngày sinh không được lớn hơn ngày hiện tại
+    if (ngaySinh.isAfter(moment(), 'day')) {
+      notification.error({
+        message: "Lỗi",
+        description: "Ngày sinh không thể lớn hơn ngày hiện tại!",
+      });
+      return;
+    }
+
     // Nếu có ảnh, upload và lưu URL
     let avatarUrl = "";
     if (fileList.length > 0 && fileList[0].status === 'done') {
@@ -100,7 +109,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
     </div>
   );
 
-  // Custom request for Firebase Storage upload
+  
   const customRequest = async ({ file, onSuccess, onError }) => {
     try {
       const storageRef = ref(storage, 'avatars/' + file.name);
@@ -108,7 +117,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
 
       uploadTask.on('state_changed', 
         (snapshot) => {
-          // Optional: Handle progress if needed
+          
         },
         (error) => {
           onError(error);
@@ -116,7 +125,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           onSuccess(null, file);
-          setFileList([{ url: downloadURL }]);  // Update fileList with the URL of the uploaded image
+          setFileList([{ url: downloadURL }]);  
         }
       );
     } catch (error) {
@@ -248,7 +257,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
             fileList={fileList}
             onChange={handleChange}
             onPreview={handlePreview}
-            customRequest={customRequest} // Use custom request for Firebase upload
+            customRequest={customRequest}
           >
             {fileList.length >= 1 ? null : uploadButton}
           </Upload>

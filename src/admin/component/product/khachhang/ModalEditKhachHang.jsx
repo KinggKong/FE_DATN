@@ -54,6 +54,15 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
       return;
     }
 
+     // Kiểm tra ngày sinh không được lớn hơn ngày hiện tại
+     if (ngaySinh.isAfter(moment(), 'day')) {
+      notification.error({
+        message: "Lỗi",
+        description: "Ngày sinh không thể lớn hơn ngày hiện tại!",
+      });
+      return;
+    }
+
     
     const phoneRegex = /^[0-9]{10,11}$/;
     if (!phoneRegex.test(sdt)) {
