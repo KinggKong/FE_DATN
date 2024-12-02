@@ -30,6 +30,8 @@ export default function PreCheckout() {
     const [userInfo, setUserInfo] = useState(null);
     const { fetchCart } = useCartStore();
 
+
+
     const fetchData = useCallback(async (userId) => {
         setLoading(true);
         try {
@@ -67,6 +69,7 @@ export default function PreCheckout() {
         }
         fetchProvinces();
       }, [fetchData]);
+
 
     const fetchProvinces = async () => {
         setProvincesLoading(true);
