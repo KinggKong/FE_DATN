@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Table, Switch, Space, Button, Row, Col, Select, Modal } from 'antd';
+import { Table, Switch, Space, Button, Row, Col, Select, Modal, Spin } from 'antd';
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { AiFillEye } from "react-icons/ai";
@@ -34,6 +34,8 @@ const TableSanPhamChiTiet = () => {
     const [dataSource, setDataSource] = useState([]);
     const [totalItems, setTotalItems] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [loadingDrawerAdd, setLoadingDrawerAdd] = useState(false);
+
     const [itemDelete, setDeletingItem] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isOpenEdit, setOpenEdit] = useState(false);
@@ -430,6 +432,7 @@ const TableSanPhamChiTiet = () => {
     };
 
     const handleAddProduct = async (tableData) => {
+        
         console.log(tableData);
         if (!tableData || tableData.length === 0) {
             notification.error({
@@ -442,6 +445,8 @@ const TableSanPhamChiTiet = () => {
         }
 
         try {
+            // setLoading(true);
+            setLoadingDrawerAdd(true);
             const checkPromises = tableData.map(async (item) => {
                 const params = {
                     idSp: item.id_sanPham,
@@ -483,6 +488,9 @@ const TableSanPhamChiTiet = () => {
                 message: "Error",
                 description: "Thêm sản phẩm thất bại!",
             });
+        } finally {
+            setLoading(false);
+            setLoadingDrawerAdd(false);
         }
     };
     const addOrUpdateProducts = async (tableData) => {
@@ -513,199 +521,215 @@ const TableSanPhamChiTiet = () => {
         await fetchData();
         setOpen(false);
     };
-    return (<>
-        <label className="text-sm block mb-2 mt-2" htmlFor="">
-            Sản phẩm
-        </label>
-        <Row className="flex items-center justify-between mb-3 mt-3">
-            <Col span={16}>
+    return (
+        <div>
+            {loading ? (
+                <Spin size="large" />
+            ) : (<>
 
-                <Select
-                    showSearch
-                    style={{
-                        width: "100%",
-                    }}
-                    placeholder="Tất cả sản phẩm"
-                    optionFilterProp="label"
-                    filterSort={(optionA, optionB) =>
-                        (optionA?.label ?? "")
-                            .toLowerCase()
-                            .localeCompare((optionB?.label ?? "").toLowerCase())
-                    }
-                    value={idSanPham}
-                    onChange={(value) => {
-                        setIdSanPham(value);
-                    }}
-                    options={[
-                        { value: "", label: "Tất cả sản phẩm" },
-                        ...dataSanPham?.map((sanPham) => ({
-                            value: sanPham.id,
-                            label: sanPham.tenSanPham,
-                        })),
-                    ]}
-                />
-            </Col>
-            <Col span={6} style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-                <Button type="primary" onClick={showDrawer} icon={<PlusOutlined />}>
-                    Thêm mới sản phẩm chi tiết
-                </Button>
-            </Col>
-        </Row>
+                <label className="text-sm block mb-2 mt-2" htmlFor="">
+                    Sản phẩm
+                </label>
+                <Row className="flex items-center justify-between mb-3 mt-3">
+                    <Col span={16}>
 
-        <Row className="flex justify-between mb-3 mt-3">
+                        <Select
+                            showSearch
+                            style={{
+                                width: "100%",
+                            }}
+                            placeholder="Tất cả sản phẩm"
+                            optionFilterProp="label"
+                            filterSort={(optionA, optionB) =>
+                                (optionA?.label ?? "")
+                                    .toLowerCase()
+                                    .localeCompare((optionB?.label ?? "").toLowerCase())
+                            }
+                            value={idSanPham}
+                            onChange={(value) => {
+                                setIdSanPham(value);
+                            }}
+                            options={[
+                                { value: "", label: "Tất cả sản phẩm" },
+                                ...dataSanPham?.map((sanPham) => ({
+                                    value: sanPham.id,
+                                    label: sanPham.tenSanPham,
+                                })),
+                            ]}
+                        />
+                    </Col>
+                    <Col span={6} style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                        <Button type="primary" onClick={showDrawer} icon={<PlusOutlined />}>
+                            Thêm mới sản phẩm chi tiết
+                        </Button>
+                    </Col>
+                </Row>
 
-            <Col span={5}>
-                <label className="text-sm block mb-2" htmlFor="">
-                    Thương hiệu
-                </label>
-                <Select
-                    showSearch
-                    style={{
-                        width: "100%",
-                    }}
-                    placeholder="Tất cả thương hiệu"
-                    optionFilterProp="label"
-                    filterSort={(optionA, optionB) =>
-                        (optionA?.label ?? "")
-                            .toLowerCase()
-                            .localeCompare((optionB?.label ?? "").toLowerCase())
-                    }
-                    value={idThuongHieu}
-                    onChange={(value) => {
-                        setIdThuongHieu(value);
-                    }}
-                    options={[
-                        { value: "", label: "Tất cả thương hiệu" },
-                        ...dataThuongHieu?.map((thuongHieu) => ({
-                            value: thuongHieu.id,
-                            label: thuongHieu.tenThuongHieu,
-                        })),
-                    ]}
+                <Row className="flex justify-between mb-3 mt-3">
+
+                    <Col span={5}>
+                        <label className="text-sm block mb-2" htmlFor="">
+                            Thương hiệu
+                        </label>
+                        <Select
+                            showSearch
+                            style={{
+                                width: "100%",
+                            }}
+                            placeholder="Tất cả thương hiệu"
+                            optionFilterProp="label"
+                            filterSort={(optionA, optionB) =>
+                                (optionA?.label ?? "")
+                                    .toLowerCase()
+                                    .localeCompare((optionB?.label ?? "").toLowerCase())
+                            }
+                            value={idThuongHieu}
+                            onChange={(value) => {
+                                setIdThuongHieu(value);
+                            }}
+                            options={[
+                                { value: "", label: "Tất cả thương hiệu" },
+                                ...dataThuongHieu?.map((thuongHieu) => ({
+                                    value: thuongHieu.id,
+                                    label: thuongHieu.tenThuongHieu,
+                                })),
+                            ]}
+                        />
+                    </Col>
+                    <Col span={5}>
+                        <label className="text-sm block mb-2" htmlFor="">
+                            Danh mục
+                        </label>
+                        <Select
+                            showSearch
+                            style={{
+                                width: "100%",
+                            }}
+                            value={idDanhMuc}
+                            onChange={(value) => {
+                                setIdDanhMuc(value);
+                            }}
+                            placeholder="Tất cả danh mục"
+                            optionFilterProp="label"
+                            filterSort={(optionA, optionB) =>
+                                (optionA?.label ?? "")
+                                    .toLowerCase()
+                                    .localeCompare((optionB?.label ?? "").toLowerCase())
+                            }
+                            options={[
+                                { value: "", label: "Tất cả danh mục" },
+                                ...dataDanhMuc?.map((danhMuc) => ({
+                                    value: danhMuc.id,
+                                    label: danhMuc.tenDanhMuc,
+                                })),
+                            ]}
+                        />
+                    </Col>
+                    <Col span={5}>
+                        <label className="text-sm block mb-2" htmlFor="">
+                            Chất liệu vải
+                        </label>
+                        <Select
+                            showSearch
+                            style={{
+                                width: "100%",
+                            }}
+                            value={idChatLieuVai}
+                            onChange={(value) => {
+                                setIdChatLieuVai(value);
+                            }}
+                            placeholder="Tất cả chất vải"
+                            optionFilterProp="label"
+                            filterSort={(optionA, optionB) =>
+                                (optionA?.label ?? "")
+                                    .toLowerCase()
+                                    .localeCompare((optionB?.label ?? "").toLowerCase())
+                            }
+                            options={[
+                                { value: "", label: "Tất cả chất vải" },
+                                ...dataChatLieuVai?.map((vai) => ({
+                                    value: vai.id,
+                                    label: vai.tenChatLieuVai,
+                                })),
+                            ]}
+                        />
+                    </Col>
+                    <Col span={5}>
+                        <label className="text-sm block mb-2" htmlFor="">
+                            Chất liệu đế
+                        </label>
+                        <Select
+                            showSearch
+                            style={{
+                                width: "100%",
+                            }}
+                            value={idChatLieuDe}
+                            onChange={(value) => {
+                                setIdChatLieuDe(value);
+                            }}
+                            placeholder="Tất cả chất đế"
+                            optionFilterProp="label"
+                            filterSort={(optionA, optionB) =>
+                                (optionA?.label ?? "")
+                                    .toLowerCase()
+                                    .localeCompare((optionB?.label ?? "").toLowerCase())
+                            }
+                            options={[
+                                { value: "", label: "Tất cả chất đế" },
+                                ...dataChatLieuDe?.map((de) => ({
+                                    value: de.id,
+                                    label: de.tenChatLieu,
+                                })),
+                            ]}
+                        />
+                    </Col>
+                </Row>
+                <ModalConfirm
+                    isOpen={isModalOpen}
+                    handleClose={() => setIsModalOpen(false)}
+                    title={"sản phẩm chi tiết"}
+                    handleConfirm={handleConfirmDelete}
                 />
-            </Col>
-            <Col span={5}>
-                <label className="text-sm block mb-2" htmlFor="">
-                    Danh mục
-                </label>
-                <Select
-                    showSearch
-                    style={{
-                        width: "100%",
-                    }}
-                    value={idDanhMuc}
-                    onChange={(value) => {
-                        setIdDanhMuc(value);
-                    }}
-                    placeholder="Tất cả danh mục"
-                    optionFilterProp="label"
-                    filterSort={(optionA, optionB) =>
-                        (optionA?.label ?? "")
-                            .toLowerCase()
-                            .localeCompare((optionB?.label ?? "").toLowerCase())
-                    }
-                    options={[
-                        { value: "", label: "Tất cả danh mục" },
-                        ...dataDanhMuc?.map((danhMuc) => ({
-                            value: danhMuc.id,
-                            label: danhMuc.tenDanhMuc,
-                        })),
-                    ]}
+                <DrawerView
+                    isOpen={openView}
+                    onClose={() => setOpenView(false)}
+                    product={productView}
+                    productDetails={dataView}
                 />
-            </Col>
-            <Col span={5}>
-                <label className="text-sm block mb-2" htmlFor="">
-                    Chất liệu vải
-                </label>
-                <Select
-                    showSearch
-                    style={{
-                        width: "100%",
-                    }}
-                    value={idChatLieuVai}
-                    onChange={(value) => {
-                        setIdChatLieuVai(value);
-                    }}
-                    placeholder="Tất cả chất vải"
-                    optionFilterProp="label"
-                    filterSort={(optionA, optionB) =>
-                        (optionA?.label ?? "")
-                            .toLowerCase()
-                            .localeCompare((optionB?.label ?? "").toLowerCase())
-                    }
-                    options={[
-                        { value: "", label: "Tất cả chất vải" },
-                        ...dataChatLieuVai?.map((vai) => ({
-                            value: vai.id,
-                            label: vai.tenChatLieuVai,
-                        })),
-                    ]}
+                <ModalEdit
+                    isOpen={isOpenEdit}
+                    handleClose={() => setOpenEdit(false)}
+                    product={productEdit}
+                    handleSubmit={handleConfirmEdit}
                 />
-            </Col>
-            <Col span={5}>
-                <label className="text-sm block mb-2" htmlFor="">
-                    Chất liệu đế
-                </label>
-                <Select
-                    showSearch
-                    style={{
-                        width: "100%",
-                    }}
-                    value={idChatLieuDe}
-                    onChange={(value) => {
-                        setIdChatLieuDe(value);
-                    }}
-                    placeholder="Tất cả chất đế"
-                    optionFilterProp="label"
-                    filterSort={(optionA, optionB) =>
-                        (optionA?.label ?? "")
-                            .toLowerCase()
-                            .localeCompare((optionB?.label ?? "").toLowerCase())
-                    }
-                    options={[
-                        { value: "", label: "Tất cả chất đế" },
-                        ...dataChatLieuDe?.map((de) => ({
-                            value: de.id,
-                            label: de.tenChatLieu,
-                        })),
-                    ]}
+                <DrawerAdd
+                    isOpen={open}
+                    handleClose={onClose}
+                    handleAddProduct={handleAddProduct}
+                    loadingDrawer={loadingDrawerAdd}
                 />
-            </Col>
-        </Row>
-        <ModalConfirm
-            isOpen={isModalOpen}
-            handleClose={() => setIsModalOpen(false)}
-            title={"sản phẩm chi tiết"}
-            handleConfirm={handleConfirmDelete}
-        />
-        <DrawerView
-            isOpen={openView}
-            onClose={() => setOpenView(false)}
-            product={productView}
-            productDetails={dataView}
-        />
-        <ModalEdit
-            isOpen={isOpenEdit}
-            handleClose={() => setOpenEdit(false)}
-            product={productEdit}
-            handleSubmit={handleConfirmEdit}
-        />
-        <DrawerAdd
-            isOpen={open}
-            handleClose={onClose}
-            handleAddProduct={handleAddProduct}
-        />
-        <Table columns={columns} dataSource={dataSource} onChange={onChange}
-            pagination={{
-                current: currentPage,
-                pageSize: pageSize,
-                total: totalItems,
-                showSizeChanger: true,
-                pageSizeOptions: ["10", "20", "50", "100"],
-                onChange: (page, pageSize) => {
-                    setCurrentPage(page);
-                    setPageSize(pageSize);
-                },
-            }} />
-    </>);
+                <Table columns={columns} dataSource={dataSource} onChange={onChange}
+                    pagination={{
+                        current: currentPage,
+                        pageSize: pageSize,
+                        total: totalItems,
+                        showSizeChanger: true,
+                        pageSizeOptions: ["10", "20", "50", "100"],
+                        onChange: (page, pageSize) => {
+                            setCurrentPage(page);
+                            setPageSize(pageSize);
+                        },
+                    }} />
+
+
+
+            </>
+            )}
+
+        </div>
+
+
+
+    );
 };
 export default TableSanPhamChiTiet;

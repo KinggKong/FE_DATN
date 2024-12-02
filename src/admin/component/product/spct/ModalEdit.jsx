@@ -55,7 +55,7 @@ const ModalEdit = ({
                 ...values,
                 hinhAnh: hinhAnhNew, // Chỉ gửi URL
             };
-            console.log(adjustedValues);
+            console.log("data",adjustedValues);
             handleSubmit(product?.id, adjustedValues);
         },
     });
