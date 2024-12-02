@@ -15,13 +15,12 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
   const [ngaySinh, setNgaySinh] = useState(null);
   const [gioiTinh, setGioiTinh] = useState(true); 
   const [trangThai, setTrangThai] = useState(true); 
-  const [idTaiKhoan, setIdTaiKhoan] = useState(""); 
   const [diaChi, setDiaChi] = useState(""); 
   const [fileList, setFileList] = useState([]);
 
   const handleConfirmAdd = () => {
    
-    if (!ten || !email || !sdt || !ngaySinh || !idTaiKhoan || !diaChi) {
+    if (!ten || !email || !sdt || !ngaySinh ) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ các trường!",
@@ -57,7 +56,6 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
       ngaySinh: ngaySinh ? ngaySinh.format('YYYY-MM-DD') : null,
       gioiTinh,
       trangThai: trangThai ? 1 : 0,
-      idTaiKhoan,
       diaChi,
       avatar: fileList.length > 0 && fileList[0].url ? fileList[0].url : "", // Lưu URL avatar
     });
@@ -209,17 +207,7 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
       </Row>
 
       <Row className="flex justify-between mb-3">
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Tài khoản
-          </label>
-          <Input
-            value={idTaiKhoan}
-            onChange={(e) => setIdTaiKhoan(e.target.value)}
-            placeholder="Nhập ID tài khoản"
-            type="number"
-          />
-        </Col>
+       
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Trạng thái

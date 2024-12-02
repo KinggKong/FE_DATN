@@ -15,8 +15,6 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
   const [ngaySinh, setNgaySinh] = useState(null);
   const [gioiTinh, setGioiTinh] = useState(true); 
   const [trangThai, setTrangThai] = useState(true); 
-  const [idTaiKhoan, setIdTaiKhoan] = useState(""); 
-  const [idDiaChi, setIdDiaChi] = useState(""); 
   const [fileList, setFileList] = useState([]); 
   const [ngayTao, setNgayTao] = useState(null); 
 
@@ -29,8 +27,6 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
       setNgaySinh(moment(khachHang.ngaySinh));
       setNgayTao(moment(khachHang.ngayTao)); 
       setGioiTinh(khachHang.gioiTinh);  
-      setIdTaiKhoan(khachHang.idTaiKhoan);
-      setIdDiaChi(khachHang.idDiaChi);
       setTrangThai(khachHang.trangThai === 1);
     
       if (khachHang.avatar) {
@@ -41,7 +37,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
 
   const handleConfirmEdit = () => {
 
-    if (!ten || !ma || !email || !sdt || !ngaySinh || !idTaiKhoan || !idDiaChi) {
+    if (!ten || !ma || !email || !sdt || !ngaySinh ) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ các trường!",
@@ -77,8 +73,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
       ngaySinh: ngaySinh ? ngaySinh.format('YYYY-MM-DD') : null,
       gioiTinh,
       trangThai: trangThai ? 1 : 0,
-      idTaiKhoan,
-      idDiaChi,
+    
       avatar: fileList.length > 0 && fileList[0].url ? fileList[0].url : "", 
     });
   };
@@ -225,31 +220,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
         </Col>
       </Row>
 
-      <Row className="flex justify-between mb-3">
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> ID Tài khoản
-          </label>
-          <Input
-            value={idTaiKhoan}
-            onChange={(e) => setIdTaiKhoan(e.target.value)}
-            placeholder="Nhập ID tài khoản"
-            type="number"
-          />
-        </Col>
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> ID Địa chỉ
-          </label>
-          <Input
-            value={idDiaChi}
-            onChange={(e) => setIdDiaChi(e.target.value)}
-            placeholder="Nhập ID địa chỉ"
-            type="number"
-          />
-        </Col>
-      </Row>
-
+    
       <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">Ngày tạo</label>

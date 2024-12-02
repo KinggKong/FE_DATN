@@ -14,11 +14,13 @@ const Login = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+
   const onFinish = async (values) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:8085/v1/api/auth/signin",
+        "http://localhost:8080/api/v1/auth/login",
         {
           username: values.username,
           password: values.password,
@@ -28,8 +30,25 @@ const Login = () => {
       const data = response.data;
       if(data.code === 1000){
         message.success("Login successful!");
-        localStorage.setItem("accountToken", data.data.accountToken);
-        localStorage.setItem("refreshToken",  data.data.refreshToken);
+        const token = data.data.accessToken;
+        localStorage.setItem("accessToken", token);
+        const profileResponse = await axios.get(
+          "http://localhost:8080/api/v1/auth/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (profileResponse.data) {
+          localStorage.setItem(
+            "userInfo",
+            JSON.stringify(profileResponse.data)
+          );
+        
+        }
+        
         navigate("/");
       }       
     } catch (error) {
@@ -79,7 +98,7 @@ const Login = () => {
             rules={[
               {
                 required: true,
-                message: "Please input your username or email!",
+                message: "Please input your email!",
               },
               {
                 min: 3,
@@ -90,7 +109,7 @@ const Login = () => {
           >
             <Input
               prefix={<UserOutlined />}
-              placeholder="Username or Email"
+              placeholder="Email"
               className="rounded-md"
               disabled={loading}
             />
@@ -153,7 +172,7 @@ const Login = () => {
           className="w-full h-10 flex items-center justify-center space-x-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-300"
           disabled={loading}
         >
-          <Link to="https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=http://localhost:8085/v1/api/auth/oauth/google&response_type=code&client_id=97706771741-gjlt594f1j58kcn9sn7vu9lcq4v0cfk2.apps.googleusercontent.com&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&access_type=offline">
+          <Link to="https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=http://localhost:8080/api/v1/auth/oauth/google&response_type=code&client_id=949623093363-hhnb82n3djt2h4ovguvmqdk714rnihqv.apps.googleusercontent.com&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&access_type=offline">
             <span>Continue with Google</span>
           </Link>
         </Button>
