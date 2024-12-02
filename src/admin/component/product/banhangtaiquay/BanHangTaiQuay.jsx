@@ -41,6 +41,9 @@ import { getAllSanPhamChiTietApi } from "../../../../api/SanPhamChiTietAPI";
 import TabPane from "antd/es/tabs/TabPane";
 import { getAllKhachHang } from "../../../../api/KhachHang";
 import axiosClient from "../../../../api/axiosClient";
+import ModalThemMoiKhachHang from "../khachhang/ModalThemMoiKhachHang";
+import { createKhachHangApi } from "../../../../api/KhachHangApi";
+import { data } from "autoprefixer";
 
 const ShoppingCart = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -92,7 +95,7 @@ const ShoppingCart = () => {
       setOpenThanhToan(false);
       setConfirmLoading(false);
     }, 2000);
-    await createLSTT();
+    // await createLSTT();
   };
   const handleThanhToanCancel = () => {
     console.log("Clicked cancel button");
@@ -100,7 +103,7 @@ const ShoppingCart = () => {
   };
 
   const handleButtonClick = async (method) => {
-    setOpenThanhToan(true);
+    // setOpenThanhToan(true);
     setSelectedMethod(method);
   };
 
@@ -110,31 +113,30 @@ const ShoppingCart = () => {
     }
   }, [currentInvoice]);
 
-  const createLSTT = async () => {
-    const payload = {
-      maGiaoDich: null,
-      soTien: currentInvoice?.tongTien,
-      phuongThucThanhToan: selectedMethod,
-      hoaDonId: currentInvoice?.id,
-    };
+  // const createLSTT = async () => {
+  //   const payload = {
+  //     maGiaoDich: null,
+  //     soTien: currentInvoice?.tongTien,
+  //     phuongThucThanhToan: selectedMethod,
+  //     hoaDonId: currentInvoice?.id,
+  //   };
 
-    try {
-      const response = await axiosClient.post(
-        "/api/v1/lichSuThanhToan",
-        payload
-      );
-      if (response.data) {
-        console.log(
-          "Lịch sử thanh toán đã được tạo thành công:",
-          response.data
-        );
-      }
-    } catch (error) {
-      console.error("Lỗi khi tạo lịch sử thanh toán:", error);
-    }
-  };
+  //   try {
+  //     const response = await axiosClient.post(
+  //       "/api/v1/lichSuThanhToan",
+  //       payload
+  //     );
+  //     if (response.data) {
+  //       console.log(
+  //         "Lịch sử thanh toán đã được tạo thành công:",
+  //         response.data
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Lỗi khi tạo lịch sử thanh toán:", error);
+  //   }
+  // };
 
-  
   const handlePaymentAmountChange = (e) => {
     setModalPaymentAmount(Number(e.target.value));
   };
@@ -193,7 +195,9 @@ const ShoppingCart = () => {
 
   useEffect(() => {
     fetchDataKhachHang();
-  }, []);
+  }, [])
+
+
 
   const showModalAddSPCT = () => {
     setIsModalOpen(true);
@@ -287,7 +291,7 @@ const ShoppingCart = () => {
         return;
       }
 
-      const res = await confirmPayment(id);
+      const res = await confirmPayment(id, selectedMethod);
       console.log(res);
 
       if (res?.code === 200) {
@@ -591,24 +595,6 @@ const ShoppingCart = () => {
     }
   }, []);
 
-  // const getLSTTByOrderId = async (orderId) => {
-  //   setLoading(true);
-  //   try {
-  //     if(!currentInvoice) {
-  //       toast.warning("Vui lòng chọn hóa đơn !");
-  //       return;
-  //     }
-  //     const res = await getLSTTByIDHD(orderId);
-  //     if (res?.data) {
-  //       setLichSuThanhToan(res.data)
-  //     }
-
-  //   } catch (error) {
-  //     console.error("Error fetching order:", error);
-  //   }finally{
-  //     setLoading(false)
-  //   }
-  // }
 
   const paymentHistory = [
     {
@@ -864,24 +850,33 @@ const ShoppingCart = () => {
     }
   };
 
+  // Add customer
+
+  const [isCreateCustomer, setIsCreateCustomer] = useState(false)
+
+  const handleCreateCustomer = async () => {
+    setIsCreateCustomer(true)
+  }
+
+  const cancelCreateCustomer = async () => {
+    setIsCreateCustomer(false)
+  }
+
+  const handleSubmit = async(customerData) => {
+    const res = 
+    await createKhachHangApi(customerData);
+
+    if(res?.data) {
+      await fetchDataKhachHang();
+      toast.success("Thêm khách hàng thành công !")
+      setIsCreateCustomer(false)
+    }
+  };
+
+
+
   return (
     <div style={{ padding: 20 }}>
-      {/* <div style={{ marginBottom: 20, textAlign: "right", margin: '20px' }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleCreateNewOrder}
-        >
-          Tạo hóa đơn
-        </Button>
-         <Button type="primary" onClick={showQrScanner}>
-            <IoQrCodeSharp />
-            QR Code
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={showModal}>
-            Thêm sản phẩm
-          </Button>
-      </div> */}
       <div
         style={{
           display: "flex",
@@ -972,7 +967,6 @@ const ShoppingCart = () => {
       </div>
       {/* Tổng tiền */}
       <div style={{ textAlign: "right", marginTop: 20 }}>
-        {/* <strong>Tổng tiền: {currentInvoice?.tongTien.toLocaleString()} VND</strong> */}
         <strong>
           Tổng tiền:{" "}
           {currentInvoice?.tongTien && !isNaN(currentInvoice.tongTien)
@@ -1034,80 +1028,6 @@ const ShoppingCart = () => {
       >
         <div id="reader" style={{ width: "100%" }}></div>
       </Modal>
-      {/* <Modal
-        title="Thêm sản phẩm"
-        visible={isShow}
-        onOk={handleOk}
-        onCancel={handleCancelAddSPCT}
-        width={1000} 
-        bodyStyle={{ padding: "20px" }} 
-      >
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "10px",
-            marginBottom: "20px",
-          }}
-        >
-          <Input
-            placeholder="Nhập tên sản phẩm"
-            prefix={<SearchOutlined />}
-            style={{ width: "730px" }}
-          />{" "}
-          <Button type="primary">Tìm kiếm</Button>
-          <Button>Reset</Button>
-          <Select placeholder="Chất Liệu" style={{ width: "150px" }}>
-            <Option value="All">Tất cả</Option>
-            <Option value="Leather">Da</Option>
-            <Option value="Synthetic">Nhân tạo</Option>
-          </Select>
-          <Select placeholder="Thương Hiệu" style={{ width: "150px" }}>
-            <Option value="All">Tất cả</Option>
-            <Option value="Kappa">Kappa</Option>
-            <Option value="Nike">Nike</Option>
-          </Select>
-          <Select placeholder="Giới Tính" style={{ width: "150px" }}>
-            <Option value="All">Tất cả</Option>
-            <Option value="Male">Nam</Option>
-            <Option value="Female">Nữ</Option>
-          </Select>
-          <Select placeholder="Kích cỡ" style={{ width: "150px" }}>
-            <Option value="All">Tất cả</Option>
-            <Option value="36">36</Option>
-            <Option value="37">37</Option>
-          </Select>
-          <Select placeholder="Màu Sắc" style={{ width: "150px" }}>
-            <Option value="All">Tất cả</Option>
-            <Option value="Maroon">Maroon</Option>
-            <Option value="Red">Red</Option>
-          </Select>
-          <div style={{ width: "300px" }}>
-            <span>Khoảng giá:</span>
-            <Slider range min={0} max={10000000} step={500000} />
-          </div>
-        </div>
-
-        <Table
-          columns={columnsSPCT}
-          dataSource={sanPhamChiTiet}
-          rowKey="key"
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: totalItems,
-            showSizeChanger: true,
-            pageSizeOptions: ["5","10", "20", "50", "100"],
-            onChange: (page, pageSize) => {
-                setCurrentPage(page);
-                setPageSize(pageSize);
-            },
-        }}
-          onRow={(record) => ({
-            onClick: () => handleProductSelect(record),
-          })}
-        />
-      </Modal> */}
 
       <Modal
         title="Thêm sản phẩm"
@@ -1117,9 +1037,9 @@ const ShoppingCart = () => {
         width={1000}
         bodyStyle={{
           padding: "20px",
-          height: "55vh", // Cố định chiều cao Modal
-          overflow: "hidden", // Đảm bảo Modal không mở rộng
-          display: "flex", // Sử dụng flex để kiểm soát bố cục nội dung
+          height: "55vh",
+          overflow: "hidden",
+          display: "flex",
           flexDirection: "column",
         }}
       >
@@ -1171,8 +1091,8 @@ const ShoppingCart = () => {
 
         <div
           style={{
-            flex: 1, // Chiếm không gian còn lại của Modal
-            overflowY: "auto", // Kích hoạt cuộn dọc cho vùng bảng
+            flex: 1,
+            overflowY: "auto",
           }}
         >
           <Table
@@ -1273,13 +1193,13 @@ const ShoppingCart = () => {
           </Form.Item>
           <Divider />
           {/*<Text strong style={{ color: 'red' }}>Tiền thiếu: {remainingAmount.toLocaleString()} VND</Text>*/}
-          <Table
+          {/*<Table
             columns={paymentHistory}
             dataSource={lichSuThanhToan}
             pagination={false}
             locale={{ emptyText: "No data" }}
             style={{ marginTop: 16 }}
-          />
+          /> */}
           <Divider />
           <Text strong>
             Khách thanh toán: {partialPayment.toLocaleString()} VND
@@ -1473,12 +1393,17 @@ const ShoppingCart = () => {
               </Text>
             </Form.Item>
             <Form.Item label="Giảm giá">
-              {/* <Text>{discount.toLocaleString()} VND</Text> */}
+              <Text>
+                {currentInvoice?.soTienGiam && !isNaN(currentInvoice.soTienGiam)
+                  ? currentInvoice.soTienGiam.toLocaleString() + " VND"
+                  : "0.0 VND"}
+              </Text>
             </Form.Item>
             <Form.Item label="Tổng tiền">
               <Title level={4} style={{ color: "red" }}>
-                {currentInvoice?.tongTien && !isNaN(currentInvoice.tongTien)
-                  ? currentInvoice.tongTien.toLocaleString() + " VND"
+                {currentInvoice?.tienSauGiam &&
+                !isNaN(currentInvoice.tienSauGiam)
+                  ? currentInvoice.tienSauGiam.toLocaleString() + " VND"
                   : "0.0 VND"}
               </Title>
             </Form.Item>
@@ -1501,6 +1426,9 @@ const ShoppingCart = () => {
             open={isShowModalKhachHang}
             onCancel={cancelModalKhachHang}
             width={1000}
+            okText="Thêm khách hàng"
+            cancelText="Hủy"
+            onOk={handleCreateCustomer}
           >
             <Table
               rowKey="key"
@@ -1512,6 +1440,12 @@ const ShoppingCart = () => {
               })}
             />
           </Modal>
+          <ModalThemMoiKhachHang
+            isOpen={isCreateCustomer}
+            handleClose={cancelCreateCustomer}
+            title="Khách hàng"
+            handleSubmit={handleSubmit}
+          />
           <Modal
             title="Số lượng sản phẩm"
             open={isModalOpen}
