@@ -45,13 +45,14 @@ export default function PreCheckout() {
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!userInfo || !userInfo.id) {
-                console.log('User info not available yet');
-                return;
-              }
+            const userId = userInfo && userInfo.id ? userInfo.id : 1;
+            // if (!userInfo || !userInfo.id) {
+            //     console.log('User info not available yet');
+            //     return;
+            //   }
             setLoading(true)
             try {
-                const response = await axios.get(`http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userInfo.id}`);
+                const response = await axios.get(`http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userId}`);
                 if (response.data.code === 1000) {
                     if (!response.data.data || !response.data.data.gioHangChiTietList || response.data.data.gioHangChiTietList.length === 0) {                    
                         navigate('/');

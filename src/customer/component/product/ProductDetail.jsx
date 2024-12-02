@@ -8,9 +8,11 @@ import { Link } from "react-router-dom";
 import { SyncOutlined, TrophyOutlined, CarOutlined, CreditCardOutlined, WalletOutlined, EnvironmentOutlined, SafetyOutlined, GiftOutlined } from "@ant-design/icons";
 import useCartStore from "../cart/useCartStore";
 import { getSaleCTByPrDtApi } from "../../../api/SaleCTApi";
+import { set } from "@ant-design/plots/es/core/utils";
 const ProductDetail = () => {
   const { id } = useParams();
   const [productDetail, setProductDetail] = useState({});
+  const [detail, setDetail] = useState({});
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [nameSize, setNameSize] = useState(null);
@@ -56,6 +58,7 @@ const ProductDetail = () => {
     // Tìm tên kích thước từ danh sách sản phẩm chi tiết
     const size = productDetail.sanPhamChiTietList?.find(item => item.id_kichThuoc === e.target.value);
     if (size) {
+      setDetail(size);
       setNameSize(size.tenKichThuoc); // Cập nhật tên kích thước
     }
     updatePrice(e.target.value, selectedColor); // Cập nhật giá khi thay đổi kích thước
@@ -65,8 +68,10 @@ const ProductDetail = () => {
   // Cập nhật ảnh chính khi chọn màu
   const handleColorChange = (colorId) => {
     const color = productDetail.sanPhamChiTietList?.find((item) => item.id_mauSac === colorId);
+    console.log("Color", color);
     if (color) {
-      setSelectedImage(colorId.hinhAnhList?.[0].url || "");
+      setSelectedImage(color.hinhAnhList?.[0].url || "");
+      setDetail(color);
       setSelectedColor(colorId);
       setNameColor(color.tenMauSac); // Cập nhật tên màu
       updatePrice(selectedSize, colorId); // Cập nhật giá khi thay đổi màu
@@ -140,6 +145,7 @@ const ProductDetail = () => {
     const productDetailItem = productDetail?.sanPhamChiTietList?.find(
       (item) => item.id === id
     );
+    setDetail(productDetailItem);
     console.log("ProductDetail", productDetailItem);
     return productDetailItem ? productDetailItem : null;
   }
@@ -151,6 +157,7 @@ const ProductDetail = () => {
       const res = await getSanPhamByIdApi(id);
       setProductDetail(res.data);
       const firstItem = res.data.sanPhamChiTietList?.[0];
+      setDetail(firstItem);
       if (firstItem) {
         setProductDetailId(firstItem.id); // Set id của productDetail mặc định
         setSelectedColor(firstItem.id_mauSac);
@@ -379,12 +386,24 @@ const ProductDetail = () => {
 
           <Typography.Paragraph
             style={{
-              color: productDetail.trangThai === 1 && stockQuantity >0  ? "green" : "red", // Màu xanh lá cho 'Còn hàng', màu đỏ cho 'Hết hàng'
+              color:
+                productDetail.trangThai === 1 && stockQuantity > 0 && detail.trangThai === 1
+                  ? "green" // Màu xanh lá cho 'Còn hàng'
+                  : productDetail.trangThai === 0 || detail.trangThai === 0
+                    ? "gray"  // Màu xám cho 'Ngừng bán'
+                    : "red",  // Màu đỏ cho 'Hết hàng'
               fontWeight: "bold", // Tùy chọn: làm chữ đậm hơn để nổi bật
             }}
           >
-            Tình trạng: {productDetail.trangThai === 1 && stockQuantity >0  ? "Còn hàng" : "Hết hàng"}
+            Tình trạng:
+            {productDetail.trangThai === 1 && stockQuantity > 0 && detail.trangThai === 1
+              ? " Còn hàng"
+              : productDetail.trangThai === 0 || detail.trangThai === 0
+                ? " Ngừng bán"
+                : " Hết hàng"}
           </Typography.Paragraph>
+
+
 
           {/* Số lượng tồn kho
           <Typography.Paragraph>Số lượng còn lại: {stockQuantity}</Typography.Paragraph> */}
@@ -470,6 +489,9 @@ const ProductDetail = () => {
                   e.target.style.color = "white";
                 }}
                 onClick={handleAddToCart} // Thêm sản phẩm vào giỏ hàng
+                // disabled
+                // className={`${productDetail.trangThai === 1 && stockQuantity > 0 ? "" : "disabled"}`}
+                disabled={!(productDetail.trangThai === 1 && stockQuantity > 0 && detail.trangThai === 1)}
               >
                 Thêm sản phẩm vào giỏ hàng
               </Button>
