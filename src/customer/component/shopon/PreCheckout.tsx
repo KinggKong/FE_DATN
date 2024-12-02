@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Form, Input, Radio, Space, Spin, Image, message, notification, Select } from 'antd';
 import { CreditCard, Truck, Tag } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
+import useCartStore from "../cart/useCartStore";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -27,6 +28,7 @@ export default function PreCheckout() {
     const [shippingLoading, setShippingLoading] = useState(false);
     const [checkoutLoading, setCheckoutLoading] = useState(false);
     const [userInfo, setUserInfo] = useState(null);
+    const {fetchCart } = useCartStore();
 
 
     
@@ -219,6 +221,7 @@ export default function PreCheckout() {
                         description: `Thanh toán thành công đơn hàng!`,
                     });
                     navigate(`/infor-order?maHoaDon=${maHoaDon}`);
+                    fetchCart();
                 } else {
                     throw new Error('Checkout failed');
                 }
