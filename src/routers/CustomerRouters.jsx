@@ -8,7 +8,6 @@ import InvoiceLookup from "../customer/component/shopon/InvoiceLookup";
 import GioiThieu from "../customer/component/gioithieu/GioiThieu";
 import FailedPay from "../customer/component/shopon/FailedPay";
 import HandlePayment from "../customer/component/shopon/HandlePayment"
-import Login from "../customer/auth/Login";
 
 const CustomerRouters = {
   path: "/",

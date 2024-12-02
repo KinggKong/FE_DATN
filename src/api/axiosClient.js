@@ -9,20 +9,26 @@ const axiosClient = axios.create({
   paramsSerializer: (params) => queryString.stringify(params),
 });
 
-axiosClient.interceptors.request.use(async (config) => {
-  // Handle token here ...
-  return config;
-});
-axiosClient.interceptors.response.use(
-  (response) => {
-    if (response && response.data) {
-      return response.data;
+axiosClient.interceptors.request.use(
+  (config) => {
+    const accessToken = localStorage.getItem("accessToken"); 
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
-    return response;
+    return config;
   },
+  (error) => Promise.reject(error) 
+);
+
+axiosClient.interceptors.response.use(
+  (response) => response.data, 
   (error) => {
-    // Handle errors
-    throw error;
+    if (error.response && error.response.status === 401) {
+      console.error("Unauthorized! Token might be expired.");
+ 
+      window.location.href = "/auth/login"; 
+    }
+    return Promise.reject(error); 
   }
 );
 
