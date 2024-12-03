@@ -19,6 +19,7 @@ const Navigation = ({ searchValue, setSearchValue }) => {
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+  const [userInfo, setUserInfo] = useState({});
   const showDrawer = () => {
     setOpenDrawer(true);
   };
@@ -64,6 +65,15 @@ const Navigation = ({ searchValue, setSearchValue }) => {
     setIsLoggedIn(false);
     navigate("/auth/login");
   };
+   useEffect(() => {
+        const storedUserInfo = localStorage.getItem("userInfo");
+        if (storedUserInfo) {
+            const parsedUserInfo = JSON.parse(storedUserInfo);
+            setUserInfo(parsedUserInfo);
+            console.log('Stored user info:', storedUserInfo);
+            console.log('Parsed user info:', parsedUserInfo);
+        }
+    }, []);
 
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken");
@@ -197,7 +207,10 @@ const Navigation = ({ searchValue, setSearchValue }) => {
 
          {isLoggedIn ? (
             <Dropdown overlay={userMenu}>
-              <Avatar icon={<UserOutlined />} />
+              <Avatar
+               src={userInfo.avatar}
+              icon={<UserOutlined />} 
+              />
             </Dropdown>
           ) : (
             <Link to="/auth/login">
