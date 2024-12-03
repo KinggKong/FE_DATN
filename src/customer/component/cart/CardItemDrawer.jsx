@@ -46,7 +46,7 @@ export default function CardItemDrawer({ product, onQuantityChange, onRemove }) 
     <div className="flex items-start space-x-4 py-4 border-b border-gray-200">
       <div className="bg-gray-200 rounded-md flex-shrink-0" style={{ width: "100px", height: "50px", overflow: "hidden" }}>
         <img
-          src={product.sanPhamChiTietResponse.hinhAnhList[0].url || ""}
+          src={product.sanPhamChiTietResponse.hinhAnhList[0]?.url || ""}
           className="w-full h-full object-cover"
           alt={product.name || "Product Image"}
         />

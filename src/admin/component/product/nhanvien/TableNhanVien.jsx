@@ -122,17 +122,33 @@ const TableNhanVien = () => {
   const handleConfirmEdit = async (id, updatedNhanVien, avatarFile) => {
     setLoading(true);
     try {
+      // Kiểm tra xem email hoặc số điện thoại có bị trùng với nhân viên khác không (ngoại trừ bản ghi này)
+      const existingNhanVien = dataSource.find(
+        (item) => 
+          (item.id !== id && item.email === updatedNhanVien.email) || 
+          (item.id !== id && item.sdt === updatedNhanVien.sdt)
+      );
+  
+      if (existingNhanVien) {
+        // Nếu có nhân viên nào trùng email hoặc SĐT thì thông báo lỗi
+        notification.error({
+          message: "Lỗi",
+          description: "Email hoặc SĐT không được trùng nhau với nhân viên khác",
+        });
+        return; // Dừng việc cập nhật
+      }
+  
+      // Tiến hành cập nhật nhân viên nếu không có trùng lặp
       let avatarUrl = updatedNhanVien.avatar;
       if (avatarFile) {
         avatarUrl = await uploadImageToFirebase(avatarFile);
       }
   
       const updatedNhanVienWithAvatar = { ...updatedNhanVien, avatar: avatarUrl };
-  
       await updateNhanVienApi(id, updatedNhanVienWithAvatar);
   
       notification.success({
-        message: "Success",
+        message: "Thành công",
         description: `Cập nhật nhân viên ${updatedNhanVien.ten} thành công!`,
       });
   
@@ -141,13 +157,14 @@ const TableNhanVien = () => {
     } catch (error) {
       console.error("Cập nhật nhân viên thất bại", error);
       notification.error({
-        message: "Error",
-        description: " Vui lòng nhập đầy đủ thông tin",
+        message: "Lỗi",
+        description: "Cập nhật nhân viên thất bại",
       });
     } finally {
       setLoading(false);
     }
   };
+  
 
   const handleAdd = () => {
     setIsModalAddOpen(true);
@@ -156,17 +173,31 @@ const TableNhanVien = () => {
   const handleConfirmAdd = async (newNhanVien, avatarFile) => {
     setLoading(true);
     try {
+      // Kiểm tra xem email hoặc số điện thoại có bị trùng với nhân viên khác không
+      const existingNhanVien = dataSource.find(
+        (item) => item.email === newNhanVien.email || item.sdt === newNhanVien.sdt
+      );
+  
+      if (existingNhanVien) {
+        // Nếu có nhân viên nào trùng email hoặc SĐT thì thông báo lỗi
+        notification.error({
+          message: "Lỗi",
+          description: "Email hoặc SĐT không được trùng nhau với nhân viên khác",
+        });
+        return; // Dừng việc thêm mới nhân viên
+      }
+  
+      // Tiến hành thêm mới nhân viên nếu không có trùng lặp
       let avatarUrl = '';
       if (avatarFile) {
         avatarUrl = await uploadImageToFirebase(avatarFile);
       }
   
       const newNhanVienWithAvatar = { ...newNhanVien, avatar: avatarUrl };
-  
       await createNhanVienApi(newNhanVienWithAvatar);
   
       notification.success({
-        message: "Success",
+        message: "Thành công",
         description: `Thêm mới nhân viên ${newNhanVien.ten} thành công!`,
       });
   
@@ -175,13 +206,15 @@ const TableNhanVien = () => {
     } catch (error) {
       console.error("Tạo nhân viên mới thất bại", error);
       notification.error({
-        message: "Error",
-        description: "Email, SĐT không được trùng nhau",
+        message: "Lỗi",
+        description: "Tạo nhân viên mới thất bại",
       });
     } finally {
       setLoading(false);
     }
   };
+  
+
 
   const columns = [
     {
