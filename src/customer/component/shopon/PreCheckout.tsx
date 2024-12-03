@@ -26,12 +26,30 @@ export default function PreCheckout() {
     const [wardsLoading, setWardsLoading] = useState(false);
     const [shippingLoading, setShippingLoading] = useState(false);
     const [checkoutLoading, setCheckoutLoading] = useState(false);
+    const [userInfo, setUserInfo] = useState(null);
+
+
+    
+    useEffect(() => {
+        const storedUserInfo = localStorage.getItem("userInfo");
+        if (storedUserInfo) {
+          const parsedUserInfo = JSON.parse(storedUserInfo);
+          setUserInfo(parsedUserInfo);
+          console.log('Stored user info:', storedUserInfo);
+          console.log('Parsed user info:', parsedUserInfo);
+        }
+      }, []);
+
 
     useEffect(() => {
         const fetchData = async () => {
+            if (!userInfo || !userInfo.id) {
+                console.log('User info not available yet');
+                return;
+              }
             setLoading(true)
             try {
-                const response = await axios.get('http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=1');
+                const response = await axios.get(`http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userInfo.id}`);
                 if (response.data.code === 1000) {
                     if (!response.data.data || !response.data.data.gioHangChiTietList || response.data.data.gioHangChiTietList.length === 0) {                    
                         navigate('/');
@@ -51,7 +69,7 @@ export default function PreCheckout() {
 
         fetchData();
         fetchProvinces();
-    }, []);
+    }, [userInfo]);
 
     const fetchProvinces = async () => {
         setProvincesLoading(true);

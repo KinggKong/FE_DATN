@@ -15,7 +15,6 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
   const [ngaySinh, setNgaySinh] = useState(null);
   const [gioiTinh, setGioiTinh] = useState(true); // true for male, false for female
   const [trangThai, setTrangThai] = useState(true); // Default to active
-  const [idTaiKhoan, setIdTaiKhoan] = useState(""); // Account ID
   const [diaChi, setDiaChi] = useState(""); // Address ID
   const [fileList, setFileList] = useState([]); // State để lưu file tải lên (avatar)
 
@@ -26,7 +25,6 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
       setSdt(nhanVien.sdt);
       setNgaySinh(moment(nhanVien.ngaySinh));
       setGioiTinh(nhanVien.gioiTinh);  // true for male, false for female
-      setIdTaiKhoan(nhanVien.idTaiKhoan);
       setDiaChi(nhanVien.diaChi);
       setTrangThai(nhanVien.trangThai === 1); // Assuming 1 means active
       // Set fileList nếu nhân viên đã có avatar
@@ -38,7 +36,7 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
 
   const handleConfirmEdit = () => {
    
-    if (!ten || !email || !sdt || !ngaySinh || !idTaiKhoan || !diaChi) {
+    if (!ten || !email || !sdt || !ngaySinh ) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ các trường!",
@@ -74,7 +72,6 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
       ngaySinh: ngaySinh ? ngaySinh.format('YYYY-MM-DD') : null,
       gioiTinh,
       trangThai: trangThai ? 1 : 0,
-      idTaiKhoan,
       diaChi,
       avatar: fileList.length > 0 && fileList[0].url ? fileList[0].url : "", // Lưu URL avatar
     });
@@ -226,17 +223,7 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
       </Row>
 
       <Row className="flex justify-between mb-3">
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Tài khoản
-          </label>
-          <Input
-            value={idTaiKhoan}
-            onChange={(e) => setIdTaiKhoan(e.target.value)}
-            placeholder="Nhập ID tài khoản"
-            type="number"
-          />
-        </Col>
+       
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Trạng thái

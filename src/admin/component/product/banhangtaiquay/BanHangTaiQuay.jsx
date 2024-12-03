@@ -6,10 +6,13 @@ import {
   Form,
   Input,
   InputNumber,
+  message,
   Modal,
+  notification,
   Row,
   Select,
   Slider,
+  Spin,
   Switch,
   Table,
   Tabs,
@@ -30,6 +33,7 @@ import {
   getHoaDonById,
   confirmPayment,
   addCustomerToInvoice,
+  changeTypeBill,
 } from "../../../../api/HoaDon";
 import {
   getAllHdctByIdHoaDon,
@@ -43,27 +47,20 @@ import { getAllKhachHang } from "../../../../api/KhachHang";
 import axiosClient from "../../../../api/axiosClient";
 import ModalThemMoiKhachHang from "../khachhang/ModalThemMoiKhachHang";
 import { createKhachHangApi } from "../../../../api/KhachHangApi";
-import { data } from "autoprefixer";
+import { useNavigate } from "react-router-dom";
+import TextArea from "antd/es/input/TextArea";
 
 const ShoppingCart = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isModalVisibleQR, setIsModalVisibleQR] = useState(false);
   const { Title, Text } = Typography;
   const [isShow, setIsShow] = useState(false);
-  const [form] = Form.useForm();
-  const API_HOST = "https://provinces.open-api.vn/api/";
-  const [provinces, setProvinces] = useState([]);
-  const [districts, setDistricts] = useState([]);
-  const [wards, setWards] = useState([]);
-  const [selectedProvince, setSelectedProvince] = useState("");
-  const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [selectedWard, setSelectedWard] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [sanPhamChiTiet, setSanPhamChiTiet] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [invoices, setInvoices] = useState([]);
   const [currentInvoice, setCurrentInvoice] = useState(null);
   const [invoiceDetails, setInvoiceDetails] = useState([]);
@@ -86,20 +83,23 @@ const ShoppingCart = () => {
     setConfirmPaymets(false);
   };
 
-  const [openThanhToan, setOpenThanhToan] = useState(false);
-  const [confirmLoading, setConfirmLoading] = useState(false);
+  // const changeType = async (id) => {
+  //   await changeTypeBill(id);
+  // };
 
-  const handleThanhToanOk = async () => {
-    setConfirmLoading(true);
-    setTimeout(() => {
-      setOpenThanhToan(false);
-      setConfirmLoading(false);
-    }, 2000);
-    // await createLSTT();
-  };
-  const handleThanhToanCancel = () => {
-    console.log("Clicked cancel button");
-    setOpenThanhToan(false);
+  const changeType = async (id) => {
+    try {
+      // Gọi API để thay đổi loại hóa đơn
+      await changeTypeBill(id);
+
+      // Sau khi thay đổi loại hóa đơn thành công, cập nhật lại trạng thái của currentInvoice
+      setCurrentInvoice((prev) => ({
+        ...prev,
+        loaiHoaDon: prev.loaiHoaDon === "OFFLINE" ? "ONLINE" : "OFFLINE", // Đảo ngược trạng thái
+      }));
+    } catch (error) {
+      console.error("Failed to update invoice type:", error);
+    }
   };
 
   const handleButtonClick = async (method) => {
@@ -136,10 +136,6 @@ const ShoppingCart = () => {
   //     console.error("Lỗi khi tạo lịch sử thanh toán:", error);
   //   }
   // };
-
-  const handlePaymentAmountChange = (e) => {
-    setModalPaymentAmount(Number(e.target.value));
-  };
 
   const selectCustomer = (payload) => {
     setCurrentCustomer(payload);
@@ -195,9 +191,7 @@ const ShoppingCart = () => {
 
   useEffect(() => {
     fetchDataKhachHang();
-  }, [])
-
-
+  }, []);
 
   const showModalAddSPCT = () => {
     setIsModalOpen(true);
@@ -206,52 +200,6 @@ const ShoppingCart = () => {
   const handleOkAddSPCT = async () => {
     await addSpctToHoaDon();
     setIsModalOpen(false);
-  };
-
-  // const handleButtonClick = (method) => {
-  //   setSelectedMethod(method);
-  // };
-
-  useEffect(() => {
-    axios.get(`${API_HOST}?depth=1`).then((response) => {
-      setProvinces(response.data);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (selectedProvince) {
-      axios.get(`${API_HOST}p/${selectedProvince}?depth=2`).then((response) => {
-        setDistricts(response.data.districts);
-      });
-    } else {
-      setDistricts([]);
-      setWards([]);
-    }
-  }, [selectedProvince]);
-
-  useEffect(() => {
-    if (selectedDistrict) {
-      axios.get(`${API_HOST}d/${selectedDistrict}?depth=2`).then((response) => {
-        setWards(response.data.wards);
-      });
-    } else {
-      setWards([]);
-    }
-  }, [selectedDistrict]);
-
-  const handleProvinceChange = (value) => {
-    setSelectedProvince(value);
-    setSelectedDistrict("");
-    setSelectedWard("");
-  };
-
-  const handleDistrictChange = (value) => {
-    setSelectedDistrict(value);
-    setSelectedWard("");
-  };
-
-  const handleWardChange = (value) => {
-    setSelectedWard(value);
   };
 
   const showModal = () => {
@@ -272,9 +220,51 @@ const ShoppingCart = () => {
 
   useEffect(() => {
     if (activeTab !== "noInvoice") {
-      getOrderById(activeTab); // Tải dữ liệu hóa đơn đầu tiên khi component mount
+      getOrderById(activeTab);
     }
   }, [activeTab]);
+
+  // const handleXacNhanThanhToan = async (id) => {
+  //   setLoading(true);
+  //   try {
+  //     if (!currentInvoice) {
+  //       setConfirmPaymets(false);
+  //       toast.warning("Vui lòng chọn hóa đơn");
+  //       return;
+  //     }
+
+  //     if (partialPayment !== currentInvoice.tongTien) {
+  //       setConfirmPaymets(false);
+  //       toast.warning("Vui lòng thanh toán đơn hàng!");
+  //       return;
+  //     }
+
+  //     const res = await confirmPayment(id, selectedMethod);
+  //     console.log(res);
+
+  //     if (res?.code === 200) {
+  //       setInvoices((prevInvoices) => {
+  //         const newInvoices = prevInvoices.filter(
+  //           (invoice) => invoice.id !== id
+  //         );
+  //         if (newInvoices.length > 0 && newInvoices[0]?.id) {
+  //           setActiveTab(newInvoices[0]?.id);
+  //         } else {
+  //           setActiveTab("noInvoice");
+  //         }
+  //         return newInvoices;
+  //       });
+  //       toast.success("Thanh toán hóa đơn thành công!");
+  //       setConfirmPaymets(false);
+  //       setPartialPayment(0);
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     toast.error("Đã có lỗi xảy ra khi thanh toán");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleXacNhanThanhToan = async (id) => {
     setLoading(true);
@@ -282,10 +272,14 @@ const ShoppingCart = () => {
       if (!currentInvoice) {
         setConfirmPaymets(false);
         toast.warning("Vui lòng chọn hóa đơn");
-        return; // Dừng lại nếu không có hóa đơn
+        return;
       }
 
-      if (partialPayment !== currentInvoice.tongTien) {
+      if (
+        Number(localStorage.getItem(currentInvoice?.id)) !==
+        currentInvoice.tienSauGiam
+      ) {
+        console.log();
         setConfirmPaymets(false);
         toast.warning("Vui lòng thanh toán đơn hàng!");
         return;
@@ -295,6 +289,9 @@ const ShoppingCart = () => {
       console.log(res);
 
       if (res?.code === 200) {
+        // Xóa thông tin hóa đơn khỏi localStorage khi thanh toán thành công
+        localStorage.removeItem(currentInvoice?.id);
+
         setInvoices((prevInvoices) => {
           const newInvoices = prevInvoices.filter(
             (invoice) => invoice.id !== id
@@ -324,9 +321,9 @@ const ShoppingCart = () => {
   const showModalThanhToan = () => setIsModalVisible(true);
   const handleCancelThanhToan = () => setIsModalVisible(false);
   const handleOkThanhToan = () => {
-    setPartialPayment(currentInvoice?.tongTien);
+    setPartialPayment(currentInvoice?.tienSauGiam);
     console.log(modalPaymentAmount);
-
+    localStorage.setItem(`${currentInvoice.id}`, currentInvoice?.tienSauGiam);
     setIsModalVisible(false);
   };
 
@@ -502,13 +499,6 @@ const ShoppingCart = () => {
   const handleCancelQR = () => {
     setIsModalVisibleQR(false);
   };
-  const renderOptions = (data) => {
-    return data.map((item) => (
-      <option key={item.code} value={item.code}>
-        {item.name}
-      </option>
-    ));
-  };
 
   const fetchDataSpct = useCallback(async () => {
     const params = { pageNumber: currentPage - 1, pageSize };
@@ -553,6 +543,13 @@ const ShoppingCart = () => {
     fetchData();
   }, []);
 
+  // useEffect(() => {
+  //   const intervalId = setInterval(() => {
+  //     fetchData();
+  //   }, 1000);
+  //   return () => clearInterval(intervalId);
+  // }, []);
+
   const handleCreateNewOrder = async () => {
     try {
       if (invoices.length >= 5) {
@@ -594,7 +591,6 @@ const ShoppingCart = () => {
       setLoading(false);
     }
   }, []);
-
 
   const paymentHistory = [
     {
@@ -668,7 +664,7 @@ const ShoppingCart = () => {
             value={record.soLuong}
             style={{ width: 60, margin: "0 10px" }}
             onChange={(value) => handleQuantityChange(value, record)}
-            onBlur={(e) => handleBlur(e, record)}
+            // onBlur={(e) => handleBlur(e, record)}
           />
           <Button
             icon={<PlusOutlined />}
@@ -741,6 +737,9 @@ const ShoppingCart = () => {
       return;
     }
 
+    if (isProcessing) return;
+    setIsProcessing(true);
+
     try {
       const payload = {
         idSanPhamChiTiet: record?.idSanPhamChiTiet,
@@ -748,7 +747,6 @@ const ShoppingCart = () => {
         method: value > record.soLuong ? "plus" : "minus",
         soLuong: Math.abs(value - record.soLuong),
       };
-      console.log(payload);
 
       const response = await axiosClient.put(
         `/api/v1/hdct/update-soLuong/${record.id}`,
@@ -762,24 +760,31 @@ const ShoppingCart = () => {
             )
           : [];
 
-        setHoaDonChiTiet(updatedData);
-        await getOrderById(currentInvoice?.id);
-        await fetchDataSpct();
-        // toast.success("Cập nhật số lượng thành công!");
+        setHoaDonChiTiet(updatedData); // Cập nhật lại trạng thái chi tiết hóa đơn
+        await getOrderById(currentInvoice?.id); // Cập nhật lại thông tin hóa đơn
+        await fetchDataSpct(); // Lấy lại dữ liệu sản phẩm chi tiết
       } else {
-        toast.error("Cập nhật thất bại!");
+        toast.error("Cập nhật thất bại!"); // Thông báo nếu không có dữ liệu
       }
     } catch (error) {
+      // Kiểm tra nếu lỗi chưa được hiển thị
       if (!errorShown) {
-        // Hiển thị lỗi chỉ một lần
-        toast.error("Số lượng vượt quá trong kho !");
-        setErrorShown(true); // Đặt cờ lỗi đã hiển thị
+        toast.error(
+          "Số lượng vượt quá trong kho, kiểm tra lại số lượng sản phẩm!"
+        ); // Thông báo lỗi
+        setErrorShown(true); // Đánh dấu lỗi đã hiển thị
       }
-      console.error("Error updating quantity:", error);
+      console.error("Error updating quantity:", error); // In lỗi ra console
     } finally {
-      setTimeout(() => setErrorShown(false), 3000); // Đặt lại trạng thái sau 3 giây
+      // Đặt lại trạng thái sau 3 giây để cho phép xử lý tiếp theo
+      setTimeout(() => {
+        setErrorShown(false); // Đặt lại trạng thái lỗi
+        setIsProcessing(false); // Đặt lại trạng thái không còn xử lý
+      }, 3000);
     }
   };
+
+  const [isProcessing, setIsProcessing] = useState(false); // Kiểm tra xem có đang xử lý API không
 
   const handleBlur = async (e, record) => {
     const value = e.target.value;
@@ -852,28 +857,285 @@ const ShoppingCart = () => {
 
   // Add customer
 
-  const [isCreateCustomer, setIsCreateCustomer] = useState(false)
+  const [isCreateCustomer, setIsCreateCustomer] = useState(false);
 
   const handleCreateCustomer = async () => {
-    setIsCreateCustomer(true)
-  }
+    setIsCreateCustomer(true);
+  };
 
   const cancelCreateCustomer = async () => {
-    setIsCreateCustomer(false)
-  }
+    setIsCreateCustomer(false);
+  };
 
-  const handleSubmit = async(customerData) => {
-    const res = 
-    await createKhachHangApi(customerData);
+  const handleSubmits = async (customerData) => {
+    const res = await createKhachHangApi(customerData);
 
-    if(res?.data) {
+    if (res?.data) {
       await fetchDataKhachHang();
-      toast.success("Thêm khách hàng thành công !")
-      setIsCreateCustomer(false)
+      toast.success("Thêm khách hàng thành công !");
+      setIsCreateCustomer(false);
     }
   };
 
+  const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [form] = Form.useForm();
+  const [checkoutData, setCheckoutData] = useState(null);
+  const [error, setError] = useState(null);
+  const [ship, setShip] = useState(0);
+  const navigate = useNavigate();
 
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [provincesLoading, setProvincesLoading] = useState(false);
+  const [districtsLoading, setDistrictsLoading] = useState(false);
+  const [wardsLoading, setWardsLoading] = useState(false);
+  const [shippingLoading, setShippingLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem("userInfo");
+    if (storedUserInfo) {
+      const parsedUserInfo = JSON.parse(storedUserInfo);
+      setUserInfo(parsedUserInfo);
+      console.log("Stored user info:", storedUserInfo);
+      console.log("Parsed user info:", parsedUserInfo);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!userInfo || !userInfo.id) {
+        console.log("User info not available yet");
+        return;
+      }
+      // setLoading(true);
+      try {
+        const response = await axios.get(
+          `http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userInfo.id}`
+        );
+        if (response.data.code === 1000) {
+          if (
+            !response.data.data ||
+            !response.data.data?.gioHangChiTietList ||
+            response.data.data?.gioHangChiTietList.length === 0
+          ) {
+            navigate("/");
+            return;
+          }
+          setCheckoutData(response.data.data);
+        } else {
+          throw new Error("Failed to fetch data");
+        }
+      } catch (err) {
+        setError("An error occurred while fetching data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    fetchProvinces();
+  }, [userInfo]);
+
+  const fetchProvinces = async () => {
+    setProvincesLoading(true);
+    try {
+      const response = await axios.get(
+        "http://localhost:8080/api/v1/locations/provinces"
+      );
+      if (response.data.code === 1000) {
+        setProvinces(response.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching provinces:", err);
+    } finally {
+      setProvincesLoading(false);
+    }
+  };
+
+  const fetchDistricts = async (provinceCode) => {
+    setDistrictsLoading(true);
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/v1/locations/districts?provinceCode=${provinceCode}`
+      );
+      if (response.data.code === 1000) {
+        setDistricts(response.data.data);
+        setWards([]);
+        form.setFieldsValue({ district: undefined, ward: undefined });
+      }
+    } catch (err) {
+      console.error("Error fetching districts:", err);
+    } finally {
+      setDistrictsLoading(false);
+    }
+  };
+
+  const fetchWards = async (districtCode) => {
+    setWardsLoading(true);
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/v1/locations/wards?districtCode=${districtCode}`
+      );
+      if (response.data.code === 1000) {
+        setWards(response.data.data);
+        form.setFieldsValue({ ward: undefined });
+      }
+    } catch (err) {
+      console.error("Error fetching wards:", err);
+    } finally {
+      setWardsLoading(false);
+    }
+  };
+
+  const calculateShippingCost = async (latitude, longitude) => {
+    setShippingLoading(true);
+    const locations = [
+      [105.74680306431928, 21.037955318097737],
+      [longitude, latitude],
+    ];
+    const requestData = {
+      locations: locations,
+      metrics: ["distance"],
+      units: "km",
+    };
+
+    try {
+      const response = await axios.post(
+        "https://api.openrouteservice.org/v2/matrix/driving-car",
+        requestData,
+        {
+          headers: {
+            Authorization:
+              "5b3ce3597851110001cf62485b5a6259f66d4725bd2c5d24e7cdc7e1",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const distanceKm = response.data.distances[0][1];
+      let shippingCost;
+
+      if (distanceKm < 40) {
+        shippingCost = 30000;
+      } else if (distanceKm < 100) {
+        shippingCost = 50000;
+      } else if (distanceKm < 200) {
+        shippingCost = 60000;
+      } else if (distanceKm < 400) {
+        shippingCost = 70000;
+      } else {
+        shippingCost = 90000;
+      }
+
+      setShip(shippingCost);
+    } catch (err) {
+      console.error("Error calculating shipping cost:", err);
+      message.error("Không thể tính phí vận chuyển. Vui lòng thử lại.");
+    } finally {
+      setShippingLoading(false);
+    }
+  };
+
+  const handleProvinceChange = (value) => {
+    const selectedProvince = provinces.find(
+      (province) => province.code === value
+    );
+    if (selectedProvince) {
+      calculateShippingCost(
+        selectedProvince.latitude,
+        selectedProvince.longitude
+      );
+    }
+    fetchDistricts(value);
+  };
+
+  const handleDistrictChange = (value) => {
+    fetchWards(value);
+  };
+
+  const handleSubmit = async (values) => {
+    setCheckoutLoading(true);
+    try {
+      const selectedProvince = provinces.find(
+        (province) => province.code === values.province
+      );
+      const selectedDistrict = districts.find(
+        (district) => district.code === values.district
+      );
+      const selectedWard = wards.find((ward) => ward.code === values.ward);
+
+      const hoaDonRequest = {
+        idGioHang: values.idGioHang,
+        tenNguoiNhan: values.tenNguoiNhan,
+        diaChiNhan: `${values.address}, ${
+          selectedWard ? selectedWard.fullName : ""
+        }, ${selectedDistrict ? selectedDistrict.fullName : ""}, ${
+          selectedProvince ? selectedProvince.fullName : ""
+        }`,
+        sdt: values.sdt,
+        tongTien: checkoutData.totalPrice + ship,
+        tienSauGiam: checkoutData.totalPrice + ship,
+        tienShip: ship,
+        ghiChu: values.ghiChu,
+        email: values.email,
+        idKhachHang: values.idKhachHang,
+        idVoucher: null,
+        hinhThucThanhToan: paymentMethod,
+        soTienGiam: 0,
+      };
+
+      let response;
+      if (paymentMethod === "VNPAY") {
+        response = await axios.post(
+          "http://localhost:8080/api/payment/submitOrder",
+          hoaDonRequest
+        );
+        if (response.data.code === 1000) {
+          window.location.href = response.data.data;
+        } else {
+          throw new Error("VNPay payment initiation failed");
+        }
+      } else {
+        response = await axios.post(
+          "http://localhost:8080/api/v1/shop-on/checkout",
+          hoaDonRequest
+        );
+        if (response.data.code === 1000) {
+          const maHoaDon = response.data.data.maHoaDon;
+          notification.success({
+            message: "Success",
+            duration: 4,
+            pauseOnHover: false,
+            showProgress: true,
+            description: `Thanh toán thành công đơn hàng!`,
+          });
+          navigate(`/infor-order?maHoaDon=${maHoaDon}`);
+        } else {
+          throw new Error("Checkout failed");
+        }
+      }
+    } catch (err) {
+      message.error("Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.");
+      console.log(err);
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
+  // if (loading) {
+  //   return <Spin size="large" />;
+  // }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  const { gioHangChiTietList, totalPrice } = checkoutData ?? [];
 
   return (
     <div style={{ padding: 20 }}>
@@ -954,17 +1216,7 @@ const ShoppingCart = () => {
           display: "flex",
           justifyContent: "space-between",
         }}
-      >
-        {/* <Space>
-          <Button type="primary" onClick={showQrScanner}>
-            <IoQrCodeSharp />
-            QR Code
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={showModal}>
-            Thêm sản phẩm
-          </Button>
-        </Space> */}
-      </div>
+      ></div>
       {/* Tổng tiền */}
       <div style={{ textAlign: "right", marginTop: 20 }}>
         <strong>
@@ -1171,38 +1423,24 @@ const ShoppingCart = () => {
               </Button>
             </Button.Group>
           </Form.Item>
-          <Modal
-            title="Xác nhận thanh toán !"
-            open={openThanhToan}
-            onOk={handleThanhToanOk}
-            confirmLoading={confirmLoading}
-            onCancel={handleThanhToanCancel}
-          ></Modal>
-
           <Form.Item label="Số tiền khách thanh toán">
             <Input
               type="text"
               value={
-                currentInvoice?.tongTien && !isNaN(currentInvoice.tongTien)
-                  ? currentInvoice.tongTien.toLocaleString() + " VND"
+                currentInvoice?.tienSauGiam &&
+                !isNaN(currentInvoice?.tienSauGiam)
+                  ? currentInvoice?.tienSauGiam.toLocaleString() + " VND"
                   : "0.0 VND"
               }
-              onChange={() => setModalPaymentAmount(currentInvoice?.tongTien)}
+              // onChange={() => setModalPaymentAmount(localStorage.getItem(currentInvoice?.id))}
               placeholder="Nhập số tiền thanh toán"
             />
           </Form.Item>
           <Divider />
-          {/*<Text strong style={{ color: 'red' }}>Tiền thiếu: {remainingAmount.toLocaleString()} VND</Text>*/}
-          {/*<Table
-            columns={paymentHistory}
-            dataSource={lichSuThanhToan}
-            pagination={false}
-            locale={{ emptyText: "No data" }}
-            style={{ marginTop: 16 }}
-          /> */}
           <Divider />
           <Text strong>
-            Khách thanh toán: {partialPayment.toLocaleString()} VND
+            {/* Khách thanh toán: {partialPayment.toLocaleString()} VND */}
+            Khách thanh toán: {localStorage.getItem(currentInvoice?.id)} VND
           </Text>
           <br />
           <Text strong style={{ color: "red" }}>
@@ -1210,7 +1448,6 @@ const ShoppingCart = () => {
           </Text>
         </Form>
       </Modal>
-      {/*</div>*/}
       <div
         style={{
           display: "flex",
@@ -1218,138 +1455,139 @@ const ShoppingCart = () => {
           alignItems: "flex-start",
           gap: "20px",
           width: "100%",
-        }}
+        }}  
       >
-        {shipping && (
-          <div style={{ width: "48%" }}>
-            <Title level={3}>Thông tin giao hàng</Title>
-            <Divider />
-            <Form
-              style={{ width: "100%" }}
-              form={form}
-              layout="vertical"
-              onFinish={(values) => console.log("Form values:", values)}
+        {currentInvoice?.loaiHoaDon === "ONLINE" && (
+          <div style={{ width: "48%", marginTop: '40px' }}>
+             <Title level={3}>Thông tin giao hàng</Title>
+      <Form
+        form={form}
+        layout="vertical"
+        className="space-y-4"
+        initialValues={{
+          tenNguoiNhan:
+            checkoutData?.gioHangChiTietList[0].gioHang.khachHang.ten,
+          sdt: checkoutData?.gioHangChiTietList[0].gioHang.khachHang.sdt,
+          idKhachHang:
+            checkoutData?.gioHangChiTietList[0].gioHang.khachHang.id,
+          email:
+            checkoutData?.gioHangChiTietList[0].gioHang.khachHang.email,
+          idGioHang: checkoutData?.idGioHang,
+        }}
+        onFinish={handleSubmit}
+      >
+        <Form.Item name="idGioHang" hidden>
+          <Input type="hidden" />
+        </Form.Item>
+        <Form.Item name="idKhachHang" hidden>
+          <Input type="hidden" />
+        </Form.Item>
+        
+        <Form.Item
+          label="Tên"
+          name="tenNguoiNhan"
+          required
+          rules={[{ required: true, message: "Vui lòng nhập tên" }]}
+        >
+          <Input size="large" />
+        </Form.Item>
+
+        <Form.Item
+          label="Số điện thoại"
+          name="sdt"
+          required
+          rules={[{ required: true, message: "Vui lòng nhập số điện thoại" }]}
+        >
+          <Input size="large" />
+        </Form.Item>
+
+        {/* Sử dụng Row và Col để hiển thị thành phố, quận, phường trên cùng một dòng */}
+        <Row gutter={16}>
+          <Col span={8}>
+            <Form.Item
+              label="Tỉnh/Thành phố"
+              name="province"
+              required
+              rules={[{ required: true, message: "Vui lòng chọn Tỉnh/Thành phố" }]}
             >
-              <Form.Item
-                name="fullName"
-                label="Họ và Tên"
-                rules={[{ required: true, message: "Vui lòng nhập họ và tên" }]}
-              >
-                <Input placeholder="Nhập họ và tên" />
-              </Form.Item>
-              <Form.Item
-                name="phoneNumber"
-                label="Số điện thoại"
-                rules={[
-                  { required: true, message: "Vui lòng nhập số điện thoại" },
-                  {
-                    pattern: /^[0-9]{10}$/,
-                    message: "Số điện thoại không hợp lệ",
-                  },
-                ]}
-              >
-                <Input placeholder="Nhập số điện thoại" />
-              </Form.Item>
-              <Form.Item
-                name="email"
-                label="Email"
-                rules={[
-                  { required: true, message: "Vui lòng nhập email" },
-                  { type: "email", message: "Email không hợp lệ" },
-                ]}
-              >
-                <Input placeholder="Nhập email" />
-              </Form.Item>
-              <Form.Item
-                name="address"
-                label="Địa chỉ"
-                rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
-              >
-                <Input placeholder="Nhập địa chỉ" />
-              </Form.Item>
+              <Select size="large" onChange={handleProvinceChange}>
+                {provinces.map((province) => (
+                  <Option key={province.code} value={province.code}>
+                    {province.fullName}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
 
-              {/* Wrap these items in a flex container */}
-              <div style={{ display: "flex", gap: "8px" }}>
-                <Form.Item
-                  name="city"
-                  label="Tỉnh/Thành phố"
-                  rules={[
-                    { required: true, message: "Vui lòng chọn tỉnh/thành phố" },
-                  ]}
-                  style={{ flex: 1 }}
-                >
-                  <Select
-                    placeholder="Chọn tỉnh/thành phố"
-                    value={selectedProvince}
-                    onChange={handleProvinceChange}
-                  >
-                    <Option value="">Chọn thành phố</Option>
-                    {renderOptions(provinces)}
-                  </Select>
-                </Form.Item>
+          <Col span={8}>
+            <Form.Item
+              label="Quận/Huyện"
+              name="district"
+              required
+              rules={[{ required: true, message: "Vui lòng chọn Quận/Huyện" }]}
+            >
+              <Select size="large" onChange={handleDistrictChange}>
+                {districts.map((district) => (
+                  <Option key={district.code} value={district.code}>
+                    {district.fullName}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
 
-                <Form.Item
-                  name="district"
-                  label="Quận/Huyện"
-                  rules={[
-                    { required: true, message: "Vui lòng chọn quận/huyện" },
-                  ]}
-                  style={{ flex: 1 }}
-                >
-                  <Select
-                    placeholder="Chọn quận/huyện"
-                    value={selectedDistrict}
-                    onChange={handleDistrictChange}
-                    disabled={!selectedProvince}
-                  >
-                    <Option value="">Chọn huyện/Xã</Option>
-                    {renderOptions(districts)}
-                  </Select>
-                </Form.Item>
+          <Col span={8}>
+            <Form.Item
+              label="Phường/Xã"
+              name="ward"
+              required
+              rules={[{ required: true, message: "Vui lòng chọn Phường/Xã" }]}
+            >
+              <Select size="large">
+                {wards.map((ward) => (
+                  <Option key={ward.code} value={ward.code}>
+                    {ward.fullName}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
 
-                <Form.Item
-                  name="ward"
-                  label="Phường/Xã"
-                  rules={[
-                    { required: true, message: "Vui lòng chọn phường/xã" },
-                  ]}
-                  style={{ flex: 1 }}
-                >
-                  <Select
-                    placeholder="Chọn phường/xã"
-                    value={selectedWard}
-                    onChange={handleWardChange}
-                    disabled={!selectedDistrict}
-                  >
-                    <Option value="">Chọn xã</Option>
-                    {renderOptions(wards)}
-                  </Select>
-                </Form.Item>
-              </div>
+        <Form.Item
+          label="Địa chỉ chi tiết"
+          name="address"
+          required
+          rules={[{ required: true, message: "Vui lòng nhập địa chỉ chi tiết" }]}
+        >
+          <Input size="large" />
+        </Form.Item>
 
-              <Form.Item name="note" label="Ghi chú">
-                <Input.TextArea
-                  placeholder="Ghi chú thêm (không bắt buộc)"
-                  rows={3}
-                />
-              </Form.Item>
-              <Form.Item>
-                <Button type="primary" htmlType="submit">
-                  Xác nhận
-                </Button>
-              </Form.Item>
-            </Form>
+        <Form.Item label="Địa chỉ email (tùy chọn)" name="email">
+          <Input size="large" />
+        </Form.Item>
+
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold">THÔNG TIN BỔ SUNG</h3>
+          <Form.Item label="Ghi chú đơn hàng (tùy chọn)" name="ghiChu">
+            <TextArea
+              rows={4}
+              placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
+            />
+          </Form.Item>
+        </div>
+      </Form>
           </div>
         )}
 
         {/* Form Thông tin thanh toán - Luôn hiển thị */}
-        <div style={{ width: "48%", marginLeft: "auto" }}>
+        {currentInvoice?.id &&  <div style={{ width: "48%", marginLeft: "auto", marginTop: '40px' }}>
           <Title level={3}>
-            <FaBagShopping style={{ marginRight: 20 }} />
+            {/* <FaBagShopping style={{ marginRight: 20 }} /> */}
             Thông tin thanh toán
           </Title>
           <Form layout="vertical">
-            <Divider />
             <Form.Item label="Khách thanh toán">
               <Row align="middle">
                 <Col flex="auto">
@@ -1360,7 +1598,15 @@ const ShoppingCart = () => {
                   />
                 </Col>
                 <Col style={{ paddingLeft: "8px" }}>
-                  <Text strong>{partialPayment.toLocaleString()} VND</Text>
+                  {/* <Text strong>{partialPayment.toLocaleString()} VND</Text> */}
+                  <Text strong>
+                    {localStorage.getItem(currentInvoice?.id)
+                      ? parseFloat(
+                          localStorage.getItem(currentInvoice?.id)
+                        ).toLocaleString()
+                      : "0"}{" "}
+                    VND
+                  </Text>
                 </Col>
               </Row>
             </Form.Item>
@@ -1378,9 +1624,23 @@ const ShoppingCart = () => {
               </Row>
             </Form.Item>
             <Form.Item label="Giao Hàng">
-              <Switch
+              {/* <Switch
                 checked={shipping}
-                onChange={() => setShipping(!shipping)}
+                onChange={() => {
+                  setShipping(!shipping),
+                  changeType(currentInvoice?.id)
+                }}
+              /> */}
+              <Switch
+                checked={currentInvoice?.loaiHoaDon !== "OFFLINE"} // Bật nếu loại hóa đơn không phải OFFLINE
+                onChange={() => {
+                  // Thay đổi trạng thái của loaiHoaDon khi người dùng thay đổi
+                  const newLoaiHoaDon =
+                    currentInvoice?.loaiHoaDon === "OFFLINE"
+                      ? "ONLINE"
+                      : "OFFLINE"; // Đảo ngược trạng thái loại hóa đơn
+                  changeType(currentInvoice?.id, newLoaiHoaDon); // Giả sử `changeType` là hàm cập nhật lại loại hóa đơn
+                }}
               />
             </Form.Item>
             <Form.Item label="Tiền hàng">
@@ -1399,15 +1659,30 @@ const ShoppingCart = () => {
                   : "0.0 VND"}
               </Text>
             </Form.Item>
+            {currentInvoice?.loaiHoaDon === 'ONLINE' && <Form.Item label="Tiền ship">
+              <Text>
+                {ship && !isNaN(ship)
+                  ? ship.toLocaleString() + " VND"
+                  : "0.0 VND"}
+              </Text>
+            </Form.Item>}
+            {/* <Form.Item label= "Tiền ship">
+            <Text>
+                {ship && !isNaN(ship)
+                  ? ship.toLocaleString() + " VND"
+                  : "0.0 VND"}
+              </Text>
+            </Form.Item> */}
+            
             <Form.Item label="Tổng tiền">
               <Title level={4} style={{ color: "red" }}>
-                {currentInvoice?.tienSauGiam &&
-                !isNaN(currentInvoice.tienSauGiam)
-                  ? currentInvoice.tienSauGiam.toLocaleString() + " VND"
+                {currentInvoice?.tienSauGiam + ship &&
+                !isNaN(currentInvoice.tienSauGiam + ship)
+                  ? (currentInvoice.tienSauGiam + ship).toLocaleString() + " VND"
                   : "0.0 VND"}
               </Title>
             </Form.Item>
-            <Button
+            {currentInvoice.loaiHoaDon === 'OFFLINE' ? <Button
               type="primary"
               block
               style={{
@@ -1419,7 +1694,14 @@ const ShoppingCart = () => {
               onClick={confirmPaymentShow}
             >
               Xác nhận thanh toán
-            </Button>
+            </Button> : <Button
+               style={{
+                width: "150px",
+                background: "black",
+                color: "white",
+                marginLeft: "400px",
+              }}
+            >Xác nhận đặt hàng</Button>}
           </Form>
           <Modal
             title="Khách hàng"
@@ -1444,7 +1726,7 @@ const ShoppingCart = () => {
             isOpen={isCreateCustomer}
             handleClose={cancelCreateCustomer}
             title="Khách hàng"
-            handleSubmit={handleSubmit}
+            handleSubmit={handleSubmits}
           />
           <Modal
             title="Số lượng sản phẩm"
@@ -1470,7 +1752,8 @@ const ShoppingCart = () => {
               onChange={(value) => setQuantity(value)}
             />
           </Modal>
-        </div>
+        </div>}
+       
       </div>
     </div>
   );

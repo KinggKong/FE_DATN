@@ -525,7 +525,7 @@ const TableSanPhamChiTiet = () => {
                     style={{
                         width: "100%",
                     }}
-                    placeholder=""
+                    placeholder="Tất cả sản phẩm"
                     optionFilterProp="label"
                     filterSort={(optionA, optionB) =>
                         (optionA?.label ?? "")
@@ -537,7 +537,7 @@ const TableSanPhamChiTiet = () => {
                         setIdSanPham(value);
                     }}
                     options={[
-                        { value: "", label: "" },
+                        { value: "", label: "Tất cả sản phẩm" },
                         ...dataSanPham?.map((sanPham) => ({
                             value: sanPham.id,
                             label: sanPham.tenSanPham,
@@ -563,7 +563,7 @@ const TableSanPhamChiTiet = () => {
                     style={{
                         width: "100%",
                     }}
-                    placeholder=""
+                    placeholder="Tất cả thương hiệu"
                     optionFilterProp="label"
                     filterSort={(optionA, optionB) =>
                         (optionA?.label ?? "")
@@ -575,7 +575,7 @@ const TableSanPhamChiTiet = () => {
                         setIdThuongHieu(value);
                     }}
                     options={[
-                        { value: "", label: "" },
+                        { value: "", label: "Tất cả thương hiệu" },
                         ...dataThuongHieu?.map((thuongHieu) => ({
                             value: thuongHieu.id,
                             label: thuongHieu.tenThuongHieu,
@@ -596,7 +596,7 @@ const TableSanPhamChiTiet = () => {
                     onChange={(value) => {
                         setIdDanhMuc(value);
                     }}
-                    placeholder=""
+                    placeholder="Tất cả danh mục"
                     optionFilterProp="label"
                     filterSort={(optionA, optionB) =>
                         (optionA?.label ?? "")
@@ -604,7 +604,7 @@ const TableSanPhamChiTiet = () => {
                             .localeCompare((optionB?.label ?? "").toLowerCase())
                     }
                     options={[
-                        { value: "", label: "" },
+                        { value: "", label: "Tất cả danh mục" },
                         ...dataDanhMuc?.map((danhMuc) => ({
                             value: danhMuc.id,
                             label: danhMuc.tenDanhMuc,
@@ -625,7 +625,7 @@ const TableSanPhamChiTiet = () => {
                     onChange={(value) => {
                         setIdChatLieuVai(value);
                     }}
-                    placeholder=""
+                    placeholder="Tất cả chất vải"
                     optionFilterProp="label"
                     filterSort={(optionA, optionB) =>
                         (optionA?.label ?? "")
@@ -633,7 +633,7 @@ const TableSanPhamChiTiet = () => {
                             .localeCompare((optionB?.label ?? "").toLowerCase())
                     }
                     options={[
-                        { value: "", label: "" },
+                        { value: "", label: "Tất cả chất vải" },
                         ...dataChatLieuVai?.map((vai) => ({
                             value: vai.id,
                             label: vai.tenChatLieuVai,
@@ -654,7 +654,7 @@ const TableSanPhamChiTiet = () => {
                     onChange={(value) => {
                         setIdChatLieuDe(value);
                     }}
-                    placeholder=""
+                    placeholder="Tất cả chất đế"
                     optionFilterProp="label"
                     filterSort={(optionA, optionB) =>
                         (optionA?.label ?? "")
@@ -662,7 +662,7 @@ const TableSanPhamChiTiet = () => {
                             .localeCompare((optionB?.label ?? "").toLowerCase())
                     }
                     options={[
-                        { value: "", label: "" },
+                        { value: "", label: "Tất cả chất đế" },
                         ...dataChatLieuDe?.map((de) => ({
                             value: de.id,
                             label: de.tenChatLieu,
