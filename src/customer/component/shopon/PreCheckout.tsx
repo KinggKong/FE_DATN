@@ -280,7 +280,10 @@ export default function PreCheckout() {
                                 label="Số điện thoại"
                                 name="sdt"
                                 required
-                                rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}
+                                rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }, {
+                                    pattern: /^(0|\+84)[3-9][0-9]{8}$/,
+                                    message: 'Số điện thoại không đúng định dạng!',
+                                },]}
                             >
                                 <Input size="large" />
                             </Form.Item>
