@@ -307,9 +307,10 @@ const ShoppingCart = () => {
         setConfirmPaymets(false);
         setPartialPayment(0);
       }
+      
     } catch (error) {
       console.log(error);
-      toast.error("Đã có lỗi xảy ra khi thanh toán");
+      toast.error("Số lương voucher đã hết !");
     } finally {
       setLoading(false);
     }
@@ -1181,9 +1182,7 @@ const ShoppingCart = () => {
           invoices.map((invoice) => (
             <TabPane tab={`Hóa đơn ${invoice.id}`} key={invoice.id}>
               <div>
-                <Button type="primary" style={{ marginBottom: "10px" }}>
-                  Danh sách
-                </Button>
+                
                 <Table
                   columns={invoiceColumns}
                   dataSource={invoiceDetails}
