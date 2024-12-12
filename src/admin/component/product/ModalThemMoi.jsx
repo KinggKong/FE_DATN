@@ -8,6 +8,7 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
 
   const handleConfirmAdd = () => {
     handleSubmit(newColorName);
+    setNewColorName('');
   };
   
   return (
@@ -35,7 +36,7 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
         keyboard={false}
         maskClosable={false}
       > 
-        <input onChange={(e)=> setNewColorName(e.target.value)} className="w-full border rounded-sm h-8 p-4" placeholder={'Nhập tên'+' '+title}></input>
+        <input value={newColorName} onChange={(e)=> setNewColorName(e.target.value)} className="w-full border rounded-sm h-8 p-4" placeholder={'Nhập tên'+' '+title}></input>
 
       </Modal>
     </>

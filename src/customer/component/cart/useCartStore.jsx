@@ -139,7 +139,7 @@ const useCartStore = create((set) => ({
             try {
                 // Lấy thông tin người dùng từ localStorage
 
-                const response = await axios.get(`http://localhost:8080/api/v1/gio-hang-ct?idGioHang=${userInfo.idGioHang}`);
+                const response = await axios.get(`http://localhost:8080/api/v1/gio-hang-ct/all?idGioHang=${userInfo.idGioHang}`);
                 if (response.data && response.data.data) {
                     set({ cart: response.data.data });
                 }
@@ -152,7 +152,7 @@ const useCartStore = create((set) => ({
             try {
                 // Lấy thông tin người dùng từ localStorage
 
-                const response = await axios.get(`http://localhost:8080/api/v1/gio-hang-ct?idGioHang=1`);
+                const response = await axios.get(`http://localhost:8080/api/v1/gio-hang-ct/all?idGioHang=1`);
                 if (response.data && response.data.data) {
                     set({ cart: response.data.data });
                 }

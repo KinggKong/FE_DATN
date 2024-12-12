@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Button, Flex, Table, Space, notification, Spin} from "antd";
+import { Button, Flex, Table, Space, notification, Spin, Switch} from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
@@ -33,13 +33,14 @@ const TableThuongHieu = () => {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenMau: valueSearch,
+        tenThuongHieu: valueSearch,
       };
       const res = await getAllThuongHieuApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content.map((item,index) => ({
           ...item,
           key: item.id,
+          stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,
         }));
         setDataSource(dataWithKey);
         setTotalItems(res.data.totalElements);
@@ -115,7 +116,7 @@ const TableThuongHieu = () => {
 
   const handleConfirmAdd = async (newColorName) => {
     try {
-      await createThuongHieuApi({ tenThuongHieu: newColorName });
+      await createThuongHieuApi({ tenThuongHieu: newColorName, trangThai: 1 });
       notification.success({
         duration: 4,
         pauseOnHover: false,
@@ -131,12 +132,32 @@ const TableThuongHieu = () => {
     }
   };
 
+  const handleStatusChange = async (record, checked) => {
+    const updatedData = { ...record, trangThai: checked ? 1 : 0 };
+
+    try {
+        await updateThuongHieuApi(record.id, updatedData);
+        notification.success({
+            message: "Cập nhật trạng thái thành công",
+            description: `Trạng thái chất liệu đế  ${record.tenThuongHieu} đã được ${checked ? "ngừng hoạt động" : "hoạt động"}!`,
+        });
+        await fetchData();
+    } catch (error) {
+        console.error("Failed to update status", error);
+        notification.error({
+            message: "Lỗi",
+            description: "Không thể cập nhật trạng thái.",
+        });
+    }
+};
+
+
 
   const columns = [
     {
       title: "STT",
-      dataIndex: "id",
-      key: "id",
+      dataIndex: "stt",
+      key: "stt",
     },
     {
       title: "Thương Hiệu",
@@ -146,7 +167,18 @@ const TableThuongHieu = () => {
     },
     {
       title: "Ngày tạo",
-      dataIndex: "createdAt",
+      dataIndex: "created_at",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "trangThai",
+      key: "trangThai",
+      render: (text, record) => (
+        <Switch
+          checked={text === 1} // Kiểm tra trạng thái (1 là hoạt động)
+          onChange={(checked) => handleStatusChange(record, checked ? 1 : 0)} // Cập nhật trạng thái chính xác
+        />
+      )
     },
     {
       title: "Thao tác",

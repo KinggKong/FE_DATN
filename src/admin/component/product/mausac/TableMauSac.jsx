@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Button, Flex, Table, Space, notification, Spin } from "antd";
+import { Button, Flex, Table, Space, notification, Spin, Switch } from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
@@ -36,9 +36,10 @@ const TableMauSac = () => {
       };
       const res = await getAllMauSacApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content.map((item,index) => ({
           ...item,
           key: item.id,
+          stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,
         }));
         setDataSource(dataWithKey);
         setTotalItems(res.data.totalElements);
@@ -131,10 +132,30 @@ const TableMauSac = () => {
     setIsModalAddOpen(true);
   };
 
+  const handleStatusChange = async (record, checked) => {
+    const updatedData = { ...record, trangThai: checked ? 1 : 0 };
+
+    try {
+        await updateMauSacApi(record.id, updatedData);
+        notification.success({
+            message: "Cập nhật trạng thái thành công",
+            description: `Trạng thái chất liệu đế  ${record.tenMau} đã được ${checked ? "ngừng hoạt động" : "hoạt động"}!`,
+        });
+        await fetchData();
+    } catch (error) {
+        console.error("Failed to update status", error);
+        notification.error({
+            message: "Lỗi",
+            description: "Không thể cập nhật trạng thái.",
+        });
+    }
+};
+
+
   const handleConfirmAdd = async (newColorName) => {
     setLoading(true);
     try {
-      await createMauSacApi({ tenMau: newColorName });
+      await createMauSacApi({ tenMau: newColorName, trangThai: 1 });
       notification.success({
         message: "Success",
         duration: 4,
@@ -162,7 +183,7 @@ const TableMauSac = () => {
   const columns = [
     {
       title: "STT",
-      dataIndex: "id",
+      dataIndex: "stt",
     },
     {
       title: "Màu sắc",
@@ -172,6 +193,17 @@ const TableMauSac = () => {
     {
       title: "Ngày tạo",
       dataIndex: "createdAt",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "trangThai",
+      key: "trangThai",
+      render: (text, record) => (
+        <Switch
+          checked={text === 1} // Kiểm tra trạng thái (1 là hoạt động)
+          onChange={(checked) => handleStatusChange(record, checked ? 1 : 0)} // Cập nhật trạng thái chính xác
+        />
+      )
     },
     {
       title: "Thao tác",

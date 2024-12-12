@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Button, Flex, Table, Space, notification, Spin } from "antd";
+import { Button, Flex, Table, Space, notification, Spin, Switch } from "antd";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import ModalConfirm from "../ModalConfirm";
@@ -33,14 +33,17 @@ const TableDanhMuc = () => {
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenMau: valueSearch,
+        tenDanhMuc: valueSearch,
       };
       const res = await getAllDanhMucApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content.map((item,index) => ({
           ...item,
           key: item.id,
+          stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,
+
         }));
+        console.log(dataWithKey);
         setDataSource(dataWithKey);
         setTotalItems(res.data.totalElements);
       }
@@ -60,7 +63,7 @@ const TableDanhMuc = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
- 
+
   const handleDelete = (record) => {
     setDeletingItem(record);
     setIsModalOpen(true);
@@ -92,7 +95,7 @@ const TableDanhMuc = () => {
 
   const handleConfirmEdit = async (id, updateDanhMuc) => {
     try {
-      console.log("Dữ liệu gửi đi:", updateDanhMuc); 
+      console.log("Dữ liệu gửi đi:", updateDanhMuc);
       await updateDanhMucApi(id, updateDanhMuc);
       notification.success({
         duration: 4,
@@ -111,10 +114,28 @@ const TableDanhMuc = () => {
   const handleAdd = () => {
     setIsModalAddOpen(true);
   };
+  const handleStatusChange = async (record, checked) => {
+    const updatedData = { ...record, trangThai: checked ? 1 : 0 };
+
+    try {
+      await updateDanhMucApi(record.id, updatedData);
+      notification.success({
+        message: "Cập nhật trạng thái thành công",
+        description: `Trạng thái danh mục ${record.tenDanhMuc} đã được ${checked ? "ngừng hoạt động" : "hoạt động"}!`,
+      });
+      await fetchData();
+    } catch (error) {
+      console.error("Failed to update status", error);
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể cập nhật trạng thái.",
+      });
+    }
+  };
 
   const handleConfirmAdd = async (newColorName) => {
     try {
-      await createDanhMucApi({ tenDanhMuc: newColorName });
+      await createDanhMucApi({ tenDanhMuc: newColorName , trangThai: 1 });
       notification.success({
         duration: 4,
         pauseOnHover: false,
@@ -134,8 +155,8 @@ const TableDanhMuc = () => {
   const columns = [
     {
       title: "STT",
-      dataIndex: "id",
-      key: "id",
+      dataIndex: "stt",
+      key: "stt",
     },
     {
       title: "Danh mục",
@@ -145,7 +166,18 @@ const TableDanhMuc = () => {
     },
     {
       title: "Ngày tạo",
-      dataIndex: "createdAt",
+      dataIndex: "created_at",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "trangThai",
+      key: "trangThai",
+      render: (text, record) => (
+        <Switch
+          checked={text === 1} // Kiểm tra trạng thái (1 là hoạt động)
+          onChange={(checked) => handleStatusChange(record, checked ? 1 : 0)} // Cập nhật trạng thái chính xác
+        />
+      )
     },
     {
       title: "Thao tác",
@@ -180,7 +212,7 @@ const TableDanhMuc = () => {
             pageSize: pageSize,
             total: totalItems,
             showSizeChanger: true,
-            pageSizeOptions: ["5","10", "20", "50", "100"],
+            pageSizeOptions: ["5", "10", "20", "50", "100"],
             onChange: (page, pageSize) => {
               setCurrentPage(page);
               setPageSize(pageSize);
@@ -207,9 +239,9 @@ const TableDanhMuc = () => {
         danhmuc={itemEdit}
         handleSubmit={handleConfirmEdit}
       />
-      
+
     </Spin>
-    
+
   );
 };
 

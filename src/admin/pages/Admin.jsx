@@ -1,27 +1,49 @@
+
 import { Button, Layout, theme, Card, Badge, Avatar } from "antd";
 import Logo from "../component/sidebar/Logo";
 import MenuList from "../component/sidebar/MenuList";
-import { useState } from "react";
-import {
-  MenuUnfoldOutlined,
-  MenuFoldOutlined,
-  BellOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
-import ToggleThemeButton from "../component/sidebar/ToggleThemeButton";
-import { Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { MenuUnfoldOutlined, MenuFoldOutlined } from "@ant-design/icons";
+import { Outlet, Link } from "react-router-dom";
 import { Content } from "antd/es/layout/layout";
+import ToggleThemeButton from "../component/sidebar/ToggleThemeButton";
+
 
 const { Header, Sider } = Layout;
+
 function Admin() {
   const [darkTheme, setDarkTheme] = useState(true);
-  const [collapse, setCollape] = useState(false);
+  const [collapse, setCollapse] = useState(false);
+  const [userInfo, setUserInfo] = useState({});
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const user = null;
+  // const user = {
+  //   name: "Hoàng Trung Thông",
+  //   role: "Chủ cửa hàng",
+  //   avatar: "https://i.pravatar.cc/150",
+  // };
   const toggleTheme = () => {
     setDarkTheme(!darkTheme);
   };
   const {
     token: { colorBgContainer },
   } = theme.useToken();
+
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem("userInfo");
+    if (storedUserInfo) {
+      const parsedUserInfo = JSON.parse(storedUserInfo);
+      setUserInfo(parsedUserInfo);
+      console.log('Stored user info:', storedUserInfo);
+      console.log('Parsed user info:', parsedUserInfo);
+    }
+  }, []);
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    setIsLoggedIn(!!accessToken);
+  }, []);
 
   return (
     <Layout>
@@ -41,40 +63,58 @@ function Admin() {
         <Header
           style={{
             padding: "0 10px",
-            background: colorBgContainer,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            background: "#fff",
+            boxShadow: "0px 1px 4px rgba(0, 0, 0, 0.1)",
           }}
         >
           <Button
             type="text"
             className="toggle"
-            onClick={() => setCollape(!collapse)}
+            onClick={() => setCollapse(!collapse)}
             icon={collapse ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           />
 
           <div style={{ display: "flex", alignItems: "center" }}>
-            <Badge size="small" count={6} overflowCount={99}>
-              <BellOutlined style={{ fontSize: "20px" }} />
-            </Badge>
+            {isLoggedIn ? (
+              // Hiển thị thông tin người dùng khi đã đăng nhập
+              <>
+                <div
+                  style={{
+                    textAlign: "right",
+                    marginRight: "10px",
+                    lineHeight: "1.5",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "16px",
+                      display: "block",
+                    }}
+                  >
+                    {userInfo.ten}
+                  </span>
+                  <span style={{ color: "#888", fontSize: "14px" }}>
+                    {userInfo.role}
+                  </span>
+                </div>
+                <Avatar size={40} src={userInfo.avatar} />
+              </>
+            ) : (
+              <Link to="/auth/login">
+                <Button type="primary">Đăng nhập</Button>
+              </Link>
+            )}
 
-            <Avatar
-              style={{ marginLeft: "20px", fontSize: "20px" }}
-              icon={<UserOutlined />}
-            />
           </div>
         </Header>
         <Content>
-          <Card
-            style={{
-              marginTop: "20px",
-              marginLeft: "10px",
-              marginRight: "10px",
-            }}
-          >
+          <div style={{ padding: "20px" }}>
             <Outlet />
-          </Card>
+          </div>
         </Content>
       </Layout>
     </Layout>

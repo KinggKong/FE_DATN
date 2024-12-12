@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Button, Flex, Table, Space, notification, Spin, Switch } from "antd";
+import { Button, Flex, Table, Space, notification, Spin, Switch, Col, Row, DatePicker, Select } from "antd";
 import { Tag } from 'antd';
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
@@ -10,6 +10,7 @@ import { getAllVoucherApi, deleteVoucherApi, updateVoucherApi, createVoucherApi 
 import ModalEdit3 from "./ModalEdit3";
 
 const TableVoucher = () => {
+  const { RangePicker } = DatePicker;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalAddOpen, setIsModalAddOpen] = useState(false);
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
@@ -21,20 +22,33 @@ const TableVoucher = () => {
   const [pageSize, setPageSize] = useState(10);
   const [valueSearch, setValueSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [thoiGianSearch, setThoiGianSearch] = useState([]);
+
+  const [statusSearch, setStatusSearch] = useState('');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
+
+      const formattedDates = {
+        thoiGianBatDau: thoiGianSearch && thoiGianSearch[0] ? thoiGianSearch[0].format('YYYY-MM-DDTHH:mm:ss') : null,
+        thoiGianKetThuc: thoiGianSearch && thoiGianSearch[1] ? thoiGianSearch[1].format('YYYY-MM-DDTHH:mm:ss') : null,
+      };
+      console.log(formattedDates);
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
-        tenVoucher: valueSearch,
+        tenChienDich: valueSearch,
+        ngayBatDau: formattedDates.thoiGianBatDau || undefined,  // Không gửi nếu không có giá trị
+        ngayKetThuc: formattedDates.thoiGianKetThuc || undefined,
+        trangThai: statusSearch !== '' ? statusSearch : undefined,  // Không gửi nếu trạng thái rỗng
       };
       const res = await getAllVoucherApi(params);
       if (res && res.data && res.data.content) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content.map((item,index) => ({
           ...item,
           key: item.id,
+          stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,
         }));
         setDataSource(dataWithKey);
         setTotalItems(res.data.totalElements);
@@ -48,7 +62,7 @@ const TableVoucher = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, valueSearch]);
+  }, [currentPage, pageSize, valueSearch, thoiGianSearch, statusSearch]);
 
   const checkVoucherExists = async (value, type, excludeId) => {
     const params = {
@@ -301,7 +315,7 @@ const TableVoucher = () => {
   const columns = [
     {
       title: "STT",
-      dataIndex: "id",
+      dataIndex: "stt",
     },
     {
       title: "Tên voucher",
@@ -431,6 +445,66 @@ const TableVoucher = () => {
         valueSearch={setValueSearch}
         handleAddOpen={handleAdd}
       />
+      <Row className='mt-2' justify="space-between">
+        <Col span={12} >
+          <Row>
+            <Col span={14} >
+              <RangePicker className='me-3'
+                showTime={{
+                  format: 'HH:mm',
+                }}
+                format="YYYY-MM-DD HH:mm"
+                placeholder={['Ngày bắt đầu', 'Ngày kết thúc']}
+                onChange={(value) => {
+                  if (!value) {
+                    // Khi xóa sạch thời gian
+                    setThoiGianSearch(null); // Hoặc giá trị mặc định
+                    console.log('Thoi Gian Search: Xóa sạch, trả về tất cả kết quả');
+                    // Gọi API trả về tất cả hoặc cập nhật lại dữ liệu
+                    fetchData();
+                  } else {
+                    // Khi có giá trị thời gian
+                    setThoiGianSearch(value);
+                    console.log('Thoi Gian Search: ', value);
+                  }
+                }}
+              // onOk={(value) => {
+              //     setThoiGianSearch(value); // Cập nhật thoiGianSearch khi nhấn nút OK
+              //     console.log('Thoi Gian Search: ', value);
+              // }}
+              />
+            </Col>
+            <Col span={8} >
+              <Select
+                defaultValue="Trạng thái"
+                style={{
+                  width: 220,
+                }}
+                onChange={(value) => setStatusSearch(value)}
+
+                options={[
+                  {
+                    value: '',
+                    label: 'Trạng thái',
+                  },
+                  {
+                    value: '1',
+                    label: 'Đang hoạt động',
+                  },
+                  {
+                    value: '0',
+                    label: 'Ngừng hoạt động',
+                  },
+
+                ]}
+              />
+            </Col>
+
+          </Row>
+
+
+        </Col>
+      </Row>
       <Flex gap="middle" className="mt-4" vertical>
         <Table
           columns={columns}

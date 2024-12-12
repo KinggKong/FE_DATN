@@ -294,7 +294,7 @@ const DrawerAdd = ({
 
   const fetchData = async () => {
     try {
-      // Gọi cả hai API đồng thời
+      // Gọi cả ba API đồng thời
       const params = {
         pageNumber: 0,
         pageSize: 100,
@@ -304,32 +304,38 @@ const DrawerAdd = ({
         getAllMauSacApi(params),
         getAllSanPhamApi(params),
       ]);
-
-      // Kiểm tra và cập nhật kích thước
+  
+      // Kiểm tra và lọc kích thước với trạng thái == 1
       if (Array.isArray(sizesResponse.data.content)) {
-        setSizes(sizesResponse.data.content);
-        console.log('Kích thước:', sizesResponse.data.content);
+        const filteredSizes = sizesResponse.data.content.filter(size => size.trangThai === 1);
+        setSizes(filteredSizes);
+        console.log('Kích thước (trạng thái == 1):', filteredSizes);
       } else {
         console.error('API phản hồi kích thước không phải là mảng:', sizesResponse.data);
       }
-
-      // Kiểm tra và cập nhật màu sắc
+  
+      // Kiểm tra và lọc màu sắc với trạng thái == 1
       if (Array.isArray(colorsResponse.data.content)) {
-        setColors(colorsResponse.data.content);
-        console.log('Màu sắc:', colorsResponse.data.content);
+        const filteredColors = colorsResponse.data.content.filter(color => color.trangThai === 1);
+        setColors(filteredColors);
+        console.log('Màu sắc (trạng thái == 1):', filteredColors);
       } else {
         console.error('API phản hồi màu sắc không phải là mảng:', colorsResponse.data);
       }
+  
+      // Kiểm tra và lọc sản phẩm với trạng thái == 1
       if (Array.isArray(productsResponse.data.content)) {
-        setProducts(productsResponse.data.content);
-        console.log('Sản phẩm:', productsResponse.data.content);
+        const filteredProducts = productsResponse.data.content.filter(product => product.trangThai === 1);
+        setProducts(filteredProducts);
+        console.log('Sản phẩm (trạng thái == 1):', filteredProducts);
       } else {
-        console.error('API phản hồi màu sắc không phải là mảng:', colorsResponse.data);
+        console.error('API phản hồi sản phẩm không phải là mảng:', productsResponse.data);
       }
     } catch (error) {
       console.error('Lỗi khi gọi API:', error);
     }
   };
+  
   useEffect(() => {
     let isMounted = true;
 

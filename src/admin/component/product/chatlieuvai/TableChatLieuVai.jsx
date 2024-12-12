@@ -36,9 +36,10 @@ const TableChatLieuVai = () => {
       };
       const res = await getAllChatLieuVaiApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content.map((item,index) => ({
           ...item,
           key: item.id,
+          stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,
         }));
         setDataSource(dataWithKey);
         setTotalItems(res.data.totalElements);
@@ -155,7 +156,7 @@ const TableChatLieuVai = () => {
     }
 
     try {
-      await createChatLieuVaiApi({ tenChatLieuVai: newChatLieuName });
+      await createChatLieuVaiApi({ tenChatLieuVai: newChatLieuName , trangThai: 1 });
       notification.success({
         duration: 4,
         pauseOnHover: false,
@@ -197,8 +198,8 @@ const TableChatLieuVai = () => {
   const columns = [
     {
       title: "STT",
-      dataIndex: "id",
-      key: "id",
+      dataIndex: "stt",
+      key: "stt",
     },
     {
       title: "Chất liệu vải",
