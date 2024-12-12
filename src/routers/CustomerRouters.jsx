@@ -9,6 +9,7 @@ import GioiThieu from "../customer/component/gioithieu/GioiThieu";
 import FailedPay from "../customer/component/shopon/FailedPay";
 import HandlePayment from "../customer/component/shopon/HandlePayment"
 import AccountInfo from "../customer/component/profile/AccountInfo";
+import BillHistoryPage from "../customer/component/shopon/BillHistoryPage";
 
 const CustomerRouters = {
   path: "/",

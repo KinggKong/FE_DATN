@@ -1,14 +1,14 @@
-import React, { useState, useEffect,useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { Form, Input, Radio, Space, Spin, Image, message, notification, Select } from 'antd';
+import { Form, Input, Radio, Space, Spin, Image, message, notification, AutoComplete } from 'antd';
 import { CreditCard, Truck, Tag } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import useCartStore from "../cart/useCartStore";
+import debounce from 'lodash/debounce';
 
 const { TextArea } = Input;
-const { Option } = Select;
 
-export default function PreCheckout() {
+const PreCheckout = () => {
     const [paymentMethod, setPaymentMethod] = useState('COD');
     const [form] = Form.useForm();
     const [checkoutData, setCheckoutData] = useState(null);
@@ -16,146 +16,79 @@ export default function PreCheckout() {
     const [ship, setShip] = useState(0);
     const navigate = useNavigate();
 
-    const [provinces, setProvinces] = useState([]);
-    const [districts, setDistricts] = useState([]);
-    const [wards, setWards] = useState([]);
-
-
     const [loading, setLoading] = useState(true);
-    const [provincesLoading, setProvincesLoading] = useState(false);
-    const [districtsLoading, setDistrictsLoading] = useState(false);
-    const [wardsLoading, setWardsLoading] = useState(false);
     const [shippingLoading, setShippingLoading] = useState(false);
     const [checkoutLoading, setCheckoutLoading] = useState(false);
     const [userInfo, setUserInfo] = useState(null);
     const { fetchCart } = useCartStore();
 
+    const [addressOptions, setAddressOptions] = useState([]);
 
+    const apiKey = 'DFt7PndsFeTuDNGggyzQyLr0dzqU9Sf0hb0mMZX5'; // Replace with your Goong API key
+    const originLat = 21.038059779392608;
+    const originLng = 105.74668196761013;
 
     const fetchData = useCallback(async (userId) => {
         setLoading(true);
         try {
-          console.log('Fetching data for userId:', userId);
-          const response = await axios.get(`http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userId}`);
-          if (response.data.code === 1000) {
-            if (!response.data.data || !response.data.data.gioHangChiTietList || response.data.data.gioHangChiTietList.length === 0) {
-              navigate('/');
-              return;
+            console.log('Fetching data for userId:', userId);
+            const response = await axios.get(`http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userId}`);
+            if (response.data.code === 1000) {
+                if (!response.data.data || !response.data.data.gioHangChiTietList || response.data.data.gioHangChiTietList.length === 0) {
+                    navigate('/');
+                    return;
+                }
+                setCheckoutData(response.data.data);
+            } else {
+                throw new Error('Failed to fetch data');
             }
-            setCheckoutData(response.data.data);
-          } else {
-            throw new Error('Failed to fetch data');
-          }
         } catch (err) {
-          setError('An error occurred while fetching data');
-          console.error('Error:', err);
+            setError('An error occurred while fetching data');
+            console.error('Error:', err);
         } finally {
-          setLoading(false);
+            setLoading(false);
         }
-      }, [navigate]);
+    }, [navigate]);
 
-
-      useEffect(() => {
+    useEffect(() => {
         const storedUserInfo = localStorage.getItem("userInfo");
         if (storedUserInfo) {
-          const parsedUserInfo = JSON.parse(storedUserInfo);
-          setUserInfo(parsedUserInfo);
-          console.log('Stored user info:', storedUserInfo);
-          console.log('Parsed user info:', parsedUserInfo);
-          fetchData(parsedUserInfo.id);
+            const parsedUserInfo = JSON.parse(storedUserInfo);
+            setUserInfo(parsedUserInfo);
+            console.log('Stored user info:', storedUserInfo);
+            console.log('Parsed user info:', parsedUserInfo);
+            fetchData(parsedUserInfo.id);
         } else {
-          console.log('No stored user info, using default userId: 1');
-          fetchData(1);
+            console.log('No stored user info, using default userId: 1');
+            fetchData(1);
         }
-        fetchProvinces();
-      }, [fetchData]);
+    }, [fetchData]);
 
-
-    const fetchProvinces = async () => {
-        setProvincesLoading(true);
-        try {
-            const response = await axios.get('http://localhost:8080/api/v1/locations/provinces');
-            if (response.data.code === 1000) {
-                setProvinces(response.data.data);
-            }
-        } catch (err) {
-            console.error('Error fetching provinces:', err);
-        } finally {
-            setProvincesLoading(false);
-        }
-    };
-
-    const fetchDistricts = async (provinceCode) => {
-        setDistrictsLoading(true);
-        try {
-            const response = await axios.get(`http://localhost:8080/api/v1/locations/districts?provinceCode=${provinceCode}`);
-            if (response.data.code === 1000) {
-                setDistricts(response.data.data);
-                setWards([]);
-                form.setFieldsValue({ district: undefined, ward: undefined });
-            }
-        } catch (err) {
-            console.error('Error fetching districts:', err);
-        } finally {
-            setDistrictsLoading(false);
-        }
-    };
-
-    const fetchWards = async (districtCode) => {
-        setWardsLoading(true);
-        try {
-            const response = await axios.get(`http://localhost:8080/api/v1/locations/wards?districtCode=${districtCode}`);
-            if (response.data.code === 1000) {
-                setWards(response.data.data);
-                form.setFieldsValue({ ward: undefined });
-            }
-        } catch (err) {
-            console.error('Error fetching wards:', err);
-        } finally {
-            setWardsLoading(false);
-        }
-    };
-
-    const calculateShippingCost = async (latitude, longitude) => {
+    const calculateShippingCost = async (lat, lng) => {
         setShippingLoading(true);
-        const locations = [
-            [105.74680306431928, 21.037955318097737],
-            [longitude, latitude],
-        ];
-        const requestData = {
-            locations: locations,
-            metrics: ["distance"],
-            units: "km",
-        };
-
         try {
-            const response = await axios.post(
-                "https://api.openrouteservice.org/v2/matrix/driving-car",
-                requestData,
-                {
-                    headers: {
-                        Authorization: "5b3ce3597851110001cf62485b5a6259f66d4725bd2c5d24e7cdc7e1",
-                        "Content-Type": "application/json",
-                    },
+            const distanceResponse = await axios.get(`https://rsapi.goong.io/DistanceMatrix?origins=${originLat},${originLng}&destinations=${lat},${lng}&api_key=${apiKey}`);
+            
+            if (distanceResponse.data.rows && distanceResponse.data.rows[0].elements && distanceResponse.data.rows[0].elements[0].distance) {
+                const distanceKm = distanceResponse.data.rows[0].elements[0].distance.value / 1000; 
+                let shippingCost;
+
+                if (distanceKm < 40) {
+                    shippingCost = 30000;
+                } else if (distanceKm < 100) {
+                    shippingCost = 50000;
+                } else if (distanceKm < 200) {
+                    shippingCost = 60000;
+                } else if (distanceKm < 400) {
+                    shippingCost = 70000;
+                } else {
+                    shippingCost = 90000;
                 }
-            );
 
-            const distanceKm = response.data.distances[0][1];
-            let shippingCost;
-
-            if (distanceKm < 40) {
-                shippingCost = 30000;
-            } else if (distanceKm < 100) {
-                shippingCost = 50000;
-            } else if (distanceKm < 200) {
-                shippingCost = 60000;
-            } else if (distanceKm < 400) {
-                shippingCost = 70000;
+                setShip(shippingCost);
             } else {
-                shippingCost = 90000;
+                throw new Error('Unable to calculate distance');
             }
-
-            setShip(shippingCost);
         } catch (err) {
             console.error('Error calculating shipping cost:', err);
             message.error('Không thể tính phí vận chuyển. Vui lòng thử lại.');
@@ -164,29 +97,42 @@ export default function PreCheckout() {
         }
     };
 
-    const handleProvinceChange = (value) => {
-        const selectedProvince = provinces.find(province => province.code === value);
-        if (selectedProvince) {
-            calculateShippingCost(selectedProvince.latitude, selectedProvince.longitude);
+    const handleAddressSearch = debounce(async (value) => {
+        if (value.length > 2) {
+            try {
+                const response = await axios.get(`https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(value)}`);
+                if (response.data.predictions) {
+                    setAddressOptions(response.data.predictions.map(prediction => ({
+                        value: prediction.description,
+                        label: prediction.description,
+                        place_id: prediction.place_id
+                    })));
+                }
+            } catch (error) {
+                console.error('Error fetching address suggestions:', error);
+            }
         }
-        fetchDistricts(value);
-    };
+    }, 300);
 
-    const handleDistrictChange = (value) => {
-        fetchWards(value);
+    const handleAddressSelect = async (value, option) => {
+        try {
+            const detailResponse = await axios.get(`https://rsapi.goong.io/Place/Detail?place_id=${option.place_id}&api_key=${apiKey}`);
+            if (detailResponse.data.result && detailResponse.data.result.geometry) {
+                const { lat, lng } = detailResponse.data.result.geometry.location;
+                calculateShippingCost(lat, lng);
+            }
+        } catch (error) {
+            console.error('Error fetching place details:', error);
+        }
     };
 
     const handleSubmit = async (values) => {
         setCheckoutLoading(true);
         try {
-            const selectedProvince = provinces.find(province => province.code === values.province);
-            const selectedDistrict = districts.find(district => district.code === values.district);
-            const selectedWard = wards.find(ward => ward.code === values.ward);
-
             const hoaDonRequest = {
                 idGioHang: values.idGioHang,
                 tenNguoiNhan: values.tenNguoiNhan,
-                diaChiNhan: `${values.address}, ${selectedWard ? selectedWard.fullName : ''}, ${selectedDistrict ? selectedDistrict.fullName : ''}, ${selectedProvince ? selectedProvince.fullName : ''}`,
+                diaChiNhan: values.address,
                 sdt: values.sdt,
                 tongTien: checkoutData.totalPrice + ship,
                 tienSauGiam: checkoutData.totalPrice + ship,
@@ -280,60 +226,30 @@ export default function PreCheckout() {
                                 label="Số điện thoại"
                                 name="sdt"
                                 required
-                                rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }, {
-                                    pattern: /^(0|\+84)[3-9][0-9]{8}$/,
-                                    message: 'Số điện thoại không đúng định dạng!',
-                                },]}
+                                rules={[
+                                    { required: true, message: 'Vui lòng nhập số điện thoại' },
+                                    {
+                                        pattern: /^(0|\+84)[3-9][0-9]{8}$/,
+                                        message: 'Số điện thoại không đúng định dạng!',
+                                    },
+                                ]}
                             >
                                 <Input size="large" />
                             </Form.Item>
 
                             <Form.Item
-                                label="Tỉnh/Thành phố"
-                                name="province"
-                                required
-                                rules={[{ required: true, message: 'Vui lòng chọn Tỉnh/Thành phố' }]}
-                            >
-                                <Select size="large" onChange={handleProvinceChange}>
-                                    {provinces.map(province => (
-                                        <Option key={province.code} value={province.code}>{province.fullName}</Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-
-                            <Form.Item
-                                label="Quận/Huyện"
-                                name="district"
-                                required
-                                rules={[{ required: true, message: 'Vui lòng chọn Quận/Huyện' }]}
-                            >
-                                <Select size="large" onChange={handleDistrictChange}>
-                                    {districts.map(district => (
-                                        <Option key={district.code} value={district.code}>{district.fullName}</Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-
-                            <Form.Item
-                                label="Phường/Xã"
-                                name="ward"
-                                required
-                                rules={[{ required: true, message: 'Vui lòng chọn Phường/Xã' }]}
-                            >
-                                <Select size="large">
-                                    {wards.map(ward => (
-                                        <Option key={ward.code} value={ward.code}>{ward.fullName}</Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-
-                            <Form.Item
-                                label="Địa chỉ chi tiết"
+                                label="Địa chỉ"
                                 name="address"
                                 required
-                                rules={[{ required: true, message: 'Vui lòng nhập địa chỉ chi tiết' }]}
+                                rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
                             >
-                                <Input size="large" />
+                                <AutoComplete
+                                    options={addressOptions}
+                                    onSearch={handleAddressSearch}
+                                    onSelect={handleAddressSelect}
+                                    placeholder="Nhập địa chỉ"
+                                    size="large"
+                                />
                             </Form.Item>
 
                             <Form.Item
@@ -445,4 +361,7 @@ export default function PreCheckout() {
             </div>
         </Spin>
     );
-}
+};
+
+export default PreCheckout;
+
