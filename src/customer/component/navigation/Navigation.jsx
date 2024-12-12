@@ -87,11 +87,6 @@ const Navigation = ({ searchValue, setSearchValue }) => {
           <UserOutlined /> Hồ sơ
         </Link>
       </Menu.Item>
-      <Menu.Item key="purchase-history">
-        <Link to="/purchase-history">
-          <HistoryOutlined /> Lịch sử mua hàng
-        </Link>
-      </Menu.Item>
       <Menu.Item key="logout" onClick={handleLogout}>
         <LogoutOutlined /> Đăng xuất
       </Menu.Item>
