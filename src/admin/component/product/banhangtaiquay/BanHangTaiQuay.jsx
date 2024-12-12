@@ -49,6 +49,7 @@ import ModalThemMoiKhachHang from "../khachhang/ModalThemMoiKhachHang";
 import { createKhachHangApi } from "../../../../api/KhachHangApi";
 import { useNavigate } from "react-router-dom";
 import TextArea from "antd/es/input/TextArea";
+import image from "../../../../util/cart-empty-img.8b677cb3.png";
 
 const ShoppingCart = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -60,7 +61,6 @@ const ShoppingCart = () => {
   const [sanPhamChiTiet, setSanPhamChiTiet] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // const [loading, setLoading] = useState(false);
   const [invoices, setInvoices] = useState([]);
   const [currentInvoice, setCurrentInvoice] = useState(null);
   const [invoiceDetails, setInvoiceDetails] = useState([]);
@@ -69,8 +69,6 @@ const ShoppingCart = () => {
   const [currentCustomer, setCurrentCustomer] = useState(null);
   const [isShowModalKhachHang, setIsShowModalKhachHang] = useState(false);
   const [hoaDonChiTiet, setHoaDonChiTiet] = useState(null);
-  const [lichSuThanhToan, setLichSuThanhToan] = useState(null);
-
   const [selectedMethod, setSelectedMethod] = useState("cash");
 
   const [confirmPayments, setConfirmPaymets] = useState(false);
@@ -82,10 +80,6 @@ const ShoppingCart = () => {
   const confirmPaymentHide = () => {
     setConfirmPaymets(false);
   };
-
-  // const changeType = async (id) => {
-  //   await changeTypeBill(id);
-  // };
 
   const changeType = async (id) => {
     try {
@@ -113,35 +107,33 @@ const ShoppingCart = () => {
     }
   }, [currentInvoice]);
 
-  // const createLSTT = async () => {
-  //   const payload = {
-  //     maGiaoDich: null,
-  //     soTien: currentInvoice?.tongTien,
-  //     phuongThucThanhToan: selectedMethod,
-  //     hoaDonId: currentInvoice?.id,
-  //   };
-
-  //   try {
-  //     const response = await axiosClient.post(
-  //       "/api/v1/lichSuThanhToan",
-  //       payload
-  //     );
-  //     if (response.data) {
-  //       console.log(
-  //         "Lịch sử thanh toán đã được tạo thành công:",
-  //         response.data
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error("Lỗi khi tạo lịch sử thanh toán:", error);
-  //   }
-  // };
-
   const selectCustomer = (payload) => {
     setCurrentCustomer(payload);
+
+    form.setFieldsValue({
+      tenNguoiNhan: payload?.ten,
+      sdt: payload?.sdt,
+      email: payload?.email,
+      province: payload?.diaChi?.tinh,
+      district: payload?.diaChi?.quan,
+      ward: payload?.diaChi?.huyen,
+    });
+    calculateShippingCost(
+      payload?.diaChi?.tinh,
+      payload?.diaChi?.quan
+    );
   };
 
+  useEffect(() => {
+    selectCustomer(currentCustomer);
+  }, [currentCustomer]);
+
   const showModalKhachHang = () => {
+    if (currentInvoice?.id == null) {
+      toast.warning("Vui lòng chọn hóa đơn !");
+      setIsShowModalKhachHang(false);
+      return;
+    }
     setIsShowModalKhachHang(true);
   };
 
@@ -150,8 +142,6 @@ const ShoppingCart = () => {
   };
 
   const handleOkKhachHang = async () => {
-    // await addKhachHangToInvoice(currentInvoice.id, currentCustomer?.id);
-    // setIsShowModalKhachHang(false);
     if (currentInvoice && currentCustomer) {
       await addKhachHangToInvoice(currentInvoice.id, currentCustomer.id);
       setIsShowModalKhachHang(false);
@@ -169,7 +159,6 @@ const ShoppingCart = () => {
       const res = await getAllKhachHang();
       console.log(res);
 
-      // Kiểm tra dữ liệu trả về
       if (res?.data && Array.isArray(res.data)) {
         const dataWithKey = res.data.map((item) => ({
           ...item,
@@ -224,52 +213,11 @@ const ShoppingCart = () => {
     }
   }, [activeTab]);
 
-  // const handleXacNhanThanhToan = async (id) => {
-  //   setLoading(true);
-  //   try {
-  //     if (!currentInvoice) {
-  //       setConfirmPaymets(false);
-  //       toast.warning("Vui lòng chọn hóa đơn");
-  //       return;
-  //     }
-
-  //     if (partialPayment !== currentInvoice.tongTien) {
-  //       setConfirmPaymets(false);
-  //       toast.warning("Vui lòng thanh toán đơn hàng!");
-  //       return;
-  //     }
-
-  //     const res = await confirmPayment(id, selectedMethod);
-  //     console.log(res);
-
-  //     if (res?.code === 200) {
-  //       setInvoices((prevInvoices) => {
-  //         const newInvoices = prevInvoices.filter(
-  //           (invoice) => invoice.id !== id
-  //         );
-  //         if (newInvoices.length > 0 && newInvoices[0]?.id) {
-  //           setActiveTab(newInvoices[0]?.id);
-  //         } else {
-  //           setActiveTab("noInvoice");
-  //         }
-  //         return newInvoices;
-  //       });
-  //       toast.success("Thanh toán hóa đơn thành công!");
-  //       setConfirmPaymets(false);
-  //       setPartialPayment(0);
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //     toast.error("Đã có lỗi xảy ra khi thanh toán");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleXacNhanThanhToan = async (id) => {
     setLoading(true);
     try {
       if (!currentInvoice) {
+        setIsShow(true);
         setConfirmPaymets(false);
         toast.warning("Vui lòng chọn hóa đơn");
         return;
@@ -307,7 +255,6 @@ const ShoppingCart = () => {
         setConfirmPaymets(false);
         setPartialPayment(0);
       }
-      
     } catch (error) {
       console.log(error);
       toast.error("Số lương voucher đã hết !");
@@ -352,12 +299,17 @@ const ShoppingCart = () => {
         return <span>Không có hình ảnh</span>;
       },
     },
-    { title: "Tên Sản Phẩm", dataIndex: "tenSanPham", key: "name" },
+    {
+      title: "Tên Sản Phẩm",
+      dataIndex: "tenSanPham",
+      key: "name",
+      render: (text) => <span style={{ width: "400px" }}>{text}</span>,
+    },
     {
       title: "Giá Bán",
       dataIndex: "giaBan",
       key: "price",
-      render: (price) => `${price} VND`,
+      render: (price) => `${price.toLocaleString()} VND`,
     },
     { title: "Số Lượng", dataIndex: "soLuong", key: "quantity" },
     { title: "Kích Thước", dataIndex: "tenKichThuoc", key: "size" },
@@ -372,7 +324,9 @@ const ShoppingCart = () => {
       dataIndex: "trangThai",
       key: "status",
       render: (status) => (
-        <Tag color={status === 1 ? "green" : "red"}>{status}</Tag>
+        <Tag color={status === 1 ? "green" : "red"}>
+          {status === 1 ? "Đang bán" : "Ngừng bán"}
+        </Tag>
       ),
     },
     {
@@ -392,7 +346,7 @@ const ShoppingCart = () => {
       dataIndex: "index",
       key: "index",
       render: (text, record, index) => index + 1,
-      width: 80, // Chiều rộng của cột STT
+      width: 80,
     },
     {
       title: "Ảnh",
@@ -401,13 +355,13 @@ const ShoppingCart = () => {
       render: (avatar) => (
         <img src={avatar} alt="Product" style={{ width: 50 }} />
       ),
-      width: 120, // Chiều rộng của cột ảnh
+      width: 120,
     },
     {
       title: "Tên khách hàng",
       dataIndex: "ten",
       key: "ten",
-      width: 200, // Chiều rộng của cột Tên khách hàng
+      width: 200,
     },
     {
       title: "Email",
@@ -427,7 +381,7 @@ const ShoppingCart = () => {
       key: "action",
       render: () => (
         <Button type="primary" onClick={handleOkKhachHang}>
-          Chọn
+          Chọn {console.log(currentCustomer)}
         </Button>
       ),
 
@@ -593,33 +547,6 @@ const ShoppingCart = () => {
     }
   }, []);
 
-  const paymentHistory = [
-    {
-      title: "STT",
-      render: (_, __, index) => index + 1,
-    },
-    {
-      title: "Mã giao dịch",
-      dataIndex: "maGiaoDich",
-    },
-    {
-      title: "Số tiền",
-      dataIndex: "soTien",
-    },
-    {
-      title: "Phương thức thanh toán",
-      dataIndex: "phuongThucThanhToan",
-    },
-    {
-      title: "Thao tác",
-      render: (_, record) => (
-        <Button type="link" danger onClick={() => console.log(record?.id)}>
-          <MdDelete style={{ fontSize: "20px" }} />
-        </Button>
-      ),
-    },
-  ];
-
   const invoiceColumns = [
     {
       title: "STT",
@@ -638,7 +565,7 @@ const ShoppingCart = () => {
             />
           );
         }
-        return <span>Không có hình ảnh</span>; // Hiển thị nếu không có hình ảnh
+        return <span>Không có hình ảnh</span>;
       },
     },
     {
@@ -665,7 +592,6 @@ const ShoppingCart = () => {
             value={record.soLuong}
             style={{ width: 60, margin: "0 10px" }}
             onChange={(value) => handleQuantityChange(value, record)}
-            // onBlur={(e) => handleBlur(e, record)}
           />
           <Button
             icon={<PlusOutlined />}
@@ -724,11 +650,11 @@ const ShoppingCart = () => {
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật số lượng.");
+      toast.error("Số lượng vượt quá trong kho !.");
     }
   };
 
-  const [errorShown, setErrorShown] = useState(false); // Trạng thái kiểm soát thông báo lỗi
+  const [errorShown, setErrorShown] = useState(false);
 
   const handleQuantityChange = async (value, record) => {
     if (value <= 0 || value === "" || value == null) {
@@ -761,41 +687,29 @@ const ShoppingCart = () => {
             )
           : [];
 
-        setHoaDonChiTiet(updatedData); // Cập nhật lại trạng thái chi tiết hóa đơn
-        await getOrderById(currentInvoice?.id); // Cập nhật lại thông tin hóa đơn
-        await fetchDataSpct(); // Lấy lại dữ liệu sản phẩm chi tiết
+        setHoaDonChiTiet(updatedData);
+        await getOrderById(currentInvoice?.id);
+        await fetchDataSpct();
       } else {
-        toast.error("Cập nhật thất bại!"); // Thông báo nếu không có dữ liệu
+        toast.error("Cập nhật thất bại!");
       }
     } catch (error) {
-      // Kiểm tra nếu lỗi chưa được hiển thị
       if (!errorShown) {
         toast.error(
           "Số lượng vượt quá trong kho, kiểm tra lại số lượng sản phẩm!"
-        ); // Thông báo lỗi
-        setErrorShown(true); // Đánh dấu lỗi đã hiển thị
+        );
+        setErrorShown(true);
       }
-      console.error("Error updating quantity:", error); // In lỗi ra console
+      console.error("Error updating quantity:", error);
     } finally {
-      // Đặt lại trạng thái sau 3 giây để cho phép xử lý tiếp theo
       setTimeout(() => {
-        setErrorShown(false); // Đặt lại trạng thái lỗi
-        setIsProcessing(false); // Đặt lại trạng thái không còn xử lý
+        setErrorShown(false);
+        setIsProcessing(false);
       }, 3000);
     }
   };
 
   const [isProcessing, setIsProcessing] = useState(false); // Kiểm tra xem có đang xử lý API không
-
-  const handleBlur = async (e, record) => {
-    const value = e.target.value;
-    if (value === "" || value <= 0) {
-      toast.error("Giá trị số lượng không hợp lệ");
-      e.target.value = record.soLuong;
-    } else {
-      await handleQuantityChange(Number(value), record);
-    }
-  };
 
   const handleDelete = async (id) => {
     try {
@@ -820,7 +734,11 @@ const ShoppingCart = () => {
 
   const handleProductSelect = (product) => {
     console.log(product);
-
+    if (currentInvoice?.id == null) {
+      setIsModalOpen(false);
+      toast.warning("Vui lòng chọn hóa đơn !");
+      return;
+    }
     setSelectedSpct(product);
   };
 
@@ -1032,7 +950,6 @@ const ShoppingCart = () => {
       } else {
         shippingCost = 90000;
       }
-
       setShip(shippingCost);
     } catch (err) {
       console.error("Error calculating shipping cost:", err);
@@ -1058,6 +975,11 @@ const ShoppingCart = () => {
   const handleDistrictChange = (value) => {
     fetchWards(value);
   };
+
+  useEffect(() => {
+    getOrderById(currentInvoice?.id);
+    fetchData();
+  }, [currentInvoice?.id]);
 
   const handleSubmit = async (values) => {
     setCheckoutLoading(true);
@@ -1128,16 +1050,10 @@ const ShoppingCart = () => {
     }
   };
 
-  // if (loading) {
-  //   return <Spin size="large" />;
-  // }
 
   if (error) {
     return <div>Error: {error}</div>;
   }
-
-  const { gioHangChiTietList, totalPrice } = checkoutData ?? [];
-
   return (
     <div style={{ padding: 20 }}>
       <div
@@ -1182,7 +1098,6 @@ const ShoppingCart = () => {
           invoices.map((invoice) => (
             <TabPane tab={`Hóa đơn ${invoice.id}`} key={invoice.id}>
               <div>
-                
                 <Table
                   columns={invoiceColumns}
                   dataSource={invoiceDetails}
@@ -1203,7 +1118,7 @@ const ShoppingCart = () => {
                 textAlign: "center",
               }}
             >
-              Chưa có hóa đơn nào! Hãy tạo hóa đơn.
+              <img src={image} style={{ margin: "0 auto" }} />
             </Text>
           </TabPane>
         )}
@@ -1285,10 +1200,10 @@ const ShoppingCart = () => {
         visible={isShow}
         onOk={handleOk}
         onCancel={handleCancelAddSPCT}
-        width={1000}
+        width={1200}
         bodyStyle={{
           padding: "20px",
-          height: "55vh",
+          height: "60vh",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
@@ -1362,6 +1277,7 @@ const ShoppingCart = () => {
             onRow={(record) => ({
               onClick: () => handleProductSelect(record),
             })}
+            sticky // Thêm thuộc tính này để cố định thanh tiêu đề
           />
         </div>
 
@@ -1454,305 +1370,322 @@ const ShoppingCart = () => {
           alignItems: "flex-start",
           gap: "20px",
           width: "100%",
-        }}  
+        }}
       >
         {currentInvoice?.loaiHoaDon === "ONLINE" && (
-          <div style={{ width: "48%", marginTop: '40px' }}>
-             <Title level={3}>Thông tin giao hàng</Title>
-      <Form
-        form={form}
-        layout="vertical"
-        className="space-y-4"
-        initialValues={{
-          tenNguoiNhan:
-            checkoutData?.gioHangChiTietList[0].gioHang.khachHang.ten,
-          sdt: checkoutData?.gioHangChiTietList[0].gioHang.khachHang.sdt,
-          idKhachHang:
-            checkoutData?.gioHangChiTietList[0].gioHang.khachHang.id,
-          email:
-            checkoutData?.gioHangChiTietList[0].gioHang.khachHang.email,
-          idGioHang: checkoutData?.idGioHang,
-        }}
-        onFinish={handleSubmit}
-      >
-        <Form.Item name="idGioHang" hidden>
-          <Input type="hidden" />
-        </Form.Item>
-        <Form.Item name="idKhachHang" hidden>
-          <Input type="hidden" />
-        </Form.Item>
-        
-        <Form.Item
-          label="Tên"
-          name="tenNguoiNhan"
-          required
-          rules={[{ required: true, message: "Vui lòng nhập tên" }]}
-        >
-          <Input size="large" />
-        </Form.Item>
-
-        <Form.Item
-          label="Số điện thoại"
-          name="sdt"
-          required
-          rules={[{ required: true, message: "Vui lòng nhập số điện thoại" }]}
-        >
-          <Input size="large" />
-        </Form.Item>
-
-        {/* Sử dụng Row và Col để hiển thị thành phố, quận, phường trên cùng một dòng */}
-        <Row gutter={16}>
-          <Col span={8}>
-            <Form.Item
-              label="Tỉnh/Thành phố"
-              name="province"
-              required
-              rules={[{ required: true, message: "Vui lòng chọn Tỉnh/Thành phố" }]}
+          <div style={{ width: "48%", marginTop: "40px" }}>
+            <Title level={3}>Thông tin giao hàng</Title>
+            <Form
+              form={form}
+              layout="vertical"
+              className="space-y-4"
+              initialValues={{
+                tenNguoiNhan: currentInvoice?.tenNguoiNhan,
+                sdt: currentInvoice?.sdt,
+                province: currentCustomer?.diaChi?.tinh,
+                email: currentInvoice?.email,
+                district: currentCustomer?.diaChi?.quan,
+                ward: currentCustomer?.diaChi?.huyen,
+              }}
+              onFinish={handleSubmit}
             >
-              <Select size="large" onChange={handleProvinceChange}>
-                {provinces.map((province) => (
-                  <Option key={province.code} value={province.code}>
-                    {province.fullName}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
+          
+              <Form.Item name="idGioHang" hidden>
+                <Input type="hidden" />
+              </Form.Item>
+              <Form.Item name="idKhachHang" hidden>
+                <Input type="hidden" />
+              </Form.Item>
+              <Form.Item
+                label="Tên"
+                name="tenNguoiNhan"
+                required
+                rules={[{ required: true, message: "Vui lòng nhập tên" }]}
+              >
+                <Input size="large" />
+              </Form.Item>
 
-          <Col span={8}>
-            <Form.Item
-              label="Quận/Huyện"
-              name="district"
-              required
-              rules={[{ required: true, message: "Vui lòng chọn Quận/Huyện" }]}
-            >
-              <Select size="large" onChange={handleDistrictChange}>
-                {districts.map((district) => (
-                  <Option key={district.code} value={district.code}>
-                    {district.fullName}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
+              <Form.Item
+                label="Số điện thoại"
+                name="sdt"
+                required
+                rules={[
+                  { required: true, message: "Vui lòng nhập số điện thoại" },
+                ]}
+              >
+                <Input size="large" />
+              </Form.Item>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item
+                    label="Tỉnh/Thành phố"
+                    name="province"
+                    required
+                    rules={[
+                      {
+                        required: true,
+                        message: "Vui lòng chọn Tỉnh/Thành phố",
+                      },
+                    ]}
+                  >
+                    <Select size="large" onChange={handleProvinceChange}>
+                      {provinces.map((province) => (
+                        <Option key={province.code} value={province.code}>
+                          {province.fullName}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
 
-          <Col span={8}>
-            <Form.Item
-              label="Phường/Xã"
-              name="ward"
-              required
-              rules={[{ required: true, message: "Vui lòng chọn Phường/Xã" }]}
-            >
-              <Select size="large">
-                {wards.map((ward) => (
-                  <Option key={ward.code} value={ward.code}>
-                    {ward.fullName}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-        </Row>
+                <Col span={8}>
+                  <Form.Item
+                    label="Quận/Huyện"
+                    name="district"
+                    required
+                    rules={[
+                      { required: true, message: "Vui lòng chọn Quận/Huyện" },
+                    ]}
+                  >
+                    <Select size="large" onChange={handleDistrictChange}>
+                      {districts.map((district) => (
+                        <Option key={district.code} value={district.code}>
+                          {district.fullName}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item
+                    label="Phường/Xã"
+                    name="ward"
+                    required
+                    rules={[
+                      { required: true, message: "Vui lòng chọn Phường/Xã" },
+                    ]}
+                  >
+                    <Select size="large">
+                      {wards.map((ward) => (
+                        <Option key={ward.code} value={ward.code}>
+                          {ward.fullName}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
 
-        <Form.Item
-          label="Địa chỉ chi tiết"
-          name="address"
-          required
-          rules={[{ required: true, message: "Vui lòng nhập địa chỉ chi tiết" }]}
-        >
-          <Input size="large" />
-        </Form.Item>
+              <Form.Item
+                label="Địa chỉ chi tiết"
+                name="address"
+                required
+                rules={[
+                  { required: true, message: "Vui lòng nhập địa chỉ chi tiết" },
+                ]}
+              >
+                <Input size="large" />
+              </Form.Item>
 
-        <Form.Item label="Địa chỉ email (tùy chọn)" name="email">
-          <Input size="large" />
-        </Form.Item>
+              <Form.Item label="Địa chỉ email (tùy chọn)" name="email">
+                <Input size="large" />
+              </Form.Item>
 
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold">THÔNG TIN BỔ SUNG</h3>
-          <Form.Item label="Ghi chú đơn hàng (tùy chọn)" name="ghiChu">
-            <TextArea
-              rows={4}
-              placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
-            />
-          </Form.Item>
-        </div>
-      </Form>
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">THÔNG TIN BỔ SUNG</h3>
+                <Form.Item label="Ghi chú đơn hàng (tùy chọn)" name="ghiChu">
+                  <TextArea
+                    rows={4}
+                    placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
+                  />
+                </Form.Item>
+              </div>
+            </Form>
           </div>
         )}
 
         {/* Form Thông tin thanh toán - Luôn hiển thị */}
-        {currentInvoice?.id &&  <div style={{ width: "48%", marginLeft: "auto", marginTop: '40px' }}>
-          <Title level={3}>
-            {/* <FaBagShopping style={{ marginRight: 20 }} /> */}
-            Thông tin thanh toán
-          </Title>
-          <Form layout="vertical">
-            <Form.Item label="Khách thanh toán">
-              <Row align="middle">
-                <Col flex="auto">
-                  <Button
-                    icon={<MdOutlinePayment />}
-                    onClick={showModalThanhToan}
-                    style={{ cursor: "pointer" }}
-                  />
-                </Col>
-                <Col style={{ paddingLeft: "8px" }}>
-                  {/* <Text strong>{partialPayment.toLocaleString()} VND</Text> */}
-                  <Text strong>
-                    {localStorage.getItem(currentInvoice?.id)
-                      ? parseFloat(
-                          localStorage.getItem(currentInvoice?.id)
-                        ).toLocaleString()
-                      : "0"}{" "}
-                    VND
-                  </Text>
-                </Col>
-              </Row>
-            </Form.Item>
-            <Form.Item label="Mã giảm giá">
-              <Row gutter={8}>
-                <Col span={16}>
-                  <Input
-                    placeholder="Nhập mã giảm giá"
-                    value={currentInvoice?.maVoucher}
-                  />
-                </Col>
-                <Col span={8}>
-                  <Button type="primary">Chọn mã</Button>
-                </Col>
-              </Row>
-            </Form.Item>
-            <Form.Item label="Giao Hàng">
-              {/* <Switch
-                checked={shipping}
-                onChange={() => {
-                  setShipping(!shipping),
-                  changeType(currentInvoice?.id)
-                }}
-              /> */}
-              <Switch
-                checked={currentInvoice?.loaiHoaDon !== "OFFLINE"} // Bật nếu loại hóa đơn không phải OFFLINE
-                onChange={() => {
-                  // Thay đổi trạng thái của loaiHoaDon khi người dùng thay đổi
-                  const newLoaiHoaDon =
-                    currentInvoice?.loaiHoaDon === "OFFLINE"
-                      ? "ONLINE"
-                      : "OFFLINE"; // Đảo ngược trạng thái loại hóa đơn
-                  changeType(currentInvoice?.id, newLoaiHoaDon); // Giả sử `changeType` là hàm cập nhật lại loại hóa đơn
-                }}
-              />
-            </Form.Item>
-            <Form.Item label="Tiền hàng">
-              <Text>
-                <strong>
-                  {currentInvoice?.tongTien && !isNaN(currentInvoice.tongTien)
-                    ? currentInvoice.tongTien.toLocaleString() + " VND"
+        {currentInvoice?.id && (
+          <div style={{ width: "48%", marginLeft: "auto", marginTop: "40px" }}>
+            <Title level={3}>
+              {/* <FaBagShopping style={{ marginRight: 20 }} /> */}
+              Thông tin thanh toán
+            </Title>
+            <Form layout="vertical">
+              <Form.Item label="Khách thanh toán">
+                <Row align="middle">
+                  <Col flex="auto">
+                    <Button
+                      icon={<MdOutlinePayment />}
+                      onClick={showModalThanhToan}
+                      style={{ cursor: "pointer" }}
+                    />
+                  </Col>
+                  <Col style={{ paddingLeft: "8px" }}>
+                    {/* <Text strong>{partialPayment.toLocaleString()} VND</Text> */}
+                    <Text strong>
+                      {localStorage.getItem(currentInvoice?.id)
+                        ? parseFloat(
+                            localStorage.getItem(currentInvoice?.id)
+                          ).toLocaleString()
+                        : "0"}{" "}
+                      VND
+                    </Text>
+                  </Col>
+                </Row>
+              </Form.Item>
+              <Form.Item label="Mã giảm giá">
+                <Row gutter={8}>
+                  <Col span={16}>
+                    <Input
+                      placeholder="Nhập mã giảm giá"
+                      value={currentInvoice?.maVoucher}
+                    />
+                  </Col>
+                  <Col span={8}>
+                    <Button type="primary">Chọn mã</Button>
+                  </Col>
+                </Row>
+              </Form.Item>
+              <Form.Item label="Giao Hàng">
+                <Switch
+                  checked={currentInvoice?.loaiHoaDon !== "OFFLINE"} // Bật nếu loại hóa đơn không phải OFFLINE
+                  onChange={() => {
+                    const newLoaiHoaDon =
+                      currentInvoice?.loaiHoaDon === "OFFLINE"
+                        ? "ONLINE"
+                        : "OFFLINE"; // Đảo ngược trạng thái loại hóa đơn
+                    changeType(currentInvoice?.id, newLoaiHoaDon); // Giả sử `changeType` là hàm cập nhật lại loại hóa đơn
+                  }}
+                />
+              </Form.Item>
+              <Form.Item label="Tiền hàng">
+                <Text>
+                  <strong>
+                    {currentInvoice?.tongTien && !isNaN(currentInvoice.tongTien)
+                      ? currentInvoice.tongTien.toLocaleString() + " VND"
+                      : "0.0 VND"}
+                  </strong>
+                </Text>
+              </Form.Item>
+              <Form.Item label="Giảm giá">
+                <Text>
+                  {currentInvoice?.soTienGiam &&
+                  !isNaN(currentInvoice.soTienGiam)
+                    ? currentInvoice.soTienGiam.toLocaleString() + " VND"
                     : "0.0 VND"}
-                </strong>
-              </Text>
-            </Form.Item>
-            <Form.Item label="Giảm giá">
-              <Text>
-                {currentInvoice?.soTienGiam && !isNaN(currentInvoice.soTienGiam)
-                  ? currentInvoice.soTienGiam.toLocaleString() + " VND"
-                  : "0.0 VND"}
-              </Text>
-            </Form.Item>
-            {currentInvoice?.loaiHoaDon === 'ONLINE' && <Form.Item label="Tiền ship">
-              <Text>
-                {ship && !isNaN(ship)
-                  ? ship.toLocaleString() + " VND"
-                  : "0.0 VND"}
-              </Text>
-            </Form.Item>}
-            {/* <Form.Item label= "Tiền ship">
-            <Text>
-                {ship && !isNaN(ship)
-                  ? ship.toLocaleString() + " VND"
-                  : "0.0 VND"}
-              </Text>
-            </Form.Item> */}
-            
-            <Form.Item label="Tổng tiền">
-              <Title level={4} style={{ color: "red" }}>
-                {currentInvoice?.tienSauGiam + ship &&
-                !isNaN(currentInvoice.tienSauGiam + ship)
-                  ? (currentInvoice.tienSauGiam + ship).toLocaleString() + " VND"
-                  : "0.0 VND"}
-              </Title>
-            </Form.Item>
-            {currentInvoice.loaiHoaDon === 'OFFLINE' ? <Button
-              type="primary"
-              block
-              style={{
-                width: "150px",
-                background: "black",
-                color: "white",
-                marginLeft: "400px",
-              }}
-              onClick={confirmPaymentShow}
+                </Text>
+              </Form.Item>
+              {currentInvoice?.loaiHoaDon === "ONLINE" && (
+                <Form.Item label="Tiền ship">
+                  <Text>
+                    {ship && !isNaN(ship)
+                      ? ship.toLocaleString() + " VND"
+                      : "0.0 VND"}
+                  </Text>
+                </Form.Item>
+              )}
+
+              <Form.Item label="Tổng tiền">
+                <Title level={4} style={{ color: "red" }}>
+                  {currentInvoice?.tienSauGiam + ship &&
+                  !isNaN(currentInvoice.tienSauGiam + ship)
+                    ? (currentInvoice.tienSauGiam + ship).toLocaleString() +
+                      " VND"
+                    : "0.0 VND"}
+                </Title>
+              </Form.Item>
+              {currentInvoice.loaiHoaDon === "OFFLINE" ? (
+                <Button
+                  type="primary"
+                  block
+                  style={{
+                    width: "150px",
+                    background: "black",
+                    color: "white",
+                    marginLeft: "400px",
+                  }}
+                  onClick={confirmPaymentShow}
+                >
+                  Xác nhận thanh toán
+                </Button>
+              ) : (
+                <Button
+                  style={{
+                    width: "150px",
+                    background: "black",
+                    color: "white",
+                    marginLeft: "400px",
+                  }}
+                  onClick={confirmPaymentShow}
+                >
+                  Xác nhận đặt hàng
+                </Button>
+              )}
+            </Form>
+            <Modal
+              title="Khách hàng"
+              open={isShowModalKhachHang}
+              onCancel={cancelModalKhachHang}
+              width={1000}
+              okText="Thêm khách hàng"
+              cancelText="Hủy"
+              onOk={handleCreateCustomer}
             >
-              Xác nhận thanh toán
-            </Button> : <Button
-               style={{
-                width: "150px",
-                background: "black",
-                color: "white",
-                marginLeft: "400px",
+              <Table
+                rowKey="key"
+                columns={columnsKhachHang}
+                dataSource={customer}
+                pagination={{
+                  current: currentPage,
+                  pageSize: pageSize,
+                  total: totalItems,
+                  showSizeChanger: true,
+                  pageSizeOptions: ["5", "10", "20", "50", "100"],
+                  onChange: (page, pageSize) => {
+                    setCurrentPage(page);
+                    setPageSize(pageSize);
+                  },
+                }}
+                loading={loading}
+                onRow={(record) => ({
+                  onClick: () => selectCustomer(record),
+                  onChange: () => selectCustomer(record),
+                })}
+              />
+            </Modal>
+            <ModalThemMoiKhachHang
+              isOpen={isCreateCustomer}
+              handleClose={cancelCreateCustomer}
+              title="Khách hàng"
+              handleSubmit={handleSubmits}
+            />
+            <Modal
+              title="Số lượng sản phẩm"
+              open={isModalOpen}
+              onOk={() => {
+                if (quantity < 1) {
+                  toast.error("Số lượng phải lớn hơn hoặc bằng 1 !");
+                  setIsModalOpen(false);
+                  setQuantity(1);
+                  return;
+                } else if (quantity > sanPhamChiTiet?.soLuong) {
+                  toast.error("Số lượng vượt quá trong kho !");
+                  setIsModalOpen(false);
+                  setQuantity(1);
+                }
+                handleOkAddSPCT();
               }}
-            >Xác nhận đặt hàng</Button>}
-          </Form>
-          <Modal
-            title="Khách hàng"
-            open={isShowModalKhachHang}
-            onCancel={cancelModalKhachHang}
-            width={1000}
-            okText="Thêm khách hàng"
-            cancelText="Hủy"
-            onOk={handleCreateCustomer}
-          >
-            <Table
-              rowKey="key"
-              columns={columnsKhachHang}
-              dataSource={customer}
-              loading={loading}
-              onRow={(record) => ({
-                onClick: () => selectCustomer(record),
-              })}
-            />
-          </Modal>
-          <ModalThemMoiKhachHang
-            isOpen={isCreateCustomer}
-            handleClose={cancelCreateCustomer}
-            title="Khách hàng"
-            handleSubmit={handleSubmits}
-          />
-          <Modal
-            title="Số lượng sản phẩm"
-            open={isModalOpen}
-            onOk={() => {
-              if (quantity < 1) {
-                toast.error("Số lượng phải lớn hơn hoặc bằng 1 !");
-                setIsModalOpen(false);
-                setQuantity(1);
-                return;
-              } else if (quantity > sanPhamChiTiet?.soLuong) {
-                toast.error("Số lượng vượt quá trong kho !");
-                setIsModalOpen(false);
-                setQuantity(1);
-              }
-              handleOkAddSPCT();
-            }}
-            onCancel={handleCancelModalAddSPCT}
-          >
-            <InputNumber
-              // min={1}
-              value={quantity}
-              onChange={(value) => setQuantity(value)}
-            />
-          </Modal>
-        </div>}
-       
+              onCancel={handleCancelModalAddSPCT}
+            >
+              <InputNumber
+                // min={1}
+                value={quantity}
+                onChange={(value) => setQuantity(value)}
+              />
+            </Modal>
+          </div>
+        )}
       </div>
     </div>
   );
