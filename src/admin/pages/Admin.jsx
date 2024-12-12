@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { MenuUnfoldOutlined, MenuFoldOutlined } from "@ant-design/icons";
 import { Outlet, Link } from "react-router-dom";
 import { Content } from "antd/es/layout/layout";
+import ToggleThemeButton from "../component/sidebar/ToggleThemeButton";
 
 
 const { Header, Sider } = Layout;
