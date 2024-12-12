@@ -13,14 +13,14 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
   const [email, setEmail] = useState("");
   const [sdt, setSdt] = useState("");
   const [ngaySinh, setNgaySinh] = useState(null);
-  const [gioiTinh, setGioiTinh] = useState(true); 
-  const [trangThai, setTrangThai] = useState(true); 
-  const [diaChi, setDiaChi] = useState(""); 
+  const [gioiTinh, setGioiTinh] = useState(true);
+  const [trangThai, setTrangThai] = useState(true);
+  const [diaChi, setDiaChi] = useState("");
   const [fileList, setFileList] = useState([]);
 
   const handleConfirmAdd = () => {
-   
-    if (!ten || !email || !sdt || !ngaySinh ) {
+
+    if (!ten || !email || !sdt || !ngaySinh || !diaChi) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ các trường!",
@@ -28,7 +28,7 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
       return;
     }
 
-   
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       notification.error({
@@ -38,16 +38,16 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
       return;
     }
 
-   
-    const age = moment().diff(ngaySinh, 'years');
-    if (age < 16) {
+
+    // Kiểm tra ngày sinh không được lớn hơn ngày hiện tại
+    if (ngaySinh.isAfter(moment().subtract(18, 'years'), 'day')) {
       notification.error({
         message: "Lỗi",
-        description: "Nhân viên phải từ 16 tuổi trở lên!",
+        description: "Bạn phải đủ 18 tuổi để đăng ký!",
       });
       return;
     }
-   
+
     const phoneRegex = /^[0-9]{10,11}$/;
     if (!phoneRegex.test(sdt)) {
       notification.error({
@@ -57,7 +57,7 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
       return;
     }
 
-   
+    // Gửi dữ liệu
     handleSubmit({
       ten,
       email,
@@ -68,6 +68,17 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
       diaChi,
       avatar: fileList.length > 0 && fileList[0].url ? fileList[0].url : "", // Lưu URL avatar
     });
+
+    // Làm sạch các ô nhập sau khi thêm thành công
+    setTen('');
+    setEmail('');
+    setSdt('');
+    setNgaySinh(null);
+    setGioiTinh(true);
+    setTrangThai(true);
+    setDiaChi('');
+    setFileList([]);
+
   };
 
   const handleChange = ({ fileList: newFileList }) => {
@@ -216,7 +227,7 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
       </Row>
 
       <Row className="flex justify-between mb-3">
-       
+
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Trạng thái

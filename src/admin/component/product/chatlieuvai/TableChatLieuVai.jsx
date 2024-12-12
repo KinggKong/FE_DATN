@@ -36,7 +36,7 @@ const TableChatLieuVai = () => {
       };
       const res = await getAllChatLieuVaiApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item,index) => ({
+        const dataWithKey = res.data.content.map((item, index) => ({
           ...item,
           key: item.id,
           stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,
@@ -83,12 +83,12 @@ const TableChatLieuVai = () => {
     } catch (error) {
       console.error("Failed to delete item", error);
       notification.error({
-          message: "Error",
-          description: "Failed to delete item",
+        message: "Error",
+        description: "Failed to delete item",
       });
-  }finally {
+    } finally {
       setLoading(false);
-  }
+    }
   };
 
   const handleEdit = (record) => {
@@ -156,7 +156,7 @@ const TableChatLieuVai = () => {
     }
 
     try {
-      await createChatLieuVaiApi({ tenChatLieuVai: newChatLieuName , trangThai: 1 });
+      await createChatLieuVaiApi({ tenChatLieuVai: newChatLieuName, trangThai: 1 });
       notification.success({
         duration: 4,
         pauseOnHover: false,
@@ -177,8 +177,8 @@ const TableChatLieuVai = () => {
   }, [fetchData]);
 
   const handleStatusChange = async (record, checked) => {
-    const updatedData = { ...record, trangThai: checked ? 0 : 1 };
-    
+    const updatedData = { ...record, trangThai: checked ? 1 : 0 };
+
     try {
       await updateChatLieuVaiApi(record.id, updatedData);
       notification.success({
@@ -218,8 +218,8 @@ const TableChatLieuVai = () => {
       key: "trangThai",
       render: (text, record) => (
         <Switch
-          checked={text === 0}
-          onChange={(checked) => handleStatusChange(record, checked)}
+          checked={text === 1} // Kiểm tra trạng thái (1 là hoạt động)
+          onChange={(checked) => handleStatusChange(record, checked ? 1 : 0)} // Cập nhật trạng thái chính xác
         />
       ),
     },
