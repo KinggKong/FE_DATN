@@ -32,6 +32,7 @@ export default function PreCheckout() {
 
     const fetchData = useCallback(async (userId) => {
         setLoading(true);
+
         try {
           console.log('Fetching data for userId:', userId);
           const response = await axios.get(`http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userId}`);
@@ -52,6 +53,8 @@ export default function PreCheckout() {
         }
       }, [navigate]);
 
+     
+  
 
       useEffect(() => {
         const storedUserInfo = localStorage.getItem("userInfo");

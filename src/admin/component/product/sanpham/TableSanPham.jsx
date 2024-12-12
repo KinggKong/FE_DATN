@@ -65,9 +65,10 @@ const TableSanPham = () => {
       };
       const res = await getAllSanPhamApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content.map((item,index) => ({
           ...item,
           key: item.id,
+          stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,
         }));
         setDataSource(dataWithKey);
         setTotalItems(res.data.totalElements);
@@ -332,7 +333,7 @@ const TableSanPham = () => {
   const columns = [
     {
       title: "STT",
-      dataIndex: "id",
+      dataIndex: "stt",
     },
     {
       title: "Tên giày",

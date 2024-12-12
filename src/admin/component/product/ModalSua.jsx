@@ -13,7 +13,7 @@ const ModalSua = ({ isOpen, handleClose, title, handleSubmit, initialData }) => 
     }, [initialData]);
 
     const onSubmit = () => {
-        const updatedItem = { tenChatLieu: ten };
+        const updatedItem = { tenChatLieu: ten , trangThai: 1};
         const id = initialData.id;
         handleSubmit(id,updatedItem);
     };

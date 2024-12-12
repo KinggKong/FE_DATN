@@ -82,7 +82,7 @@ export default function OrderManagement() {
                     orderCode: order.maHoaDon,
                     customer: order.tenNguoiNhan,
                     phone: order.sdt,
-                    total: order.tongTien,
+                    total: order.tienSauGiam==0?order.tongTien:order.tienSauGiam,
                     type: order.loaiHoaDon,
                     createdAt: new Date(order.createdAt).toLocaleString(),
                     status: order.trangThai

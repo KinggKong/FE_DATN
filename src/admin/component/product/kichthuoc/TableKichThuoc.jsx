@@ -41,9 +41,10 @@ const TableKichThuoc = () => {
       };
       const res = await getAllKichThuocApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content.map((item,index) => ({
           ...item,
           key: item.id,
+          stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,
         }));
         setDataSource(dataWithKey);
         setTotalItems(res.data.totalElements);
@@ -171,7 +172,7 @@ const TableKichThuoc = () => {
     }
 
     try {
-      await createKichThuocApi({ tenKichThuoc: newKichThuocName });
+      await createKichThuocApi({ tenKichThuoc: newKichThuocName, trangThai: 1 });
       notification.success({
         duration: 4,
         pauseOnHover: false,
@@ -194,8 +195,8 @@ const TableKichThuoc = () => {
   const columns = [
     {
       title: "STT",
-      dataIndex: "id",
-      key: "id",
+      dataIndex: "stt",
+      key: "stt",
     },
     {
       title: "Kích thước",
@@ -214,10 +215,10 @@ const TableKichThuoc = () => {
       key: "trangThai",
       render: (text, record) => (
         <Switch
-          checked={text === 0} // 0 là hoạt động
-          onChange={(checked) => handleStatusChange(record, !checked)} // Chuyển đổi trạng thái
+          checked={text === 1} // Kiểm tra trạng thái (1 là hoạt động)
+          onChange={(checked) => handleStatusChange(record, checked ? 1 : 0)} // Cập nhật trạng thái chính xác
         />
-      ),
+      )
     },
     {
       title: "Thao tác",

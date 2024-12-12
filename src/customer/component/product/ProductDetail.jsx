@@ -113,6 +113,15 @@ const ProductDetail = () => {
 
   //Hàm thêm sản phẩm vào giỏ hàng
   const handleAddToCart = () => {
+
+     
+  const productDetail = getProductDetail(productDetailId);
+
+  
+  if (productDetail.trangThai !== 1) {
+    message.error("Sản phẩm này hiện ngừng kinh doanh hoặc đã hết hàng");
+    return; 
+  }
     const productToAdd = {
       id: productDetailId,
       sanPhamChiTietResponse: getProductDetail(productDetailId),

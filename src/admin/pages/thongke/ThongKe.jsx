@@ -168,59 +168,46 @@ const ThongKe = () => {
 
 
 
-  // const renderSingleStatisticCard = (title, value, color, precision, prefix) => (
-  //   <Card bordered={false} style={{ background: color, color: 'white', marginBottom: '24px', textAlign: 'center', minWidth: '200px', height: '100px' }}>
-  //     <h3 style={{ fontSize: '1.2em', fontWeight: 'bold', marginBottom: '8px', color: 'white' }}>{title}</h3>
-  //     <Statistic
-  //       value={value}
-  //       precision={precision}
-  //       prefix={prefix}
-  //       valueStyle={{ fontSize: '1.5em', fontWeight: 'bold', color: 'white' }}
-  //     />
-  //   </Card>
-  // );
 
-  const renderSingleStatisticCard = (title, value, color, precision, prefix) => (
+
+
+
+  const renderSingleStatisticCard = (title, value, color, precision = 0, prefix = '') => (
     <Card
       bordered={false}
       style={{
-        // background: color,
-        // border: '2px solid #28a745', // Viền xanh lá cây
-        // color: '#28a745', // Chữ xanh lá cây
-        border: '2px solid' + color, // Viền xanh lá cây
-        color: color, // Chữ xanh lá cây
-        marginBottom: '24px',
+        border: `2px solid #f0f0f0`, // Màu viền tùy chỉnh
         textAlign: 'center',
-        minWidth: '200px',
-        height: '100px',
+        flex: 1, // Đảm bảo card lấp đầy khoảng trống còn lại
+        minWidth: '180px', // Đảm bảo card không quá nhỏ
+        maxWidth: '240px', // Giới hạn kích thước tối đa
+        height: '120px', // Chiều cao cố định
+        borderRadius: '8px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
       }}
     >
-      <h3
-        style={{
-          fontSize: '1.2em',
-          fontWeight: 'bold',
-          marginBottom: '8px',
-          color: color, // Chữ tiêu đề xanh lá cây
-        }}
-      >
-        {title}
-      </h3>
       <Statistic
         value={value}
         precision={precision}
         prefix={prefix}
         valueStyle={{
-          fontSize: '1.5em',
-          fontWeight: 'bold',
-          color: color, // Giá trị màu xanh lá cây
+          marginBottom: "10px", color: "#1890ff"
         }}
       />
+
+      <Text>{title}</Text>
     </Card>
   );
 
 
+
   const DashboardStatistics = ({ thongKes }) => (
-    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+    <div style={{
+      display: 'flex',
+      gap: '10px',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between', // Căn đều khoảng cách giữa các card
+    }}>
       {renderSingleStatisticCard("Doanh thu", thongKes.tongDoanhThu, '#00EE00', 0, '₫')}
       {renderSingleStatisticCard("Sản phẩm bán", thongKes.tongSanPhamBan, '#00EE00', 0, '')}
       {renderSingleStatisticCard("Đơn thành công", thongKes.donThanhCong, '#00EE00', 0, '')}
@@ -578,8 +565,8 @@ const ThongKe = () => {
       }));
     }).flat();
 
-    
-  
+
+
     // Chuẩn bị dữ liệu để export
     const dataToExport = {
       "Thống Kê Tổng Hợp": thongKes || [],
@@ -587,13 +574,13 @@ const ThongKe = () => {
       "Sản Phẩm Bán Chạy": sanPhamBanChay || [],
       "Sản Phẩm Hết Hàng": sanPhamHetHang || [],
     };
-  
+
     // Gọi hàm xuất file Excel
-    exportToExcelWithMultipleSheets(dataToExport, "ThongKeTongHop",salesType);
+    exportToExcelWithMultipleSheets(dataToExport, "ThongKeTongHop", salesType);
   };
-  
-  
-  
+
+
+
 
 
   // Hàm xử lý khi chọn kiểu bán hàng (online hoặc offline).
@@ -608,8 +595,8 @@ const ThongKe = () => {
 
   return (
     <div>
-       <Title level={5}>Trang thống kê</Title>
-      
+      <Title level={5}>Trang thống kê</Title>
+
       <Row gutter={16}>
         <Col span={12}>
 
@@ -670,13 +657,13 @@ const ThongKe = () => {
       <Row gutter={16}>
         <Col span={16}>
           <Card title={
-           
-              <div>
-                Top 10 sản phẩm bán tiêu biểu trong khoảng thời gian:
-                <strong> {ngayBatDau} </strong>
-                đến
-                <strong> {ngayKetThuc} </strong>
-             
+
+            <div>
+              Top 10 sản phẩm bán tiêu biểu trong khoảng thời gian:
+              <strong> {ngayBatDau} </strong>
+              đến
+              <strong> {ngayKetThuc} </strong>
+
             </div>
           }
             bordered={true}>

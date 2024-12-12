@@ -32,8 +32,6 @@ export default function CardItemDrawer({ product, onQuantityChange, onRemove }) 
       } else {
         setTimeLeft("Flash sale đã kết thúc");
       }
-
-
     }
   };
 
@@ -42,9 +40,17 @@ export default function CardItemDrawer({ product, onQuantityChange, onRemove }) 
     const timer = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Kiểm tra trạng thái sản phẩm
+  const isUnavailable = product.sanPhamChiTietResponse.trangThai === 0;
+  const isOutOfStock = product.sanPhamChiTietResponse.soLuong === 0;
+
   return (
     <div className="flex items-start space-x-4 py-4 border-b border-gray-200">
-      <div className="bg-gray-200 rounded-md flex-shrink-0" style={{ width: "100px", height: "50px", overflow: "hidden" }}>
+      <div
+        className="bg-gray-200 rounded-md flex-shrink-0"
+        style={{ width: "100px", height: "50px", overflow: "hidden" }}
+      >
         <img
           src={product.sanPhamChiTietResponse.hinhAnhList[0]?.url || ""}
           className="w-full h-full object-cover"
@@ -61,73 +67,79 @@ export default function CardItemDrawer({ product, onQuantityChange, onRemove }) 
         </p>
         <p className="text-sm text-gray-600 mb-2">
           {product.thoiGianGiamGia ? (
-            <span className="font-semibold text-blue-600 sliding-text ">
+            <span className="font-semibold text-blue-600 sliding-text">
               {timeLeft}
             </span>
           ) : null}
         </p>
 
-
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => onQuantityChange(product.sanPhamChiTietResponse.id, -1)} // Giảm số lượng
-              className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full"
-              disabled={product.soLuong <= 1} // Disable khi số lượng <= 1
-            >
-              <CiCircleMinus className="w-4 h-4" />
-            </button>
+          {isUnavailable ? (
+            <div className="text-red-500 text-sm italic">
+              Sản phẩm này đã ngừng bán.
+            </div>
+          ) : isOutOfStock ? (
+            <div className="text-red-500 text-sm italic">
+              Sản phẩm đã hết hàng.
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => onQuantityChange(product.sanPhamChiTietResponse.id, -1)}
+                  className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full"
+                  disabled={product.soLuong <= 1}
+                >
+                  <CiCircleMinus className="w-4 h-4" />
+                </button>
 
-            <span className="w-8 text-center">{product.soLuong}</span>
+                <span className="w-8 text-center">{product.soLuong}</span>
 
-            <button
-              onClick={() => onQuantityChange(product.sanPhamChiTietResponse.id, 1)} // Tăng số lượng
-              className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full"
-              disabled={product.soLuong >= product.sanPhamChiTietResponse.soLuong} // Disable khi số lượng >= max stock
-            >
-              <CiCirclePlus className="w-4 h-4" />
-            </button>
+                <button
+                  onClick={() => onQuantityChange(product.sanPhamChiTietResponse.id, 1)}
+                  className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full"
+                  disabled={product.soLuong >= product.sanPhamChiTietResponse.soLuong}
+                >
+                  <CiCirclePlus className="w-4 h-4" />
+                </button>
+              </div>
 
-          </div>
-
-
-          <p className="text-sm font-semibold text-gray-800">
-            {/* Kiểm tra nếu giá giảm khác giá gốc mới hiển thị */}
-            {(product.sanPhamChiTietResponse.giaBan && product.giaTien < product.sanPhamChiTietResponse.giaBan) || (product.sanPhamChiTietResponse.giaBan && product.discountPrice < product.sanPhamChiTietResponse.giaBan) ? (
-              <>
-                {/* Giá giảm */}
-                {(product.discountPrice) ?
-                  <span className="text-red-600">
-                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.discountPrice)}
-                  </span> :
-                  <span className="text-red-600">
+              <p className="text-sm font-semibold text-gray-800">
+                {(product.sanPhamChiTietResponse.giaBan && product.giaTien < product.sanPhamChiTietResponse.giaBan) ||
+                (product.sanPhamChiTietResponse.giaBan && product.discountPrice < product.sanPhamChiTietResponse.giaBan) ? (
+                  <>
+                    {product.discountPrice ? (
+                      <span className="text-red-600">
+                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.discountPrice)}
+                      </span>
+                    ) : (
+                      <span className="text-red-600">
+                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.giaTien)}
+                      </span>
+                    )}
+                    <span className="text-gray-500 line-through ml-2">
+                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.sanPhamChiTietResponse.giaBan)}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-gray-800">
                     {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.giaTien)}
                   </span>
-                }
-
-
-                {/* Giá gốc với dấu gạch chéo */}
-                <span className="text-gray-500 line-through ml-2">
-                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.sanPhamChiTietResponse.giaBan)}
-
-                </span>
-              </>
-            ) : (
-              // Nếu không có giá giảm, chỉ hiển thị giá gốc
-              <span className="text-gray-800">
-                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.giaTien)}
-              </span>
-            )}
-          </p>
-
+                )}
+              </p>
+            </>
+          )}
         </div>
       </div>
       <button
         className="text-gray-400 hover:text-gray-600"
-        onClick={() => onRemove(product.sanPhamChiTietResponse.id,)}
+        onClick={() => onRemove(product.sanPhamChiTietResponse.id)}
       >
         <TiDeleteOutline className="w-5 h-5" />
       </button>
     </div>
   );
 }
+
+
+
