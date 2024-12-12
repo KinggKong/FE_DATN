@@ -39,6 +39,15 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
     }
 
    
+    const age = moment().diff(ngaySinh, 'years');
+    if (age < 16) {
+      notification.error({
+        message: "Lỗi",
+        description: "Nhân viên phải từ 16 tuổi trở lên!",
+      });
+      return;
+    }
+   
     const phoneRegex = /^[0-9]{10,11}$/;
     if (!phoneRegex.test(sdt)) {
       notification.error({
