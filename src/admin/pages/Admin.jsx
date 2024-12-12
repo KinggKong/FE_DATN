@@ -21,6 +21,12 @@ function Admin() {
   //   role: "Chủ cửa hàng",
   //   avatar: "https://i.pravatar.cc/150",
   // };
+  const toggleTheme = () => {
+    setDarkTheme(!darkTheme);
+  };
+  const {
+    token: { colorBgContainer },
+  } = theme.useToken();
 
   useEffect(() => {
     const storedUserInfo = localStorage.getItem("userInfo");
@@ -49,6 +55,7 @@ function Admin() {
       >
         <Logo />
         <MenuList darkTheme={darkTheme} />
+        <ToggleThemeButton darkTheme={darkTheme} toggleTheme={toggleTheme} />
       </Sider>
       <Layout>
         <Header
