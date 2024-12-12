@@ -271,7 +271,6 @@ const TableKhachHang = () => {
     {
       title: "Ngày sinh",
       dataIndex: "ngaySinh",
-      render: (text) => new Date(text).toLocaleDateString(),
     },
     {
       title: "Giới tính",
