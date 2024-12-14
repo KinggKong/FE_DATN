@@ -1,10 +1,12 @@
-import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select, Button, Upload, Image } from "antd";
+import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select, Button, Upload, Image, Form, AutoComplete } from "antd";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { useState } from "react";
 import moment from "moment";
 import { UploadOutlined } from "@ant-design/icons";
 import { storage } from '../spct/firebaseConfig'; // Import tệp cấu hình Firebase
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import debounce from 'lodash/debounce';
+import axios from "axios";
 
 const { Option } = Select;
 
@@ -20,6 +22,9 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
   const [fileList, setFileList] = useState([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
+  const [diaChiStr, setDiaChiStr] = useState("");
+  const [addressOptions, setAddressOptions] = useState([]);
+  const apiKey = 'DFt7PndsFeTuDNGggyzQyLr0dzqU9Sf0hb0mMZX5';
 
   const handleConfirmAdd = () => {
     // Kiểm tra dữ liệu đầu vào
@@ -75,6 +80,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       gioiTinh,  // Đảm bảo là true hoặc false
       ngayTao: ngayTao.format('YYYY-MM-DD'), // Lưu ngày tạo
       trangThai: trangThai ? 1 : 0,
+      diaChiStr,
       avatar: avatarUrl,  // Lưu URL avatar
     });
   };
@@ -132,7 +138,26 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       onError(error);
     }
   };
+  const handleAddressSearch = debounce(async (value) => {
+    if (value.length > 2) {
+      try {
+        const response = await axios.get(`https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(value)}`);
+        if (response.data.predictions) {
+          setAddressOptions(response.data.predictions.map(prediction => ({
+            value: prediction.description,
+            label: prediction.description,
+            place_id: prediction.place_id
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching address suggestions:', error);
+      }
+    }
+  }, 300);
 
+  const handleAddressSelect = async (value) => {
+     setDiaChiStr(value);
+  };
   return (
     <Modal
       open={isOpen}
@@ -225,32 +250,30 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       
 
       <Row className="flex justify-between mb-3">
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Ngày tạo
-          </label>
-          <DatePicker
-            style={{ width: "100%" }}
-            value={ngayTao}
-            disabled
-          />
+      <Col span={24}>
+          {/* <label className="text-sm block mb-2">Ngày tạo</label>
+          <Input value={ngayTao ? ngayTao.format('DD/MM/YYYY') : ''} disabled /> */}
+          <Form.Item
+            label="Địa chỉ"
+            labelCol={{ span: 24 }} // Đẩy label thành 100% chiều rộng
+            wrapperCol={{ span: 24 }}
+          >
+            <AutoComplete
+              options={addressOptions}
+              onSearch={handleAddressSearch}
+               onSelect={handleAddressSelect}
+              placeholder="Nhập địa chỉ"
+              size="large"
+            />
+          </Form.Item>
         </Col>
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Trạng thái
-          </label>
-          <Switch
-            checked={trangThai}
-            onChange={(checked) => setTrangThai(checked)}
-            checkedChildren="Hoạt động"
-            unCheckedChildren="Không hoạt động"
-          />
-        </Col>
+       
+       
       </Row>
 
       {/* Cột Upload ảnh */}
       <Row className="flex justify-between mb-3">
-        <Col span={24}>
+        <Col span={14}>
           <label className="text-sm block mb-2">Avatar</label>
           <Upload
             listType="picture-card"
@@ -268,6 +291,17 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
               style={{ width: 100, height: 100, objectFit: 'cover', marginTop: 10 }}
             />
           )}
+        </Col>
+        <Col span={8}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Trạng thái
+          </label>
+          <Switch
+            checked={trangThai}
+            onChange={(checked) => setTrangThai(checked)}
+            checkedChildren="Hoạt động"
+            unCheckedChildren="Không hoạt động"
+          />
         </Col>
       </Row>
     </Modal>

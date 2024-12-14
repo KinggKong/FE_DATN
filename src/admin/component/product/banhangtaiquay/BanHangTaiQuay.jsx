@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  AutoComplete,
   Button,
   Col,
   Divider,
@@ -50,6 +51,7 @@ import { createKhachHangApi } from "../../../../api/KhachHangApi";
 import { useNavigate } from "react-router-dom";
 import TextArea from "antd/es/input/TextArea";
 import image from "../../../../util/cart-empty-img.8b677cb3.png";
+import debounce from 'lodash/debounce';
 
 const ShoppingCart = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -72,6 +74,13 @@ const ShoppingCart = () => {
   const [selectedMethod, setSelectedMethod] = useState("cash");
 
   const [confirmPayments, setConfirmPaymets] = useState(false);
+
+  const [addressOptions, setAddressOptions] = useState([]);
+
+  const apiKey = 'DFt7PndsFeTuDNGggyzQyLr0dzqU9Sf0hb0mMZX5'; // Replace with your Goong API key
+  const originLat = 21.038059779392608;
+  const originLng = 105.74668196761013;
+  const [isShipping, setIsShipping] = useState(false);
 
   const confirmPaymentShow = () => {
     setConfirmPaymets(true);
@@ -107,21 +116,23 @@ const ShoppingCart = () => {
     }
   }, [currentInvoice]);
 
-  const selectCustomer = (payload) => {
+  const selectCustomer = async (payload) => {
     setCurrentCustomer(payload);
-
+    console.log("Current customer:", payload);
     form.setFieldsValue({
       tenNguoiNhan: payload?.ten,
       sdt: payload?.sdt,
       email: payload?.email,
-      province: payload?.diaChi?.tinh,
-      district: payload?.diaChi?.quan,
-      ward: payload?.diaChi?.huyen,
+      address: payload?.diaChiStr,
+      // province: payload?.diaChi?.tinh,
+      // district: payload?.diaChi?.quan,
+      // ward: payload?.diaChi?.huyen,
     });
-    calculateShippingCost(
-      payload?.diaChi?.tinh,
-      payload?.diaChi?.quan
-    );
+    // calculateShippingCost(
+    //   payload?.diaChi?.tinh,
+    //   payload?.diaChi?.quan
+    // );
+    
   };
 
   useEffect(() => {
@@ -637,8 +648,8 @@ const ShoppingCart = () => {
       if (response?.data) {
         const updatedData = Array.isArray(hoaDonChiTiet)
           ? hoaDonChiTiet.map((item) =>
-              item.id === record.id ? { ...item, ...response.data } : item
-            )
+            item.id === record.id ? { ...item, ...response.data } : item
+          )
           : [];
 
         setHoaDonChiTiet(updatedData);
@@ -683,8 +694,8 @@ const ShoppingCart = () => {
       if (response?.data) {
         const updatedData = Array.isArray(hoaDonChiTiet)
           ? hoaDonChiTiet.map((item) =>
-              item.id === record.id ? { ...item, ...response.data } : item
-            )
+            item.id === record.id ? { ...item, ...response.data } : item
+          )
           : [];
 
         setHoaDonChiTiet(updatedData);
@@ -857,123 +868,74 @@ const ShoppingCart = () => {
     };
 
     fetchData();
-    fetchProvinces();
+    // fetchProvinces();
   }, [userInfo]);
 
-  const fetchProvinces = async () => {
-    setProvincesLoading(true);
-    try {
-      const response = await axios.get(
-        "http://localhost:8080/api/v1/locations/provinces"
-      );
-      if (response.data.code === 1000) {
-        setProvinces(response.data.data);
-      }
-    } catch (err) {
-      console.error("Error fetching provinces:", err);
-    } finally {
-      setProvincesLoading(false);
-    }
-  };
 
-  const fetchDistricts = async (provinceCode) => {
-    setDistrictsLoading(true);
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/v1/locations/districts?provinceCode=${provinceCode}`
-      );
-      if (response.data.code === 1000) {
-        setDistricts(response.data.data);
-        setWards([]);
-        form.setFieldsValue({ district: undefined, ward: undefined });
-      }
-    } catch (err) {
-      console.error("Error fetching districts:", err);
-    } finally {
-      setDistrictsLoading(false);
-    }
-  };
 
-  const fetchWards = async (districtCode) => {
-    setWardsLoading(true);
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/v1/locations/wards?districtCode=${districtCode}`
-      );
-      if (response.data.code === 1000) {
-        setWards(response.data.data);
-        form.setFieldsValue({ ward: undefined });
-      }
-    } catch (err) {
-      console.error("Error fetching wards:", err);
-    } finally {
-      setWardsLoading(false);
-    }
-  };
 
-  const calculateShippingCost = async (latitude, longitude) => {
+  // lấy địa chi
+
+  const calculateShippingCost = async (lat, lng) => {
     setShippingLoading(true);
-    const locations = [
-      [105.74680306431928, 21.037955318097737],
-      [longitude, latitude],
-    ];
-    const requestData = {
-      locations: locations,
-      metrics: ["distance"],
-      units: "km",
-    };
-
     try {
-      const response = await axios.post(
-        "https://api.openrouteservice.org/v2/matrix/driving-car",
-        requestData,
-        {
-          headers: {
-            Authorization:
-              "5b3ce3597851110001cf62485b5a6259f66d4725bd2c5d24e7cdc7e1",
-            "Content-Type": "application/json",
-          },
+      const distanceResponse = await axios.get(`https://rsapi.goong.io/DistanceMatrix?origins=${originLat},${originLng}&destinations=${lat},${lng}&api_key=${apiKey}`);
+
+      if (distanceResponse.data.rows && distanceResponse.data.rows[0].elements && distanceResponse.data.rows[0].elements[0].distance) {
+        const distanceKm = distanceResponse.data.rows[0].elements[0].distance.value / 1000;
+        let shippingCost;
+
+        if (distanceKm < 40) {
+          shippingCost = 30000;
+        } else if (distanceKm < 100) {
+          shippingCost = 50000;
+        } else if (distanceKm < 200) {
+          shippingCost = 60000;
+        } else if (distanceKm < 400) {
+          shippingCost = 70000;
+        } else {
+          shippingCost = 90000;
         }
-      );
 
-      const distanceKm = response.data.distances[0][1];
-      let shippingCost;
-
-      if (distanceKm < 40) {
-        shippingCost = 30000;
-      } else if (distanceKm < 100) {
-        shippingCost = 50000;
-      } else if (distanceKm < 200) {
-        shippingCost = 60000;
-      } else if (distanceKm < 400) {
-        shippingCost = 70000;
+        setShip(shippingCost);
       } else {
-        shippingCost = 90000;
+        throw new Error('Unable to calculate distance');
       }
-      setShip(shippingCost);
     } catch (err) {
-      console.error("Error calculating shipping cost:", err);
-      message.error("Không thể tính phí vận chuyển. Vui lòng thử lại.");
+      console.error('Error calculating shipping cost:', err);
+      message.error('Không thể tính phí vận chuyển. Vui lòng thử lại.');
     } finally {
       setShippingLoading(false);
     }
   };
 
-  const handleProvinceChange = (value) => {
-    const selectedProvince = provinces.find(
-      (province) => province.code === value
-    );
-    if (selectedProvince) {
-      calculateShippingCost(
-        selectedProvince.latitude,
-        selectedProvince.longitude
-      );
+  const handleAddressSearch = debounce(async (value) => {
+    if (value.length > 2) {
+      try {
+        const response = await axios.get(`https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(value)}`);
+        if (response.data.predictions) {
+          setAddressOptions(response.data.predictions.map(prediction => ({
+            value: prediction.description,
+            label: prediction.description,
+            place_id: prediction.place_id
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching address suggestions:', error);
+      }
     }
-    fetchDistricts(value);
-  };
+  }, 300);
 
-  const handleDistrictChange = (value) => {
-    fetchWards(value);
+  const handleAddressSelect = async (value, option) => {
+    try {
+      const detailResponse = await axios.get(`https://rsapi.goong.io/Place/Detail?place_id=${option.place_id}&api_key=${apiKey}`);
+      if (detailResponse.data.result && detailResponse.data.result.geometry) {
+        const { lat, lng } = detailResponse.data.result.geometry.location;
+        calculateShippingCost(lat, lng);
+      }
+    } catch (error) {
+      console.error('Error fetching place details:', error);
+    }
   };
 
   useEffect(() => {
@@ -995,11 +957,9 @@ const ShoppingCart = () => {
       const hoaDonRequest = {
         idGioHang: values.idGioHang,
         tenNguoiNhan: values.tenNguoiNhan,
-        diaChiNhan: `${values.address}, ${
-          selectedWard ? selectedWard.fullName : ""
-        }, ${selectedDistrict ? selectedDistrict.fullName : ""}, ${
-          selectedProvince ? selectedProvince.fullName : ""
-        }`,
+        diaChiNhan: `${values.address}, ${selectedWard ? selectedWard.fullName : ""
+          }, ${selectedDistrict ? selectedDistrict.fullName : ""}, ${selectedProvince ? selectedProvince.fullName : ""
+          }`,
         sdt: values.sdt,
         tongTien: checkoutData.totalPrice + ship,
         tienSauGiam: checkoutData.totalPrice + ship,
@@ -1160,7 +1120,7 @@ const ShoppingCart = () => {
       </p>
       <Divider />
       {currentInvoice?.tenKhachHang &&
-      currentInvoice.tenKhachHang !== "Khách lẻ" ? (
+        currentInvoice.tenKhachHang !== "Khách lẻ" ? (
         <div>
           <div>
             <span>Tên khách hàng</span>: {currentInvoice.tenKhachHang}
@@ -1203,7 +1163,7 @@ const ShoppingCart = () => {
         width={1200}
         bodyStyle={{
           padding: "20px",
-          height: "60vh",
+          height: "80vh",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
@@ -1343,7 +1303,7 @@ const ShoppingCart = () => {
               type="text"
               value={
                 currentInvoice?.tienSauGiam &&
-                !isNaN(currentInvoice?.tienSauGiam)
+                  !isNaN(currentInvoice?.tienSauGiam)
                   ? currentInvoice?.tienSauGiam.toLocaleString() + " VND"
                   : "0.0 VND"
               }
@@ -1389,7 +1349,7 @@ const ShoppingCart = () => {
               }}
               onFinish={handleSubmit}
             >
-          
+
               <Form.Item name="idGioHang" hidden>
                 <Input type="hidden" />
               </Form.Item>
@@ -1415,77 +1375,22 @@ const ShoppingCart = () => {
               >
                 <Input size="large" />
               </Form.Item>
-              <Row gutter={16}>
-                <Col span={8}>
-                  <Form.Item
-                    label="Tỉnh/Thành phố"
-                    name="province"
-                    required
-                    rules={[
-                      {
-                        required: true,
-                        message: "Vui lòng chọn Tỉnh/Thành phố",
-                      },
-                    ]}
-                  >
-                    <Select size="large" onChange={handleProvinceChange}>
-                      {provinces.map((province) => (
-                        <Option key={province.code} value={province.code}>
-                          {province.fullName}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item
-                    label="Quận/Huyện"
-                    name="district"
-                    required
-                    rules={[
-                      { required: true, message: "Vui lòng chọn Quận/Huyện" },
-                    ]}
-                  >
-                    <Select size="large" onChange={handleDistrictChange}>
-                      {districts.map((district) => (
-                        <Option key={district.code} value={district.code}>
-                          {district.fullName}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item
-                    label="Phường/Xã"
-                    name="ward"
-                    required
-                    rules={[
-                      { required: true, message: "Vui lòng chọn Phường/Xã" },
-                    ]}
-                  >
-                    <Select size="large">
-                      {wards.map((ward) => (
-                        <Option key={ward.code} value={ward.code}>
-                          {ward.fullName}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-              </Row>
-
               <Form.Item
-                label="Địa chỉ chi tiết"
+                label="Địa chỉ"
                 name="address"
                 required
-                rules={[
-                  { required: true, message: "Vui lòng nhập địa chỉ chi tiết" },
-                ]}
+                rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
               >
-                <Input size="large" />
+                <AutoComplete
+                  options={addressOptions}
+                  onSearch={handleAddressSearch}
+                  onSelect={handleAddressSelect}
+                  placeholder="Nhập địa chỉ"
+                  size="large"
+                />
               </Form.Item>
+
+
 
               <Form.Item label="Địa chỉ email (tùy chọn)" name="email">
                 <Input size="large" />
@@ -1526,8 +1431,8 @@ const ShoppingCart = () => {
                     <Text strong>
                       {localStorage.getItem(currentInvoice?.id)
                         ? parseFloat(
-                            localStorage.getItem(currentInvoice?.id)
-                          ).toLocaleString()
+                          localStorage.getItem(currentInvoice?.id)
+                        ).toLocaleString()
                         : "0"}{" "}
                       VND
                     </Text>
@@ -1547,7 +1452,7 @@ const ShoppingCart = () => {
                   </Col>
                 </Row>
               </Form.Item>
-              <Form.Item label="Giao Hàng">
+              {/* <Form.Item label="Giao Hàng">
                 <Switch
                   checked={currentInvoice?.loaiHoaDon !== "OFFLINE"} // Bật nếu loại hóa đơn không phải OFFLINE
                   onChange={() => {
@@ -1558,7 +1463,55 @@ const ShoppingCart = () => {
                     changeType(currentInvoice?.id, newLoaiHoaDon); // Giả sử `changeType` là hàm cập nhật lại loại hóa đơn
                   }}
                 />
-              </Form.Item>
+              </Form.Item> */}
+              <Form.Item label="Giao Hàng">
+                <Switch
+                  checked={currentInvoice?.loaiHoaDon !== "OFFLINE"} // Bật nếu loại hóa đơn không phải OFFLINE
+                  onChange={async () => {
+                    const newLoaiHoaDon =
+                      currentInvoice?.loaiHoaDon === "OFFLINE"
+                        ? "ONLINE"
+                        : "OFFLINE"; // Đảo ngược trạng thái loại hóa đơn
+                    setIsShipping(newLoaiHoaDon === "ONLINE"); // Cập nhật trạng thái giao hàng
+
+                    // Nếu loại hóa đơn là ONLINE, tính phí vận chuyển
+                    if (newLoaiHoaDon === "ONLINE") {
+                      if (currentCustomer?.diaChiStr) {
+                        try {
+                          // Gọi API để tính phí vận chuyển
+                          const response = await axios.get(
+                            `https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(
+                              currentCustomer.diaChiStr
+                            )}`
+                          );
+
+                          if (response.data.predictions && response.data.predictions.length > 0) {
+                            const placeId = response.data.predictions[0].place_id;
+
+                            const detailResponse = await axios.get(
+                              `https://rsapi.goong.io/Place/Detail?place_id=${placeId}&api_key=${apiKey}`
+                            );
+
+                            if (detailResponse.data.result && detailResponse.data.result.geometry) {
+                              const { lat, lng } = detailResponse.data.result.geometry.location;
+                              calculateShippingCost(lat, lng); // Gọi hàm tính phí ship
+                            }
+                          }
+                        } catch (error) {
+                          console.error("Error calculating shipping cost:", error);
+                          message.error("Không thể tính phí vận chuyển. Vui lòng thử lại.");
+                        }
+                      } else {
+                        message.error("Vui lòng chọn địa chỉ khách hàng trước.");
+                      }
+                    } else {
+                      setShip(0); // Nếu không giao hàng, đặt phí ship về 0
+                    }
+
+                    changeType(currentInvoice?.id, newLoaiHoaDon); // Giả sử `changeType` là hàm cập nhật loại hóa đơn
+                  }}
+                />
+              </Form.Item>;
               <Form.Item label="Tiền hàng">
                 <Text>
                   <strong>
@@ -1571,7 +1524,7 @@ const ShoppingCart = () => {
               <Form.Item label="Giảm giá">
                 <Text>
                   {currentInvoice?.soTienGiam &&
-                  !isNaN(currentInvoice.soTienGiam)
+                    !isNaN(currentInvoice.soTienGiam)
                     ? currentInvoice.soTienGiam.toLocaleString() + " VND"
                     : "0.0 VND"}
                 </Text>
@@ -1589,9 +1542,9 @@ const ShoppingCart = () => {
               <Form.Item label="Tổng tiền">
                 <Title level={4} style={{ color: "red" }}>
                   {currentInvoice?.tienSauGiam + ship &&
-                  !isNaN(currentInvoice.tienSauGiam + ship)
+                    !isNaN(currentInvoice.tienSauGiam + ship)
                     ? (currentInvoice.tienSauGiam + ship).toLocaleString() +
-                      " VND"
+                    " VND"
                     : "0.0 VND"}
                 </Title>
               </Form.Item>
