@@ -34,9 +34,9 @@ const TableKhachHang = () => {
         ten: valueSearch,
       };
       const res = await getAllKhachHangApi(params);
-      
+
       if (res && res.data && res.data.content) {
-        const dataWithKey = res.data.content.map((item,index) => ({
+        const dataWithKey = res.data.content.map((item, index) => ({
           ...item,
           key: item.id,
           stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,
@@ -136,7 +136,7 @@ const TableKhachHang = () => {
       // Kiểm tra trùng mã khách hàng, email và số điện thoại
       const existingKhachHang = dataSource.find(
         (item) =>
-          (item.id !== id && item.ma === updatedKhachHang.ma) ||
+          // (item.id !== id && item.ma === updatedKhachHang.ma) ||
           (item.id !== id && item.email === updatedKhachHang.email) ||
           (item.id !== id && item.sdt === updatedKhachHang.sdt)
       );
@@ -191,7 +191,7 @@ const TableKhachHang = () => {
       // Kiểm tra trùng mã khách hàng, email và số điện thoại
       const existingKhachHang = dataSource.find(
         (item) =>
-          item.ma === newKhachHang.ma ||
+          // item.ma === newKhachHang.ma ||
           item.email === newKhachHang.email ||
           item.sdt === newKhachHang.sdt
       );
@@ -268,6 +268,10 @@ const TableKhachHang = () => {
     {
       title: "Số điện thoại",
       dataIndex: "sdt",
+    },
+    {
+      title: "Địa chỉ",
+      dataIndex: "diaChiStr",
     },
     {
       title: "Ngày sinh",
