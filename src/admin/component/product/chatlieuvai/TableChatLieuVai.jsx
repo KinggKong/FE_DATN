@@ -177,7 +177,7 @@ const TableChatLieuVai = () => {
   }, [fetchData]);
 
   const handleStatusChange = async (record, checked) => {
-    const updatedData = { ...record, trangThai: checked ? 0 : 1 };
+    const updatedData = { ...record,trangThai: checked ? 1 : 0  };
     
     try {
       await updateChatLieuVaiApi(record.id, updatedData);
@@ -218,8 +218,9 @@ const TableChatLieuVai = () => {
       key: "trangThai",
       render: (text, record) => (
         <Switch
-          checked={text === 0}
-          onChange={(checked) => handleStatusChange(record, checked)}
+          checked={text === 1}
+          onChange={(checked) => handleStatusChange(record, checked ? 1 : 0)}
+          
         />
       ),
     },

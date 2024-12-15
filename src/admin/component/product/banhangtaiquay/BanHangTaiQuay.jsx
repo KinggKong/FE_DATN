@@ -42,7 +42,7 @@ import {
   createHoaDonChiTiet,
 } from "../../../../api/HoaDonChiTiet";
 import { toast } from "react-toastify";
-import { getAllSanPhamChiTietApi } from "../../../../api/SanPhamChiTietAPI";
+import { getAllSanPhamChiTietApi, getAllSanPhamChiTietBanApi } from "../../../../api/SanPhamChiTietAPI";
 import TabPane from "antd/es/tabs/TabPane";
 import { getAllKhachHang } from "../../../../api/KhachHang";
 import axiosClient from "../../../../api/axiosClient";
@@ -52,6 +52,12 @@ import { useNavigate } from "react-router-dom";
 import TextArea from "antd/es/input/TextArea";
 import image from "../../../../util/cart-empty-img.8b677cb3.png";
 import debounce from 'lodash/debounce';
+import { set } from "@ant-design/plots/es/core/utils";
+import { getAllSanPhamApi } from "../../../../api/SanPhamApi";
+import { getAllDanhMucApi } from "../../../../api/DanhMucService";
+import { getAllThuongHieuApi } from "../../../../api/ThuongHieuService";
+import { getAllChatLieuDeApi } from "../../../../api/ChatLieuDeApi";
+import { getAllChatLieuVaiApi } from "../../../../api/ChatLieuVaiApi";
 
 const ShoppingCart = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -81,6 +87,152 @@ const ShoppingCart = () => {
   const originLat = 21.038059779392608;
   const originLng = 105.74668196761013;
   const [isShipping, setIsShipping] = useState(false);
+  const [ship, setShip] = useState(0);
+  const [diaChi, setDiaChi] = useState(null);
+
+  //datafilter SPCT
+  const [idDanhMuc, setIdDanhMuc] = useState();
+  const [idThuongHieu, setIdThuongHieu] = useState();
+  const [idChatLieuVai, setIdChatLieuVai] = useState();
+  const [idChatLieuDe, setIdChatLieuDe] = useState();
+  const [idSanPham, setIdSanPham] = useState();
+  const [dataSanPham, setDataSanPham] = useState([]);
+  const [dataDanhMuc, setDataDanhMuc] = useState([]);
+  const [dataThuongHieu, setDataThuongHieu] = useState([]);
+  const [dataChatLieuVai, setDatChatLieuVai] = useState([]);
+  const [dataChatLieuDe, setDataChatLieuDe] = useState([]);
+
+  //fetch data filter
+  const fetchDataSanPham = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        pageNumber: 0,
+        pageSize: 100,
+      };
+      const res = await getAllSanPhamApi(params);
+      if (res && res.data) {
+        const dataWithKey = res.data.content.map((item) => ({
+          ...item,
+          key: item.id,
+        }));
+        setDataSanPham(dataWithKey);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data san pham", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to fetch data san pham",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchDataDanhMuc = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        pageNumber: 0,
+        pageSize: 100,
+      };
+      const res = await getAllDanhMucApi(params);
+      if (res && res.data) {
+        const dataWithKey = res.data.content.map((item) => ({
+          ...item,
+          key: item.id,
+        }));
+        setDataDanhMuc(dataWithKey);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data danh muc", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to fetch data danh muc",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDataThuongHieu = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        pageNumber: 0,
+        pageSize: 100,
+      };
+      const res = await getAllThuongHieuApi(params);
+      if (res && res.data) {
+        const dataWithKey = res.data.content.map((item) => ({
+          ...item,
+          key: item.id,
+        }));
+        setDataThuongHieu(dataWithKey);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data thuong hieu", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to fetch data thuong hieu",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDataChatLieuDe = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        pageNumber: 0,
+        pageSize: 100,
+      };
+      const res = await getAllChatLieuDeApi(params);
+      if (res && res.data) {
+        const dataWithKey = res.data.content.map((item) => ({
+          ...item,
+          key: item.id,
+        }));
+        setDataChatLieuDe(dataWithKey);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data chat lieu de", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to fetch data chat lieu de",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDataChatLieuVai = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        pageNumber: 0,
+        pageSize: 100,
+      };
+      const res = await getAllChatLieuVaiApi(params);
+      if (res && res.data) {
+        const dataWithKey = res.data.content.map((item) => ({
+          ...item,
+          key: item.id,
+        }));
+        setDatChatLieuVai(dataWithKey);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data chat lieu vai", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to fetch data chat lieu vai",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   const confirmPaymentShow = () => {
     setConfirmPaymets(true);
@@ -132,7 +284,38 @@ const ShoppingCart = () => {
     //   payload?.diaChi?.tinh,
     //   payload?.diaChi?.quan
     // );
-    
+
+    if (isShipping && payload?.diaChiStr) {
+      try {
+        // Gọi API Goong để lấy tọa độ từ địa chỉ
+        const response = await axios.get(
+          `https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(payload.diaChiStr)}`
+        );
+
+        if (response.data.predictions && response.data.predictions.length > 0) {
+          const placeId = response.data.predictions[0].place_id;
+
+          const detailResponse = await axios.get(
+            `https://rsapi.goong.io/Place/Detail?place_id=${placeId}&api_key=${apiKey}`
+          );
+
+          if (detailResponse.data.result && detailResponse.data.result.geometry) {
+            const { lat, lng } = detailResponse.data.result.geometry.location;
+            // Gọi hàm tính phí vận chuyển với tọa độ
+            calculateShippingCost(lat, lng);
+            setDiaChi(payload.diaChiStr);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching coordinates for address:", error);
+        message.error("Không thể tính phí vận chuyển. Vui lòng thử lại.");
+      }
+    } else if (isShipping && !payload?.diaChiStr) {
+      message.error("Vui lòng nhập địa chỉ giao hàng.");
+      setShip(0);
+      setDiaChi(null);
+    }
+
   };
 
   useEffect(() => {
@@ -244,7 +427,12 @@ const ShoppingCart = () => {
         return;
       }
 
-      const res = await confirmPayment(id, selectedMethod);
+      if (!isShipping) {
+        setShip(0);
+        setDiaChi(null);
+      }
+
+      const res = await confirmPayment(id, selectedMethod, diaChi, ship);
       console.log(res);
 
       if (res?.code === 200) {
@@ -322,7 +510,7 @@ const ShoppingCart = () => {
       key: "price",
       render: (price) => `${price.toLocaleString()} VND`,
     },
-    { title: "Số Lượng", dataIndex: "soLuong", key: "quantity" },
+    { title: "Số Lượng Còn Lại", dataIndex: "soLuong", key: "quantity" },
     { title: "Kích Thước", dataIndex: "tenKichThuoc", key: "size" },
     {
       title: "Màu Sắc",
@@ -467,11 +655,18 @@ const ShoppingCart = () => {
   };
 
   const fetchDataSpct = useCallback(async () => {
-    const params = { pageNumber: currentPage - 1, pageSize };
+    const params = {
+      idDanhMuc,
+      idThuongHieu,
+      idChatLieuVai,
+      idChatLieuDe,
+      idSanPham,
+
+    };
     try {
-      const res = await getAllSanPhamChiTietApi(params);
+      const res = await getAllSanPhamChiTietBanApi(params);
       if (res?.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.map((item) => ({
           ...item,
           key: item.id,
         }));
@@ -481,9 +676,18 @@ const ShoppingCart = () => {
     } catch (error) {
       console.error("Failed to fetch product details:", error);
     }
-  }, [currentPage, pageSize]);
+  }, [idDanhMuc,
+    idThuongHieu,
+    idChatLieuVai,
+    idChatLieuDe,
+    idSanPham,]);
 
   useEffect(() => {
+    fetchDataDanhMuc();
+    fetchDataThuongHieu();
+    fetchDataChatLieuDe();
+    fetchDataChatLieuVai();
+    fetchDataSanPham();
     fetchDataSpct();
   }, [fetchDataSpct]);
 
@@ -811,7 +1015,7 @@ const ShoppingCart = () => {
   const [form] = Form.useForm();
   const [checkoutData, setCheckoutData] = useState(null);
   const [error, setError] = useState(null);
-  const [ship, setShip] = useState(0);
+
   const navigate = useNavigate();
 
   const [provinces, setProvinces] = useState([]);
@@ -932,6 +1136,7 @@ const ShoppingCart = () => {
       if (detailResponse.data.result && detailResponse.data.result.geometry) {
         const { lat, lng } = detailResponse.data.result.geometry.location;
         calculateShippingCost(lat, lng);
+        setDiaChi(value);
       }
     } catch (error) {
       console.error('Error fetching place details:', error);
@@ -957,9 +1162,10 @@ const ShoppingCart = () => {
       const hoaDonRequest = {
         idGioHang: values.idGioHang,
         tenNguoiNhan: values.tenNguoiNhan,
-        diaChiNhan: `${values.address}, ${selectedWard ? selectedWard.fullName : ""
-          }, ${selectedDistrict ? selectedDistrict.fullName : ""}, ${selectedProvince ? selectedProvince.fullName : ""
-          }`,
+        // diaChiNhan: `${values.address}, ${selectedWard ? selectedWard.fullName : ""
+        //   }, ${selectedDistrict ? selectedDistrict.fullName : ""}, ${selectedProvince ? selectedProvince.fullName : ""
+        //   }`,
+        diaChiNhan: values.address,
         sdt: values.sdt,
         tongTien: checkoutData.totalPrice + ship,
         tienSauGiam: checkoutData.totalPrice + ship,
@@ -971,6 +1177,7 @@ const ShoppingCart = () => {
         hinhThucThanhToan: paymentMethod,
         soTienGiam: 0,
       };
+      console.log(hoaDonRequest);
 
       let response;
       if (paymentMethod === "VNPAY") {
@@ -1169,51 +1376,156 @@ const ShoppingCart = () => {
           flexDirection: "column",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "10px",
-            marginBottom: "20px",
-          }}
-        >
-          <Input
-            placeholder="Nhập tên sản phẩm"
-            prefix={<SearchOutlined />}
-            style={{ width: "730px" }}
-          />
-          <Button type="primary">Tìm kiếm</Button>
-          <Button>Reset</Button>
-          <Select placeholder="Chất Liệu" style={{ width: "150px" }}>
-            <Option value="All">Tất cả</Option>
-            <Option value="Leather">Da</Option>
-            <Option value="Synthetic">Nhân tạo</Option>
-          </Select>
-          <Select placeholder="Thương Hiệu" style={{ width: "150px" }}>
-            <Option value="All">Tất cả</Option>
-            <Option value="Kappa">Kappa</Option>
-            <Option value="Nike">Nike</Option>
-          </Select>
-          <Select placeholder="Giới Tính" style={{ width: "150px" }}>
-            <Option value="All">Tất cả</Option>
-            <Option value="Male">Nam</Option>
-            <Option value="Female">Nữ</Option>
-          </Select>
-          <Select placeholder="Kích cỡ" style={{ width: "150px" }}>
-            <Option value="All">Tất cả</Option>
-            <Option value="36">36</Option>
-            <Option value="37">37</Option>
-          </Select>
-          <Select placeholder="Màu Sắc" style={{ width: "150px" }}>
-            <Option value="All">Tất cả</Option>
-            <Option value="Maroon">Maroon</Option>
-            <Option value="Red">Red</Option>
-          </Select>
-          <div style={{ width: "300px" }}>
-            <span>Khoảng giá:</span>
-            <Slider range min={0} max={10000000} step={500000} />
-          </div>
-        </div>
+        
+          <Row className="flex justify-between">
+            <Col span={8}>
+            <label className="text-sm block mb-2" htmlFor="">
+                Sản phẩm
+              </label>
+              <Select
+                showSearch
+                style={{
+                  width: "100%",
+                }}
+                placeholder="Tất cả sản phẩm"
+                optionFilterProp="label"
+                filterSort={(optionA, optionB) =>
+                  (optionA?.label ?? "")
+                    .toLowerCase()
+                    .localeCompare((optionB?.label ?? "").toLowerCase())
+                }
+                value={idSanPham}
+                onChange={(value) => {
+                  setIdSanPham(value);
+                }}
+                options={[
+                  { value: "", label: "Tất cả sản phẩm" },
+                  ...dataSanPham?.map((sanPham) => ({
+                    value: sanPham.id,
+                    label: sanPham.tenSanPham,
+                  })),
+                ]}
+              />
+            </Col>
+
+            <Col span={3}>
+              <label className="text-sm block mb-2" htmlFor="">
+                Thương hiệu
+              </label>
+              <Select
+                showSearch
+                style={{
+                  width: "100%",
+                }}
+                placeholder="Tất cả thương hiệu"
+                optionFilterProp="label"
+                filterSort={(optionA, optionB) =>
+                  (optionA?.label ?? "")
+                    .toLowerCase()
+                    .localeCompare((optionB?.label ?? "").toLowerCase())
+                }
+                value={idThuongHieu}
+                onChange={(value) => {
+                  setIdThuongHieu(value);
+                }}
+                options={[
+                  { value: "", label: "Tất cả thương hiệu" },
+                  ...dataThuongHieu?.map((thuongHieu) => ({
+                    value: thuongHieu.id,
+                    label: thuongHieu.tenThuongHieu,
+                  })),
+                ]}
+              />
+            </Col>
+            <Col span={3}>
+              <label className="text-sm block mb-2" htmlFor="">
+                Danh mục
+              </label>
+              <Select
+                showSearch
+                style={{
+                  width: "100%",
+                }}
+                value={idDanhMuc}
+                onChange={(value) => {
+                  setIdDanhMuc(value);
+                }}
+                placeholder="Tất cả danh mục"
+                optionFilterProp="label"
+                filterSort={(optionA, optionB) =>
+                  (optionA?.label ?? "")
+                    .toLowerCase()
+                    .localeCompare((optionB?.label ?? "").toLowerCase())
+                }
+                options={[
+                  { value: "", label: "Tất cả danh mục" },
+                  ...dataDanhMuc?.map((danhMuc) => ({
+                    value: danhMuc.id,
+                    label: danhMuc.tenDanhMuc,
+                  })),
+                ]}
+              />
+            </Col>
+            <Col span={3}>
+              <label className="text-sm block mb-2" htmlFor="">
+                Chất liệu vải
+              </label>
+              <Select
+                showSearch
+                style={{
+                  width: "100%",
+                }}
+                value={idChatLieuVai}
+                onChange={(value) => {
+                  setIdChatLieuVai(value);
+                }}
+                placeholder="Tất cả chất vải"
+                optionFilterProp="label"
+                filterSort={(optionA, optionB) =>
+                  (optionA?.label ?? "")
+                    .toLowerCase()
+                    .localeCompare((optionB?.label ?? "").toLowerCase())
+                }
+                options={[
+                  { value: "", label: "Tất cả chất vải" },
+                  ...dataChatLieuVai?.map((vai) => ({
+                    value: vai.id,
+                    label: vai.tenChatLieuVai,
+                  })),
+                ]}
+              />
+            </Col>
+            <Col span={3}>
+              <label className="text-sm block mb-2" htmlFor="">
+                Chất liệu đế
+              </label>
+              <Select
+                showSearch
+                style={{
+                  width: "100%",
+                }}
+                value={idChatLieuDe}
+                onChange={(value) => {
+                  setIdChatLieuDe(value);
+                }}
+                placeholder="Tất cả chất đế"
+                optionFilterProp="label"
+                filterSort={(optionA, optionB) =>
+                  (optionA?.label ?? "")
+                    .toLowerCase()
+                    .localeCompare((optionB?.label ?? "").toLowerCase())
+                }
+                options={[
+                  { value: "", label: "Tất cả chất đế" },
+                  ...dataChatLieuDe?.map((de) => ({
+                    value: de.id,
+                    label: de.tenChatLieu,
+                  })),
+                ]}
+              />
+            </Col>
+          </Row>
+        
 
         <div
           style={{
@@ -1225,15 +1537,16 @@ const ShoppingCart = () => {
             columns={columnsSPCT}
             dataSource={sanPhamChiTiet}
             rowKey="key"
-            pagination={{
-              current: currentPage,
-              pageSize: pageSize,
-              total: totalItems,
-              onChange: (page, pageSize) => {
-                setCurrentPage(page);
-                setPageSize(pageSize);
-              },
-            }}
+            pagination={false}
+            // pagination={{
+            //   current: currentPage,
+            //   pageSize: pageSize,
+            //   total: totalItems,
+            //   onChange: (page, pageSize) => {
+            //     setCurrentPage(page);
+            //     setPageSize(pageSize);
+            //   },
+            // }}
             onRow={(record) => ({
               onClick: () => handleProductSelect(record),
             })}
@@ -1346,6 +1659,7 @@ const ShoppingCart = () => {
                 email: currentInvoice?.email,
                 district: currentCustomer?.diaChi?.quan,
                 ward: currentCustomer?.diaChi?.huyen,
+
               }}
               onFinish={handleSubmit}
             >
@@ -1495,6 +1809,7 @@ const ShoppingCart = () => {
                             if (detailResponse.data.result && detailResponse.data.result.geometry) {
                               const { lat, lng } = detailResponse.data.result.geometry.location;
                               calculateShippingCost(lat, lng); // Gọi hàm tính phí ship
+                              setDiaChi(currentCustomer.diaChiStr);
                             }
                           }
                         } catch (error) {
@@ -1505,7 +1820,8 @@ const ShoppingCart = () => {
                         message.error("Vui lòng chọn địa chỉ khách hàng trước.");
                       }
                     } else {
-                      setShip(0); // Nếu không giao hàng, đặt phí ship về 0
+                      setShip(0);
+                      setDiaChi("");
                     }
 
                     changeType(currentInvoice?.id, newLoaiHoaDon); // Giả sử `changeType` là hàm cập nhật loại hóa đơn

@@ -30,8 +30,8 @@ const updateSoLuongAndTongTienHoaDon = (id) => {
     return axiosClient.put(url);
 }
 
-const confirmPayment = (id, method) => {
-    const url = `/api/v1/hoaDon/complete/${id}?method=${method}`;
+const confirmPayment = (id, method,diachi,ship) => {
+    const url = `/api/v1/hoaDon/complete/${id}?method=${method}&&diaChi=${diachi}&&tienShip=${ship}`;
     return axiosClient.patch(url);
 }
 

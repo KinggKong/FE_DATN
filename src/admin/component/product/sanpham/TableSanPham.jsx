@@ -101,7 +101,9 @@ const TableSanPham = () => {
       };
       const res = await getAllDanhMucApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content
+        .filter((item) => item.trangThai === 1)
+        .map((item) => ({
           ...item,
           key: item.id,
         }));
@@ -127,7 +129,9 @@ const TableSanPham = () => {
       };
       const res = await getAllThuongHieuApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content
+        .filter((item) => item.trangThai === 1)
+        .map((item) => ({
           ...item,
           key: item.id,
         }));
@@ -153,7 +157,9 @@ const TableSanPham = () => {
       };
       const res = await getAllChatLieuDeApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content
+        .filter((item) => item.trangThai === 1)
+        .map((item) => ({
           ...item,
           key: item.id,
         }));
@@ -179,7 +185,9 @@ const TableSanPham = () => {
       };
       const res = await getAllChatLieuVaiApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content
+        .filter((item) => item.trangThai === 1)
+        .map((item) => ({
           ...item,
           key: item.id,
         }));
