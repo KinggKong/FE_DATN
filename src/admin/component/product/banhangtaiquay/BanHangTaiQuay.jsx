@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  AutoComplete,
   Button,
   Col,
   Divider,
@@ -12,7 +13,6 @@ import {
   Row,
   Select,
   Slider,
-  Spin,
   Switch,
   Table,
   Tabs,
@@ -23,10 +23,9 @@ import { MinusOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { IoQrCodeSharp } from "react-icons/io5";
 import { Option } from "antd/es/mentions";
-// import Title from "antd/es/skeleton/Title";//
-import { FaBagShopping } from "react-icons/fa6";
 import { MdDelete, MdOutlinePayment } from "react-icons/md";
 import axios from "axios";
+import debounce from "lodash/debounce";
 import {
   createHoaDon,
   getAllHoaDon,
@@ -41,7 +40,9 @@ import {
   createHoaDonChiTiet,
 } from "../../../../api/HoaDonChiTiet";
 import { toast } from "react-toastify";
-import { getAllSanPhamChiTietApi } from "../../../../api/SanPhamChiTietAPI";
+import {
+  fillData,
+} from "../../../../api/SanPhamChiTietAPI";
 import TabPane from "antd/es/tabs/TabPane";
 import { getAllKhachHang } from "../../../../api/KhachHang";
 import axiosClient from "../../../../api/axiosClient";
@@ -50,7 +51,6 @@ import { createKhachHangApi } from "../../../../api/KhachHangApi";
 import { useNavigate } from "react-router-dom";
 import TextArea from "antd/es/input/TextArea";
 import image from "../../../../util/cart-empty-img.8b677cb3.png";
-
 const ShoppingCart = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isModalVisibleQR, setIsModalVisibleQR] = useState(false);
@@ -72,6 +72,37 @@ const ShoppingCart = () => {
   const [selectedMethod, setSelectedMethod] = useState("cash");
 
   const [confirmPayments, setConfirmPaymets] = useState(false);
+
+  const [addressOptions, setAddressOptions] = useState([]);
+
+  const notificationMessage = (type, message) => {
+
+    toast.dismiss();
+    switch (type) {
+      case 'success':
+        toast.success(message);
+        break;
+      case 'error':
+        toast.error(message);
+        break;
+      case 'info':
+        toast.info(message);
+        break;
+      case 'warning':
+        toast.warn(message);
+        break;
+      default:
+        toast(message);
+        break;
+    }
+    
+  };
+  
+  
+
+  const apiKey = "DFt7PndsFeTuDNGggyzQyLr0dzqU9Sf0hb0mMZX5"; // Replace with your Goong API key
+  const originLat = 21.038059779392608;
+  const originLng = 105.74668196761013;
 
   const confirmPaymentShow = () => {
     setConfirmPaymets(true);
@@ -109,19 +140,6 @@ const ShoppingCart = () => {
 
   const selectCustomer = (payload) => {
     setCurrentCustomer(payload);
-
-    form.setFieldsValue({
-      tenNguoiNhan: payload?.ten,
-      sdt: payload?.sdt,
-      email: payload?.email,
-      province: payload?.diaChi?.tinh,
-      district: payload?.diaChi?.quan,
-      ward: payload?.diaChi?.huyen,
-    });
-    calculateShippingCost(
-      payload?.diaChi?.tinh,
-      payload?.diaChi?.quan
-    );
   };
 
   useEffect(() => {
@@ -260,6 +278,83 @@ const ShoppingCart = () => {
       toast.error("Số lương voucher đã hết !");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const calculateShippingCost = async (lat, lng) => {
+    setShippingLoading(true);
+    try {
+      const distanceResponse = await axios.get(
+        `https://rsapi.goong.io/DistanceMatrix?origins=${originLat},${originLng}&destinations=${lat},${lng}&api_key=${apiKey}`
+      );
+
+      if (
+        distanceResponse.data.rows &&
+        distanceResponse.data.rows[0].elements &&
+        distanceResponse.data.rows[0].elements[0].distance
+      ) {
+        const distanceKm =
+          distanceResponse.data.rows[0].elements[0].distance.value / 1000;
+        let shippingCost;
+
+        if (distanceKm < 40) {
+          shippingCost = 30000;
+        } else if (distanceKm < 100) {
+          shippingCost = 50000;
+        } else if (distanceKm < 200) {
+          shippingCost = 60000;
+        } else if (distanceKm < 400) {
+          shippingCost = 70000;
+        } else {
+          shippingCost = 90000;
+        }
+
+        setShip(shippingCost);
+      } else {
+        throw new Error("Unable to calculate distance");
+      }
+    } catch (err) {
+      console.error("Error calculating shipping cost:", err);
+      message.error("Không thể tính phí vận chuyển. Vui lòng thử lại.");
+    } finally {
+      setShippingLoading(false);
+    }
+  };
+
+  const handleAddressSearch = debounce(async (value) => {
+    if (value.length > 2) {
+      try {
+        const response = await axios.get(
+          `https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(
+            value
+          )}`
+        );
+        if (response.data.predictions) {
+          setAddressOptions(
+            response.data.predictions.map((prediction) => ({
+              value: prediction.description,
+              label: prediction.description,
+              place_id: prediction.place_id,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching address suggestions:", error);
+      }
+    }
+  }, 300);
+
+  const handleAddressSelect = async (value, option) => {
+    try {
+      const detailResponse = await axios.get(
+        `https://rsapi.goong.io/Place/Detail?place_id=${option.place_id}&api_key=${apiKey}`
+      );
+      if (detailResponse.data.result && detailResponse.data.result.geometry) {
+        const { lat, lng } = detailResponse.data.result.geometry.location;
+        calculateShippingCost(lat, lng);
+      }
+    } catch (error) {
+      console.error("Error fetching place details:", error);
     }
   };
 
@@ -458,7 +553,7 @@ const ShoppingCart = () => {
   const fetchDataSpct = useCallback(async () => {
     const params = { pageNumber: currentPage - 1, pageSize };
     try {
-      const res = await getAllSanPhamChiTietApi(params);
+      const res = await fillData(params);
       if (res?.data) {
         const dataWithKey = res.data.content.map((item) => ({
           ...item,
@@ -498,13 +593,6 @@ const ShoppingCart = () => {
     fetchData();
   }, []);
 
-  // useEffect(() => {
-  //   const intervalId = setInterval(() => {
-  //     fetchData();
-  //   }, 1000);
-  //   return () => clearInterval(intervalId);
-  // }, []);
-
   const handleCreateNewOrder = async () => {
     try {
       if (invoices.length >= 5) {
@@ -512,11 +600,11 @@ const ShoppingCart = () => {
         return;
       }
       await createHoaDon();
-      toast.success("Tạo hóa đơn mới thành công !");
+      notificationMessage('success',"Tạo hóa đơn mới thành công !");
       await fetchData();
     } catch (error) {
       console.log(error);
-      toast.error("Tạo hóa đơn thất bại !");
+      notificationMessage('error',"Tạo hóa đơn thất bại !");
     }
   };
 
@@ -534,11 +622,11 @@ const ShoppingCart = () => {
           setInvoiceDetails(details.data);
           console.log(details.data);
         } else {
-          toast.error("Không tìm thấy chi tiết hóa đơn.");
+          notificationMessage('error', "Không tìm thấy chi tiết hóa đơn.");
         }
         console.log("Success");
       } else {
-        toast.error("Không tìm thấy hóa đơn.");
+        notificationMessage('error', "Không tìm thấy hóa đơn.");
       }
     } catch (error) {
       console.error("Error fetching order:", error);
@@ -644,13 +732,13 @@ const ShoppingCart = () => {
         setHoaDonChiTiet(updatedData);
         await getOrderById(currentInvoice?.id);
         await fetchDataSpct();
-        toast.success("Cập nhật số lượng thành công!");
+        notificationMessage('success', "Cập nhật số lượng thành công!");
       } else {
-        toast.error("Cập nhật thất bại!");
+        notificationMessage('error', "Cập nhật thất bại!");
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
-      toast.error("Số lượng vượt quá trong kho !.");
+      notificationMessage('error', "Số lượng vượt quá trong kho !.");
     }
   };
 
@@ -691,11 +779,11 @@ const ShoppingCart = () => {
         await getOrderById(currentInvoice?.id);
         await fetchDataSpct();
       } else {
-        toast.error("Cập nhật thất bại!");
+        notificationMessage('error', "Cập nhật thất bại!");
       }
     } catch (error) {
       if (!errorShown) {
-        toast.error(
+        notificationMessage('error',
           "Số lượng vượt quá trong kho, kiểm tra lại số lượng sản phẩm!"
         );
         setErrorShown(true);
@@ -723,10 +811,10 @@ const ShoppingCart = () => {
       setCurrentInvoice(updatedInvoice);
       getOrderById(currentInvoice?.id);
       await fetchDataSpct();
-      toast.success("Xóa hóa đơn chi tiết thành công!");
+      notificationMessage('success', "Xóa hóa đơn chi tiết thành công!");
     } catch (error) {
       console.error("Error deleting invoice detail:", error);
-      toast.error("Có lỗi xảy ra khi xóa hóa đơn chi tiết.");
+      notificationMessage('error', "Có lỗi xảy ra khi xóa hóa đơn chi tiết.");
     }
   };
 
@@ -736,7 +824,7 @@ const ShoppingCart = () => {
     console.log(product);
     if (currentInvoice?.id == null) {
       setIsModalOpen(false);
-      toast.warning("Vui lòng chọn hóa đơn !");
+      notificationMessage('warning', "Vui lòng chọn hóa đơn !");
       return;
     }
     setSelectedSpct(product);
@@ -744,11 +832,11 @@ const ShoppingCart = () => {
 
   const addSpctToHoaDon = async () => {
     if (!currentInvoice) {
-      toast.warning("Vui lòng chọn hóa đơn!");
+      notificationMessage('warning', "Vui lòng chọn hóa đơn!");
       return;
     }
     if (!selectedSpct) {
-      toast.warning("Vui lòng chọn sản phẩm!");
+      notificationMessage('warning', "Vui lòng chọn sản phẩm!");
       return;
     }
 
@@ -764,10 +852,10 @@ const ShoppingCart = () => {
       await fetchDataSpct();
       await getOrderById(currentInvoice.id);
 
-      toast.success("Đã thêm sản phẩm vào hóa đơn!");
+      notificationMessage('success', "Đã thêm sản phẩm vào hóa đơn!");
     } catch (error) {
       console.error(error);
-      toast.error("Số lượng vượt quá trong kho.");
+      notificationMessage('error', "Số lượng vượt quá trong kho.");
       setQuantity(1);
     } finally {
       setLoading(false);
@@ -791,7 +879,7 @@ const ShoppingCart = () => {
 
     if (res?.data) {
       await fetchDataKhachHang();
-      toast.success("Thêm khách hàng thành công !");
+      notificationMessage('success', "Thêm khách hàng thành công !");
       setIsCreateCustomer(false);
     }
   };
@@ -803,14 +891,7 @@ const ShoppingCart = () => {
   const [ship, setShip] = useState(0);
   const navigate = useNavigate();
 
-  const [provinces, setProvinces] = useState([]);
-  const [districts, setDistricts] = useState([]);
-  const [wards, setWards] = useState([]);
-
   const [loading, setLoading] = useState(true);
-  const [provincesLoading, setProvincesLoading] = useState(false);
-  const [districtsLoading, setDistrictsLoading] = useState(false);
-  const [wardsLoading, setWardsLoading] = useState(false);
   const [shippingLoading, setShippingLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
@@ -825,181 +906,13 @@ const ShoppingCart = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!userInfo || !userInfo.id) {
-        console.log("User info not available yet");
-        return;
-      }
-      // setLoading(true);
-      try {
-        const response = await axios.get(
-          `http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userInfo.id}`
-        );
-        if (response.data.code === 1000) {
-          if (
-            !response.data.data ||
-            !response.data.data?.gioHangChiTietList ||
-            response.data.data?.gioHangChiTietList.length === 0
-          ) {
-            navigate("/");
-            return;
-          }
-          setCheckoutData(response.data.data);
-        } else {
-          throw new Error("Failed to fetch data");
-        }
-      } catch (err) {
-        setError("An error occurred while fetching data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-    fetchProvinces();
-  }, [userInfo]);
-
-  const fetchProvinces = async () => {
-    setProvincesLoading(true);
-    try {
-      const response = await axios.get(
-        "http://localhost:8080/api/v1/locations/provinces"
-      );
-      if (response.data.code === 1000) {
-        setProvinces(response.data.data);
-      }
-    } catch (err) {
-      console.error("Error fetching provinces:", err);
-    } finally {
-      setProvincesLoading(false);
-    }
-  };
-
-  const fetchDistricts = async (provinceCode) => {
-    setDistrictsLoading(true);
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/v1/locations/districts?provinceCode=${provinceCode}`
-      );
-      if (response.data.code === 1000) {
-        setDistricts(response.data.data);
-        setWards([]);
-        form.setFieldsValue({ district: undefined, ward: undefined });
-      }
-    } catch (err) {
-      console.error("Error fetching districts:", err);
-    } finally {
-      setDistrictsLoading(false);
-    }
-  };
-
-  const fetchWards = async (districtCode) => {
-    setWardsLoading(true);
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/v1/locations/wards?districtCode=${districtCode}`
-      );
-      if (response.data.code === 1000) {
-        setWards(response.data.data);
-        form.setFieldsValue({ ward: undefined });
-      }
-    } catch (err) {
-      console.error("Error fetching wards:", err);
-    } finally {
-      setWardsLoading(false);
-    }
-  };
-
-  const calculateShippingCost = async (latitude, longitude) => {
-    setShippingLoading(true);
-    const locations = [
-      [105.74680306431928, 21.037955318097737],
-      [longitude, latitude],
-    ];
-    const requestData = {
-      locations: locations,
-      metrics: ["distance"],
-      units: "km",
-    };
-
-    try {
-      const response = await axios.post(
-        "https://api.openrouteservice.org/v2/matrix/driving-car",
-        requestData,
-        {
-          headers: {
-            Authorization:
-              "5b3ce3597851110001cf62485b5a6259f66d4725bd2c5d24e7cdc7e1",
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const distanceKm = response.data.distances[0][1];
-      let shippingCost;
-
-      if (distanceKm < 40) {
-        shippingCost = 30000;
-      } else if (distanceKm < 100) {
-        shippingCost = 50000;
-      } else if (distanceKm < 200) {
-        shippingCost = 60000;
-      } else if (distanceKm < 400) {
-        shippingCost = 70000;
-      } else {
-        shippingCost = 90000;
-      }
-      setShip(shippingCost);
-    } catch (err) {
-      console.error("Error calculating shipping cost:", err);
-      message.error("Không thể tính phí vận chuyển. Vui lòng thử lại.");
-    } finally {
-      setShippingLoading(false);
-    }
-  };
-
-  const handleProvinceChange = (value) => {
-    const selectedProvince = provinces.find(
-      (province) => province.code === value
-    );
-    if (selectedProvince) {
-      calculateShippingCost(
-        selectedProvince.latitude,
-        selectedProvince.longitude
-      );
-    }
-    fetchDistricts(value);
-  };
-
-  const handleDistrictChange = (value) => {
-    fetchWards(value);
-  };
-
-  useEffect(() => {
-    getOrderById(currentInvoice?.id);
-    fetchData();
-  }, [currentInvoice?.id]);
-
   const handleSubmit = async (values) => {
     setCheckoutLoading(true);
     try {
-      const selectedProvince = provinces.find(
-        (province) => province.code === values.province
-      );
-      const selectedDistrict = districts.find(
-        (district) => district.code === values.district
-      );
-      const selectedWard = wards.find((ward) => ward.code === values.ward);
-
       const hoaDonRequest = {
         idGioHang: values.idGioHang,
         tenNguoiNhan: values.tenNguoiNhan,
-        diaChiNhan: `${values.address}, ${
-          selectedWard ? selectedWard.fullName : ""
-        }, ${selectedDistrict ? selectedDistrict.fullName : ""}, ${
-          selectedProvince ? selectedProvince.fullName : ""
-        }`,
+        diaChiNhan: values.address,
         sdt: values.sdt,
         tongTien: checkoutData.totalPrice + ship,
         tienSauGiam: checkoutData.totalPrice + ship,
@@ -1038,6 +951,7 @@ const ShoppingCart = () => {
             description: `Thanh toán thành công đơn hàng!`,
           });
           navigate(`/infor-order?maHoaDon=${maHoaDon}`);
+          // fetchCart();
         } else {
           throw new Error("Checkout failed");
         }
@@ -1049,7 +963,6 @@ const ShoppingCart = () => {
       setCheckoutLoading(false);
     }
   };
-
 
   if (error) {
     return <div>Error: {error}</div>;
@@ -1375,21 +1288,18 @@ const ShoppingCart = () => {
         {currentInvoice?.loaiHoaDon === "ONLINE" && (
           <div style={{ width: "48%", marginTop: "40px" }}>
             <Title level={3}>Thông tin giao hàng</Title>
+          
             <Form
               form={form}
               layout="vertical"
               className="space-y-4"
               initialValues={{
-                tenNguoiNhan: currentInvoice?.tenNguoiNhan,
-                sdt: currentInvoice?.sdt,
-                province: currentCustomer?.diaChi?.tinh,
-                email: currentInvoice?.email,
-                district: currentCustomer?.diaChi?.quan,
-                ward: currentCustomer?.diaChi?.huyen,
+                tenNguoiNhan: currentCustomer?.ten,
+                sdt: currentCustomer?.sdt,
+                email: currentCustomer?.email,
               }}
               onFinish={handleSubmit}
             >
-          
               <Form.Item name="idGioHang" hidden>
                 <Input type="hidden" />
               </Form.Item>
@@ -1411,80 +1321,28 @@ const ShoppingCart = () => {
                 required
                 rules={[
                   { required: true, message: "Vui lòng nhập số điện thoại" },
+                  {
+                    pattern: /^(0|\+84)[3-9][0-9]{8}$/,
+                    message: "Số điện thoại không đúng định dạng!",
+                  },
                 ]}
               >
                 <Input size="large" />
               </Form.Item>
-              <Row gutter={16}>
-                <Col span={8}>
-                  <Form.Item
-                    label="Tỉnh/Thành phố"
-                    name="province"
-                    required
-                    rules={[
-                      {
-                        required: true,
-                        message: "Vui lòng chọn Tỉnh/Thành phố",
-                      },
-                    ]}
-                  >
-                    <Select size="large" onChange={handleProvinceChange}>
-                      {provinces.map((province) => (
-                        <Option key={province.code} value={province.code}>
-                          {province.fullName}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item
-                    label="Quận/Huyện"
-                    name="district"
-                    required
-                    rules={[
-                      { required: true, message: "Vui lòng chọn Quận/Huyện" },
-                    ]}
-                  >
-                    <Select size="large" onChange={handleDistrictChange}>
-                      {districts.map((district) => (
-                        <Option key={district.code} value={district.code}>
-                          {district.fullName}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item
-                    label="Phường/Xã"
-                    name="ward"
-                    required
-                    rules={[
-                      { required: true, message: "Vui lòng chọn Phường/Xã" },
-                    ]}
-                  >
-                    <Select size="large">
-                      {wards.map((ward) => (
-                        <Option key={ward.code} value={ward.code}>
-                          {ward.fullName}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-              </Row>
 
               <Form.Item
-                label="Địa chỉ chi tiết"
+                label="Địa chỉ"
                 name="address"
                 required
-                rules={[
-                  { required: true, message: "Vui lòng nhập địa chỉ chi tiết" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
               >
-                <Input size="large" />
+                <AutoComplete
+                  options={addressOptions}
+                  onSearch={handleAddressSearch}
+                  onSelect={handleAddressSelect}
+                  placeholder="Nhập địa chỉ"
+                  size="large"
+                />
               </Form.Item>
 
               <Form.Item label="Địa chỉ email (tùy chọn)" name="email">
@@ -1665,12 +1523,12 @@ const ShoppingCart = () => {
               open={isModalOpen}
               onOk={() => {
                 if (quantity < 1) {
-                  toast.error("Số lượng phải lớn hơn hoặc bằng 1 !");
+                  notificationMessage('error', "Số lượng phải lớn hơn hoặc bằng 1 !");
                   setIsModalOpen(false);
                   setQuantity(1);
                   return;
                 } else if (quantity > sanPhamChiTiet?.soLuong) {
-                  toast.error("Số lượng vượt quá trong kho !");
+                  notificationMessage('error', "Số lượng vượt quá trong kho !");
                   setIsModalOpen(false);
                   setQuantity(1);
                 }
