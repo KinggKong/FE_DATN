@@ -28,7 +28,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
 
   const handleConfirmAdd = () => {
     // Kiểm tra dữ liệu đầu vào
-    if (!ten || !ma || !email || !sdt || !ngaySinh ) {
+    if (!ten || !ma || !email || !sdt || !ngaySinh) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ thông tin!",
@@ -71,6 +71,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       avatarUrl = fileList[0].url;  // Lưu URL ảnh
     }
 
+
     handleSubmit({
       ten,
       ma,
@@ -84,6 +85,19 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       avatar: avatarUrl,  // Lưu URL avatar
     });
   };
+
+
+  // Làm sạch các ô nhập sau khi thêm thành công
+  setTen('');
+  setMa('');
+  setEmail('');
+  setSdt('');
+  setNgaySinh(null);
+  setGioiTinh(true);
+  setNgayTao(moment());
+  setTrangThai(true);
+  setFileList([]);
+};
 
   // Xử lý thay đổi tệp tải lên
   const handleChange = ({ fileList: newFileList }) => setFileList(newFileList);
@@ -306,6 +320,6 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       </Row>
     </Modal>
   );
-};
+
 
 export default ModalThemMoiKhachHang;

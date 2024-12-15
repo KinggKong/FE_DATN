@@ -19,7 +19,8 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
 
   const handleConfirmEdit = () => {
     const giaTriGiamFloat = parseFloat(giaTriGiam);
-
+    const giaTriGiamToiDaFloat = parseFloat(giaTriGiamToiDa);
+  
     // Kiểm tra điều kiện cho hình thức giảm
     if (hinhThucGiam === "%" && (giaTriGiamFloat <= 0 || giaTriGiamFloat >= 100)) {
       notification.error({
@@ -28,7 +29,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       });
       return;
     }
-
+  
     if (hinhThucGiam === "VNĐ" && giaTriGiamFloat <= 1000) {
       notification.error({
         message: "Lỗi",
@@ -36,7 +37,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       });
       return;
     }
-
+  
     if (giaTriGiamFloat <= 0) {
       notification.error({
         message: "Lỗi",
@@ -44,7 +45,16 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       });
       return;
     }
-
+  
+    // Nếu hình thức giảm là VNĐ, giá trị giảm tối đa phải bằng giá trị giảm
+    if (hinhThucGiam === "VNĐ" && giaTriGiamFloat !== giaTriGiamToiDaFloat) {
+      notification.error({
+        message: "Lỗi",
+        description: "Giá trị giảm tối đa phải bằng giá trị giảm khi hình thức giảm là VNĐ!",
+      });
+      return;
+    }
+  
     // Kiểm tra số lượng phải lớn hơn hoặc bằng 0, bao gồm 0
     if (parseInt(soLuong, 10) < 0) {
       notification.error({
@@ -53,7 +63,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       });
       return;
     }
-
+  
     if (parseFloat(giaTriDonHangToiThieu) <= 0 || parseFloat(giaTriGiamToiDa) <= 0) {
       notification.error({
         message: "Lỗi",
@@ -61,7 +71,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       });
       return;
     }
-
+  
     if (ngayBatDau && ngayKetThuc && ngayKetThuc.isBefore(ngayBatDau)) {
       notification.error({
         message: "Lỗi",
@@ -69,7 +79,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       });
       return;
     }
-
+  
     // Gửi thông tin voucher, nếu số lượng là 0 thì trạng thái sẽ là "Không hoạt động"
     handleSubmit(voucher?.id, {
       tenVoucher: newVoucherName,
@@ -84,6 +94,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       trangThai: soLuong === "0" ? 0 : trangThai ? 1 : 0, // Trạng thái tự động chuyển thành 0 nếu số lượng là 0
     });
   };
+  
 
   // Cập nhật trạng thái khi số lượng thay đổi
   useEffect(() => {
