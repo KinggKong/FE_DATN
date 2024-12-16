@@ -248,7 +248,6 @@ const TableNhanVien = () => {
     {
       title: "Ngày sinh",
       dataIndex: "ngaySinh",
-      render: (text) => new Date(text).toLocaleDateString(),
     },
     {
       title: "Địa chỉ",

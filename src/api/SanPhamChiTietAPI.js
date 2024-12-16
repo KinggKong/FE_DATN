@@ -52,6 +52,10 @@ const getSanPhamChiTietSoLuongApi = (params) => {
     const url = "/api/v1/sanphamchitiets/so-luong";
     return axiosClient.get(url, { params });
 };
+const getAllSanPhamChiTietBanApi = (params) => {
+    const url = "/api/v1/sanphamchitiets/get-all-ban";
+    return axiosClient.get(url, { params });
+}
 
 const fillData = (params) => {
     const url = "/api/v1/sanphamchitiets/fillData";
@@ -68,6 +72,7 @@ export {
     getAllSanPhamChiTietBySanPhamIdApi,
     getMaxPriceApi,
     getSanPhamChiTietSoLuongApi,
-    fillData
+    fillData,
+    getAllSanPhamChiTietBanApi
 
 };

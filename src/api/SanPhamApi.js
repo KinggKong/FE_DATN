@@ -61,6 +61,11 @@ const getSanPhamBanChayApi = () => {
   return axiosClient.get(url);
 }
 
+const getAllSanPhamMoiApi = () => {
+  const url = "/api/v1/sanphams/get-all-new";
+  return axiosClient.get(url);
+}
+
 
 export {
   getAllSanPhamApi,
@@ -69,7 +74,7 @@ export {
   updateSanPhamApi,
   updateProductStautsApi,
   getSanPhamByIdApi,
- 
+  getAllSanPhamMoiApi,
   getAllSanPhamByTenSanPhamApi,
   getSanPhamByIdDanhMucApi,
   getAllSanPhamByCustomerFilterApi,

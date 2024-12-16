@@ -44,7 +44,7 @@ const Login = () => {
         if (profileResponse.data) {
           localStorage.setItem(
             "userInfo",
-            JSON.stringify(profileResponse.data)
+            JSON.stringify(profileResponse.data.data)
           );
         
         }

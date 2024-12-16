@@ -34,6 +34,7 @@ const TableKhachHang = () => {
         ten: valueSearch,
       };
       const res = await getAllKhachHangApi(params);
+      
       if (res && res.data && res.data.content) {
         const dataWithKey = res.data.content.map((item,index) => ({
           ...item,

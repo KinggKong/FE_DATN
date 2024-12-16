@@ -5,7 +5,7 @@ import { PlusOutlined } from '@ant-design/icons';
 
 import { createMauSacApi, getAllMauSacApi, getMauSacByIdApi } from '../../../../api/MauSacApi';
 import { createKichThuocApi, getAllKichThuocApi, getKichThuocByIdApi } from '../../../../api/KichThuocApi';
-import { createSanPhamApi, getAllSanPhamApi, getSanPhamByIdApi } from '../../../../api/SanPhamApi';
+import { createSanPhamApi, getAllSanPhamApi, getAllSanPhamMoiApi, getSanPhamByIdApi } from '../../../../api/SanPhamApi';
 import { useEffect } from 'react';
 import '../../../../assets/style/cssAddPlusFlash.css';
 import { getAllDanhMucApi } from '../../../../api/DanhMucService';
@@ -14,6 +14,7 @@ import { getAllChatLieuDeApi } from '../../../../api/ChatLieuDeApi';
 import { getAllChatLieuVaiApi } from '../../../../api/ChatLieuVaiApi';
 import ModalThemMoiSanPham from "../sanpham/ModalThemMoiSanPham";
 import ModalThemMoi from '../ModalThemMoi';
+import { FaPercent } from 'react-icons/fa6';
 
 const { Option } = Select;
 const DrawerAdd = ({
@@ -92,7 +93,7 @@ const DrawerAdd = ({
   const handleConfirmAddColor = async (newColorName) => {
     setLoading(true);
     try {
-      await createMauSacApi({ tenMau: newColorName });
+      await createMauSacApi({ tenMau: newColorName, trangThai: 1 });
       notification.success({
         message: "Success",
         duration: 4,
@@ -145,7 +146,7 @@ const DrawerAdd = ({
     }
 
     try {
-      await createKichThuocApi({ tenKichThuoc: newKichThuocName });
+      await createKichThuocApi({ tenKichThuoc: newKichThuocName , trangThai: 1});
       notification.success({
         duration: 4,
         pauseOnHover: false,
@@ -171,7 +172,9 @@ const DrawerAdd = ({
       };
       const res = await getAllDanhMucApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content
+        .filter((item) => item.trangThai === 1)
+        .map((item) => ({
           ...item,
           key: item.id,
         }));
@@ -197,7 +200,9 @@ const DrawerAdd = ({
       };
       const res = await getAllThuongHieuApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content
+        .filter((item) => item.trangThai === 1)
+        .map((item) => ({
           ...item,
           key: item.id,
         }));
@@ -223,7 +228,9 @@ const DrawerAdd = ({
       };
       const res = await getAllChatLieuDeApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content
+        .filter((item) => item.trangThai === 1)
+        .map((item) => ({
           ...item,
           key: item.id,
         }));
@@ -249,7 +256,9 @@ const DrawerAdd = ({
       };
       const res = await getAllChatLieuVaiApi(params);
       if (res && res.data) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const dataWithKey = res.data.content
+        .filter((item) => item.trangThai === 1)
+        .map((item) => ({
           ...item,
           key: item.id,
         }));
@@ -302,8 +311,9 @@ const DrawerAdd = ({
       const [sizesResponse, colorsResponse, productsResponse] = await Promise.all([
         getAllKichThuocApi(params),
         getAllMauSacApi(params),
-        getAllSanPhamApi(params),
+        getAllSanPhamMoiApi()
       ]);
+      console.log('san pham', productsResponse);
   
       // Kiểm tra và lọc kích thước với trạng thái == 1
       if (Array.isArray(sizesResponse.data.content)) {
@@ -324,8 +334,8 @@ const DrawerAdd = ({
       }
   
       // Kiểm tra và lọc sản phẩm với trạng thái == 1
-      if (Array.isArray(productsResponse.data.content)) {
-        const filteredProducts = productsResponse.data.content.filter(product => product.trangThai === 1);
+      if (Array.isArray(productsResponse.data)) {
+        const filteredProducts = productsResponse.data.filter(product => product.trangThai === 1);
         setProducts(filteredProducts);
         console.log('Sản phẩm (trạng thái == 1):', filteredProducts);
       } else {
@@ -533,8 +543,6 @@ const DrawerAdd = ({
   //   label: product.tenSanPham, // Hiển thị tên sản phẩm
   // }));
   const productOptions = products
-    .filter((product) => product.trangThai === 1) // Chỉ lấy các sản phẩm có trạng thái = 1
-    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)) // Sắp xếp theo updatedAt giảm dần
     .map((product) => ({
       value: product.id, // Giá trị của tùy chọn
       label: product.tenSanPham, // Tên sản phẩm hiển thị
@@ -559,6 +567,7 @@ const DrawerAdd = ({
           value={record.soLuong}
           defaultValue={text}
           onChange={(e) => handleInputChange(record.key, 'soLuong', e.target.value)}
+          suffix={<span>Đôi</span>}
         />
       ),
     },
@@ -572,6 +581,7 @@ const DrawerAdd = ({
           defaultValue={text}
           value={record.giaBan}
           onChange={(e) => handleInputChange(record.key, 'giaBan', e.target.value)}
+          suffix={<span>VNĐ</span>}
         />
       ),
     },
@@ -886,6 +896,7 @@ const DrawerAdd = ({
               min={0}
               value={commonQuantity}
               onChange={(e) => setCommonQuantity(e.target.value)}
+              suffix={<span>Đôi</span>}
             />
           </Form.Item>
           <Form.Item label="Giá chung">
@@ -894,6 +905,7 @@ const DrawerAdd = ({
               min={0}
               value={commonPrice}
               onChange={(e) => setCommonPrice(e.target.value)}
+              suffix={<span>VNĐ</span>}
             />
           </Form.Item>
         </Form>
