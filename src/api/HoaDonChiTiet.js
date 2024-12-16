@@ -27,4 +27,5 @@ const detailHDCT = (id) => {
 
 
 
+
 export {getAllHdctByIdHoaDon, deleteHdctById, createHoaDonChiTiet, updateSoLuongHDCT, detailHDCT};

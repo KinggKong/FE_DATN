@@ -90,6 +90,22 @@ const ShoppingCart = () => {
   const [ship, setShip] = useState(0);
   const [diaChi, setDiaChi] = useState(null);
 
+  //update Gia khi tat mo sale trong hoa don cho
+  const updateHoaDonCT_Sale = async () => {
+    try {
+      const res = await updateHoaDonCT_Sale();
+      if (res?.data) {
+       console.log(res.data);
+      }
+    } catch (error) {
+      console.error("Update gia trong hoa don cho error:", error);
+    }
+  };
+
+  useEffect(() => {
+    updateHoaDonCT_Sale();
+  }, []);
+
   //datafilter SPCT
   const [idDanhMuc, setIdDanhMuc] = useState();
   const [idThuongHieu, setIdThuongHieu] = useState();
@@ -506,7 +522,7 @@ const ShoppingCart = () => {
     },
     {
       title: "Giá Bán",
-      dataIndex: "giaBan",
+      dataIndex: "giaBanSauKhiGiam",
       key: "price",
       render: (price) => `${price.toLocaleString()} VND`,
     },
@@ -1143,10 +1159,10 @@ const ShoppingCart = () => {
     }
   };
 
-  useEffect(() => {
-    getOrderById(currentInvoice?.id);
-    fetchData();
-  }, [currentInvoice?.id]);
+  // useEffect(() => {
+  //   getOrderById(currentInvoice?.id);
+  //   fetchData();
+  // }, [currentInvoice?.id]);
 
   const handleSubmit = async (values) => {
     setCheckoutLoading(true);

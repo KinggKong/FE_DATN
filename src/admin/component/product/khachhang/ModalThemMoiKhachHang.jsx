@@ -84,7 +84,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       diaChiStr,
       avatar: avatarUrl,  // Lưu URL avatar
     });
-  };
+ 
 
 
   // Làm sạch các ô nhập sau khi thêm thành công
@@ -321,5 +321,5 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
     </Modal>
   );
 
-
+}
 export default ModalThemMoiKhachHang;
