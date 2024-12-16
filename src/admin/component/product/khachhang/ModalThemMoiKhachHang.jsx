@@ -1,10 +1,12 @@
-import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select, Button, Upload, Image } from "antd";
+import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select, Button, Upload, Image, Form, AutoComplete } from "antd";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { useState } from "react";
 import moment from "moment";
 import { UploadOutlined } from "@ant-design/icons";
 import { storage } from '../spct/firebaseConfig'; // Import tệp cấu hình Firebase
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import debounce from 'lodash/debounce';
+import axios from "axios";
 
 const { Option } = Select;
 
@@ -14,16 +16,19 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
   const [email, setEmail] = useState("");
   const [sdt, setSdt] = useState("");
   const [ngaySinh, setNgaySinh] = useState(null);
-  const [gioiTinh, setGioiTinh] = useState(true);  
-  const [ngayTao, setNgayTao] = useState(moment()); 
+  const [gioiTinh, setGioiTinh] = useState(true);
+  const [ngayTao, setNgayTao] = useState(moment());
   const [trangThai, setTrangThai] = useState(true);
   const [fileList, setFileList] = useState([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
+  const [diaChiStr, setDiaChiStr] = useState("");
+  const [addressOptions, setAddressOptions] = useState([]);
+  const apiKey = 'DFt7PndsFeTuDNGggyzQyLr0dzqU9Sf0hb0mMZX5';
 
   const handleConfirmAdd = () => {
     // Kiểm tra dữ liệu đầu vào
-    if (!ten || !ma || !email || !sdt || !ngaySinh ) {
+    if (!ten || !email || !sdt || !ngaySinh || !diaChiStr) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ thông tin!",
@@ -66,6 +71,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       avatarUrl = fileList[0].url;  // Lưu URL ảnh
     }
 
+
     handleSubmit({
       ten,
       ma,
@@ -75,8 +81,25 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       gioiTinh,  // Đảm bảo là true hoặc false
       ngayTao: ngayTao.format('YYYY-MM-DD'), // Lưu ngày tạo
       trangThai: trangThai ? 1 : 0,
+      diaChiStr,
       avatar: avatarUrl,  // Lưu URL avatar
     });
+
+
+
+
+    // Làm sạch các ô nhập sau khi thêm thành công
+    setTen('');
+    setMa('');
+    setEmail('');
+    setSdt('');
+    setNgaySinh(null);
+    setGioiTinh(true);
+    setNgayTao(moment());
+    setTrangThai(true);
+    setFileList([]);
+    setDiaChiStr(""); // Reset địa chỉ
+    setAddressOptions([]); // Reset các options địa chỉ
   };
 
   // Xử lý thay đổi tệp tải lên
@@ -109,15 +132,15 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
     </div>
   );
 
-  
+
   const customRequest = async ({ file, onSuccess, onError }) => {
     try {
       const storageRef = ref(storage, 'avatars/' + file.name);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
-      uploadTask.on('state_changed', 
+      uploadTask.on('state_changed',
         (snapshot) => {
-          
+
         },
         (error) => {
           onError(error);
@@ -125,14 +148,34 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           onSuccess(null, file);
-          setFileList([{ url: downloadURL }]);  
+          setFileList([{ url: downloadURL }]);
         }
       );
     } catch (error) {
       onError(error);
     }
   };
+  
+  const handleAddressSearch = debounce(async (value) => {
+    if (value.length > 2) {
+      try {
+        const response = await axios.get(`https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(value)}`);
+        if (response.data.predictions) {
+          setAddressOptions(response.data.predictions.map(prediction => ({
+            value: prediction.description,
+            label: prediction.description,
+            place_id: prediction.place_id
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching address suggestions:', error);
+      }
+    }
+  }, 300);
 
+  const handleAddressSelect = async (value) => {
+    setDiaChiStr(value);
+  };
   return (
     <Modal
       open={isOpen}
@@ -161,12 +204,12 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
         </Col>
         <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Mã khách hàng
+            <span className="text-red-600">*</span> Ngày sinh
           </label>
-          <Input
-            value={ma}
-            onChange={(e) => setMa(e.target.value)}
-            placeholder="Nhập mã khách hàng"
+          <DatePicker
+            style={{ width: "100%" }}
+            value={ngaySinh}
+            onChange={(date) => setNgaySinh(date)}
           />
         </Col>
       </Row>
@@ -197,16 +240,6 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Ngày sinh
-          </label>
-          <DatePicker
-            style={{ width: "100%" }}
-            value={ngaySinh}
-            onChange={(date) => setNgaySinh(date)}
-          />
-        </Col>
-        <Col span={11}>
-          <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Giới tính
           </label>
           <Select
@@ -220,22 +253,8 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
             <Option value="Khác">Khác</Option>
           </Select>
         </Col>
-      </Row>
 
-      
-
-      <Row className="flex justify-between mb-3">
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Ngày tạo
-          </label>
-          <DatePicker
-            style={{ width: "100%" }}
-            value={ngayTao}
-            disabled
-          />
-        </Col>
-        <Col span={11}>
+        <Col span={8}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Trạng thái
           </label>
@@ -248,9 +267,32 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
         </Col>
       </Row>
 
-      {/* Cột Upload ảnh */}
+
       <Row className="flex justify-between mb-3">
         <Col span={24}>
+          {/* <label className="text-sm block mb-2">Ngày tạo</label>
+          <Input value={ngayTao ? ngayTao.format('DD/MM/YYYY') : ''} disabled /> */}
+          <Form.Item
+            label="Địa chỉ"
+            labelCol={{ span: 24 }} // Đẩy label thành 100% chiều rộng
+            wrapperCol={{ span: 24 }}
+          >
+            <AutoComplete
+              value={diaChiStr}  // Liên kết với state diaChiStr
+              options={addressOptions}
+              onSearch={handleAddressSearch}
+              onSelect={handleAddressSelect}
+              onChange={(value) => setDiaChiStr(value)}  // Cập nhật giá trị khi người dùng gõ
+              placeholder="Nhập địa chỉ"
+              size="large"
+            />
+          </Form.Item>
+        </Col>
+      </Row>
+
+      {/* Cột Upload ảnh */}
+      <Row className="flex justify-between mb-3">
+        <Col span={14}>
           <label className="text-sm block mb-2">Avatar</label>
           <Upload
             listType="picture-card"
@@ -270,6 +312,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
           )}
         </Col>
       </Row>
+
     </Modal>
   );
 };

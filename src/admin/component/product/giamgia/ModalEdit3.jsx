@@ -19,6 +19,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
 
   const handleConfirmEdit = () => {
     const giaTriGiamFloat = parseFloat(giaTriGiam);
+    const giaTriGiamToiDaFloat = parseFloat(giaTriGiamToiDa);
 
     // Kiểm tra điều kiện cho hình thức giảm
     if (hinhThucGiam === "%" && (giaTriGiamFloat <= 0 || giaTriGiamFloat >= 100)) {
@@ -45,6 +46,15 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       return;
     }
 
+    // Nếu hình thức giảm là VNĐ, giá trị giảm tối đa phải bằng giá trị giảm
+    if (hinhThucGiam === "VNĐ" && giaTriGiamFloat !== giaTriGiamToiDaFloat) {
+      notification.error({
+        message: "Lỗi",
+        description: "Giá trị giảm tối đa phải bằng giá trị giảm khi hình thức giảm là VNĐ!",
+      });
+      return;
+    }
+
     // Kiểm tra số lượng phải lớn hơn hoặc bằng 0, bao gồm 0
     if (parseInt(soLuong, 10) < 0) {
       notification.error({
@@ -58,6 +68,17 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       notification.error({
         message: "Lỗi",
         description: "Tất cả các giá trị phải lớn hơn 0!",
+      });
+      return;
+    }
+
+    // Kiểm tra ngày bắt đầu và ngày kết thúc phải lớn hơn ngày hiện tại
+    const currentDate = moment();
+
+    if (ngayBatDau && ngayBatDau.isBefore(currentDate, 'day')) {
+      notification.error({
+        message: "Lỗi",
+        description: "Ngày bắt đầu phải lớn hơn hoặc bằng ngày hiện tại!",
       });
       return;
     }
@@ -84,6 +105,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       trangThai: soLuong === "0" ? 0 : trangThai ? 1 : 0, // Trạng thái tự động chuyển thành 0 nếu số lượng là 0
     });
   };
+
 
   // Cập nhật trạng thái khi số lượng thay đổi
   useEffect(() => {

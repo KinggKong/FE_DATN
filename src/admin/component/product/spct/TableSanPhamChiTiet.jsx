@@ -244,12 +244,13 @@ const TableSanPhamChiTiet = () => {
             dataIndex: 'tenKichThuoc',
         },
         {
-            title: 'Số lượng',
+            title: 'Số lượng còn lại',
             dataIndex: 'soLuong',
             sorter: {
                 compare: (a, b) => a.soLuong - b.soLuong,
                 multiple: 3,
             },
+            render: (soLuong) => `${soLuong} đôi`,
         },
         {
             title: 'Giá ',
@@ -258,6 +259,7 @@ const TableSanPhamChiTiet = () => {
                 compare: (a, b) => a.giaBan - b.giaBan,
                 multiple: 2,
             },
+            render: (giaBan) => giaBan.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }),
         },
         {
             title: 'Ngày tạo',

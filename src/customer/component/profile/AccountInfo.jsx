@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Form, Input, Radio, Select, Button, Layout, Menu, Avatar, Upload, message } from "antd";
+import { Form, Input, Radio, Select, Button, Layout, Menu, Avatar, Upload, message ,AutoComplete} from "antd";
 import { UserOutlined, LockOutlined, LogoutOutlined, UploadOutlined } from "@ant-design/icons";
 import { getKhachHangByIdApi, updateKhachHangApi } from "../../../api/KhachHangApi";
 import { set } from "@ant-design/plots/es/core/utils";
@@ -8,6 +8,8 @@ import { storage } from "../../../admin/component/product/spct/firebaseConfig";
 import { v4 as uuidv4 } from "uuid";
 import { Link, useNavigate } from "react-router-dom";
 import { TbReplace } from "react-icons/tb";
+import debounce from 'lodash/debounce';
+import axios from "axios";
 const { Sider, Content } = Layout;
 const { Option } = Select;
 
@@ -20,12 +22,17 @@ const AccountInfo = () => {
     const currentYear = new Date().getFullYear();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const navigate = useNavigate();
+    const [addressOptions, setAddressOptions] = useState([]);
+    const apiKey = 'DFt7PndsFeTuDNGggyzQyLr0dzqU9Sf0hb0mMZX5';
+    const originLat = 21.038059779392608;
+    const originLng = 105.74668196761013;
 
     const fetchData = async () => {
         if (!userInfo.id) return;
         try {
             // Gọi API để lấy thông tin tài khoản
             const res = await getKhachHangByIdApi(userInfo.id); // Thay `1` bằng ID thực tế
+            console.log('User info:', res.data);
             if (res.data) {
                 setDataUser(res.data);
                 setAvatar(res.data.avatar);
@@ -39,6 +46,7 @@ const AccountInfo = () => {
                     dobDay: new Date(res.data.ngaySinh).getDate(),
                     dobMonth: new Date(res.data.ngaySinh).getMonth() + 1,
                     dobYear: new Date(res.data.ngaySinh).getFullYear(),
+                    address: res.data.diaChiStr,
                 });
             }
         } catch (error) {
@@ -109,6 +117,7 @@ const AccountInfo = () => {
                 gioiTinh: values.gender === "Nam",
                 ngaySinh: `${values.dobYear}-${String(values.dobMonth).padStart(2, '0')}-${String(values.dobDay).padStart(2, '0')}`,  // Chuyển ngày và tháng về dạng "yyyy-MM-dd"
                 avatar: newAvatarUrl,
+                diaChiStr: values.address,
                 ma: dataUser.ma,
             };
 
@@ -129,7 +138,36 @@ const AccountInfo = () => {
         localStorage.removeItem("userInfo");
         setIsLoggedIn(false);
         navigate("/auth/login");
-      };
+    };
+    const handleAddressSearch = debounce(async (value) => {
+        if (value.length > 2) {
+            try {
+                const response = await axios.get(`https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(value)}`);
+                if (response.data.predictions) {
+                    setAddressOptions(response.data.predictions.map(prediction => ({
+                        value: prediction.description,
+                        label: prediction.description,
+                        place_id: prediction.place_id
+                    })));
+                }
+            } catch (error) {
+                console.error('Error fetching address suggestions:', error);
+            }
+        }
+    }, 300);
+
+    // const handleAddressSelect = async (value, option) => {
+    //     try {
+    //         const detailResponse = await axios.get(`https://rsapi.goong.io/Place/Detail?place_id=${option.place_id}&api_key=${apiKey}`);
+    //         if (detailResponse.data.result && detailResponse.data.result.geometry) {
+    //             const { lat, lng } = detailResponse.data.result.geometry.location;
+    //             console.log('Selected address:',detailResponse.data.result.geometry.location);
+    //             // calculateShippingCost(lat, lng);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error fetching place details:', error);
+    //     }
+    // };
 
 
 
@@ -160,7 +198,7 @@ const AccountInfo = () => {
                     <h2>Thông tin tài khoản</h2>
                     <Form form={form} layout="vertical" onFinish={handleFinish}>
                         <div style={{ display: "flex", gap: "20px" }}>
-                            <div style={{ textAlign: "center",display:"grid" , gridTemplateRows: "auto 1fr" }}>
+                            <div style={{ textAlign: "center", display: "grid", gridTemplateRows: "auto 1fr" }}>
 
                                 <Avatar
                                     size={200}
@@ -252,6 +290,20 @@ const AccountInfo = () => {
                                     rules={[{ required: true, message: "Vui lòng nhập số điện thoại!" }]}
                                 >
                                     <Input placeholder="Nhập số điện thoại" />
+                                </Form.Item>
+                                <Form.Item
+                                    label="Địa chỉ"
+                                    name="address"
+                                    required
+                                    rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
+                                >
+                                    <AutoComplete
+                                        options={addressOptions}
+                                        onSearch={handleAddressSearch}
+                                        // onSelect={handleAddressSelect}
+                                        placeholder="Nhập địa chỉ"
+                                        size="large"
+                                    />
                                 </Form.Item>
                                 <Form.Item>
                                     <Button type="primary" htmlType="submit">

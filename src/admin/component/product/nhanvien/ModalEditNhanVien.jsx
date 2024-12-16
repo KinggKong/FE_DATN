@@ -36,7 +36,7 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
 
   const handleConfirmEdit = () => {
    
-    if (!ten || !email || !sdt || !ngaySinh ) {
+    if (!ten || !email || !sdt || !ngaySinh || !diaChi) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ các trường!",
@@ -54,11 +54,11 @@ const ModalEditNhanVien = ({ isOpen, handleClose, title, handleSubmit, nhanVien 
       return;
     }
 
-    const age = moment().diff(ngaySinh, 'years');
-    if (age < 16) {
+     // Kiểm tra ngày sinh không được lớn hơn ngày hiện tại
+     if (ngaySinh.isAfter(moment().subtract(18, 'years'), 'day')) {
       notification.error({
         message: "Lỗi",
-        description: "Nhân viên phải từ 16 tuổi trở lên!",
+        description: "Bạn phải đủ 18 tuổi để đăng ký!",
       });
       return;
     }

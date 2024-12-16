@@ -19,8 +19,7 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
 
   const handleConfirmAdd = () => {
     const giaTriGiamFloat = parseFloat(giaTriGiam);
-
-
+    const giaTriGiamToiDaFloat = parseFloat(giaTriGiamToiDa);
 
     // Kiểm tra điều kiện cho hình thức giảm
     if (hinhThucGiam === "%" && (giaTriGiamFloat <= 0 || giaTriGiamFloat >= 100)) {
@@ -47,6 +46,16 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
       return;
     }
 
+    // Nếu hình thức giảm là VNĐ, giá trị giảm tối đa phải bằng giá trị giảm
+    if (hinhThucGiam === "VNĐ" && giaTriGiamFloat !== giaTriGiamToiDaFloat) {
+      notification.error({
+        message: "Lỗi",
+        description: "Giá trị giảm tối đa phải bằng giá trị giảm khi hình thức giảm là VNĐ!",
+      });
+      return;
+    }
+
+    // Kiểm tra các giá trị phải lớn hơn 0
     if (parseFloat(giaTriDonHangToiThieu) <= 0 || parseFloat(giaTriGiamToiDa) <= 0 || parseInt(soLuong, 10) <= 0) {
       notification.error({
         message: "Lỗi",
@@ -54,6 +63,17 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
       });
       return;
     }
+    
+     // Kiểm tra ngày bắt đầu và ngày kết thúc phải lớn hơn ngày hiện tại
+     const currentDate = moment();
+
+     if (ngayBatDau && ngayBatDau.isBefore(currentDate, 'day')) {
+       notification.error({
+         message: "Lỗi",
+         description: "Ngày bắt đầu phải lớn hơn hoặc bằng ngày hiện tại!",
+       });
+       return;
+     }
 
     if (ngayBatDau && ngayKetThuc && ngayKetThuc.isBefore(ngayBatDau)) {
       notification.error({
@@ -75,7 +95,20 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
       soLuong: parseInt(soLuong, 10),
       trangThai: trangThai ? 1 : 0,
     });
+
+    // Reset các giá trị input
+    setNewVoucherName('');
+    setMaVoucher('');
+    setGiaTriGiam('');
+    setGiaTriDonHangToiThieu('');
+    setGiaTriGiamToiDa('');
+    setNgayBatDau(null);
+    setNgayKetThuc(null);
+    setHinhThucGiam('');
+    setSoLuong(0);
+    setTrangThai(true);
   };
+
 
   return (
     <Modal
