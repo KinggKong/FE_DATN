@@ -404,7 +404,7 @@ const TableSanPham = () => {
             style={{
               width: "100%",
             }}
-            placeholder="-----------------------------------"
+            placeholder="Tất cả thương hiệu"
             optionFilterProp="label"
             filterSort={(optionA, optionB) =>
               (optionA?.label ?? "")
@@ -416,7 +416,7 @@ const TableSanPham = () => {
               setIdThuongHieu(value);
             }}
             options={[
-              { value: "", label: "-----------------------------------" },
+              { value: "", label: "Tất cả thương hiệu" },
               ...dataThuongHieu?.map((thuongHieu) => ({
                 value: thuongHieu.id,
                 label: thuongHieu.tenThuongHieu,
@@ -437,7 +437,7 @@ const TableSanPham = () => {
             onChange={(value) => {
               setIdDanhMuc(value);
             }}
-            placeholder="-----------------------------------"
+            placeholder="Tất cả danh mục"
             optionFilterProp="label"
             filterSort={(optionA, optionB) =>
               (optionA?.label ?? "")
@@ -445,7 +445,7 @@ const TableSanPham = () => {
                 .localeCompare((optionB?.label ?? "").toLowerCase())
             }
             options={[
-              { value: "", label: "-----------------------------------" },
+              { value: "", label: "Tất cả danh mục" },
               ...dataDanhMuc?.map((danhMuc) => ({
                 value: danhMuc.id,
                 label: danhMuc.tenDanhMuc,
@@ -466,7 +466,7 @@ const TableSanPham = () => {
             onChange={(value) => {
               setIdChatLieuVai(value);
             }}
-            placeholder="-----------------------------------"
+            placeholder="Tất cả chất liệu vải"
             optionFilterProp="label"
             filterSort={(optionA, optionB) =>
               (optionA?.label ?? "")
@@ -474,7 +474,7 @@ const TableSanPham = () => {
                 .localeCompare((optionB?.label ?? "").toLowerCase())
             }
             options={[
-              { value: "", label: "-----------------------------------" },
+              { value: "", label: "Tất cả chất liệu vải" },
               ...dataChatLieuVai?.map((vai) => ({
                 value: vai.id,
                 label: vai.tenChatLieuVai,
@@ -495,7 +495,7 @@ const TableSanPham = () => {
             onChange={(value) => {
               setIdChatLieuDe(value);
             }}
-            placeholder="-----------------------------------"
+            placeholder="Tất cả chất liệu đế"
             optionFilterProp="label"
             filterSort={(optionA, optionB) =>
               (optionA?.label ?? "")
@@ -503,7 +503,7 @@ const TableSanPham = () => {
                 .localeCompare((optionB?.label ?? "").toLowerCase())
             }
             options={[
-              { value: "", label: "-----------------------------------" },
+              { value: "", label: "Tất cả chất liệu đế" },
               ...dataChatLieuDe?.map((de) => ({
                 value: de.id,
                 label: de.tenChatLieu,

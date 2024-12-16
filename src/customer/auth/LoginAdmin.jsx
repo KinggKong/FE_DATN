@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const Login = () => {
+const LoginAdmin = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/v1/auth/login",
+        "http://localhost:8080/api/v1/auth/admin/login",
         {
           username: values.username,
           password: values.password,
@@ -33,7 +33,7 @@ const Login = () => {
         const token = data.data.accessToken;
         localStorage.setItem("accessToken", token);
         const profileResponse = await axios.get(
-          "http://localhost:8080/api/v1/auth/profile",
+          "http://localhost:8080/api/v1/auth/profile-admin",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -49,7 +49,7 @@ const Login = () => {
         
         }
         
-        navigate("/");
+        navigate("/admin");
       }       
     } catch (error) {
       console.error("Login error:", error);
@@ -157,7 +157,7 @@ const Login = () => {
             Forgot Password?
           </Link>
         </div>
-        <Divider plain className="text-gray-400">
+        {/* <Divider plain className="text-gray-400">
           or
         </Divider>
         <Button
@@ -175,10 +175,10 @@ const Login = () => {
           <Link to="https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=http://localhost:8080/api/v1/auth/oauth/google&response_type=code&client_id=949623093363-hhnb82n3djt2h4ovguvmqdk714rnihqv.apps.googleusercontent.com&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&access_type=offline">
             <span>Continue with Google</span>
           </Link>
-        </Button>
+        </Button> */}
       </motion.div>
     </div>
   );
 };
 
-export default Login;
+export default LoginAdmin;
