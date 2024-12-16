@@ -29,27 +29,39 @@ const TableVoucher = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-
       const formattedDates = {
         thoiGianBatDau: thoiGianSearch && thoiGianSearch[0] ? thoiGianSearch[0].format('YYYY-MM-DDTHH:mm:ss') : null,
         thoiGianKetThuc: thoiGianSearch && thoiGianSearch[1] ? thoiGianSearch[1].format('YYYY-MM-DDTHH:mm:ss') : null,
       };
-      console.log(formattedDates);
+
       const params = {
         pageNumber: currentPage - 1,
         pageSize,
         tenChienDich: valueSearch,
-        ngayBatDau: formattedDates.thoiGianBatDau || undefined,  // Không gửi nếu không có giá trị
+        ngayBatDau: formattedDates.thoiGianBatDau || undefined,
         ngayKetThuc: formattedDates.thoiGianKetThuc || undefined,
-        trangThai: statusSearch !== '' ? statusSearch : undefined,  // Không gửi nếu trạng thái rỗng
+        trangThai: statusSearch !== '' ? statusSearch : undefined,
       };
+
       const res = await getAllVoucherApi(params);
       if (res && res.data && res.data.content) {
-        const dataWithKey = res.data.content.map((item,index) => ({
-          ...item,
-          key: item.id,
-          stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,
-        }));
+        const dataWithKey = res.data.content.map((item, index) => {
+          // Kiểm tra ngày kết thúc và tự động cập nhật trạng thái nếu ngày hiện tại lớn hơn ngày kết thúc
+          const currentDate = new Date();
+          const endDate = new Date(item.ngayKetThuc);
+          const updatedItem = { ...item };
+
+          if (endDate < currentDate) {
+            updatedItem.trangThai = 0;  // Đặt trạng thái là "Không hoạt động"
+          }
+
+          return {
+            ...updatedItem,
+            key: item.id,
+            stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,
+          };
+        });
+
         setDataSource(dataWithKey);
         setTotalItems(res.data.totalElements);
       }
@@ -69,9 +81,9 @@ const TableVoucher = () => {
       tenVoucher: type === 'name' ? value : undefined,
       maVoucher: type === 'code' ? value : undefined
     };
-  
+
     const res = await getAllVoucherApi(params);
-  
+
     return res.data.content.some(item => {
       if (type === 'name') {
         return item.tenVoucher === value && item.id !== excludeId;
@@ -81,7 +93,7 @@ const TableVoucher = () => {
       return false;
     });
   };
-  
+
 
   useEffect(() => {
     fetchData();
@@ -155,7 +167,7 @@ const TableVoucher = () => {
         setLoading(false);
         return;
       }
-  
+
       if (!updateVoucher.hinhThucGiam || !updateVoucher.giaTriGiam ||
         !updateVoucher.giaTriDonHangToiThieu || !updateVoucher.giaTriGiamToiDa ||
         !updateVoucher.ngayBatDau || !updateVoucher.ngayKetThuc) {
@@ -166,7 +178,7 @@ const TableVoucher = () => {
         setLoading(false);
         return;
       }
-  
+
       // Kiểm tra giá trị giảm tối đa không được lớn hơn giá trị đơn hàng tối thiểu
       if (updateVoucher.giaTriGiamToiDa > updateVoucher.giaTriDonHangToiThieu) {
         notification.error({
@@ -176,7 +188,7 @@ const TableVoucher = () => {
         setLoading(false);
         return;
       }
-  
+
       if (updateVoucher.loaiGiaTriGiam === '%' &&
         (updateVoucher.giaTriGiam <= 0 || updateVoucher.giaTriGiam >= 100)) {
         notification.error({
@@ -186,11 +198,11 @@ const TableVoucher = () => {
         setLoading(false);
         return;
       }
-  
+
       // Kiểm tra tên và mã voucher, nhưng loại trừ voucher hiện tại bằng cách truyền thêm id
       const existsByName = await checkVoucherExists(updateVoucher.tenVoucher, 'name', id);
       const existsByCode = await checkVoucherExists(updateVoucher.maVoucher, 'code', id);
-  
+
       if (existsByName) {
         notification.error({
           message: "Lỗi",
@@ -199,7 +211,7 @@ const TableVoucher = () => {
         setLoading(false);
         return;
       }
-  
+
       if (existsByCode) {
         notification.error({
           message: "Lỗi",
@@ -208,7 +220,7 @@ const TableVoucher = () => {
         setLoading(false);
         return;
       }
-  
+
       await updateVoucherApi(id, updateVoucher);
       notification.success({
         message: "Success",
@@ -232,7 +244,7 @@ const TableVoucher = () => {
       setLoading(false);
     }
   };
-  
+
 
 
   const handleAdd = () => {
@@ -400,6 +412,18 @@ const TableVoucher = () => {
         <Switch
           checked={text === 1}
           onChange={async (checked) => {
+            const currentDate = new Date();  // Lấy ngày hiện tại
+            const expirationDate = new Date(record.ngayKetThuc);  // Lấy ngày kết thúc của voucher
+
+            // Kiểm tra nếu ngày kết thúc nhỏ hơn ngày hiện tại
+            if (expirationDate < currentDate) {
+              notification.error({
+                message: "Cập nhật thất bại",
+                description: "Không thể cập nhật trạng thái khi ngày kết thúc của voucher đã qua.",
+              });
+              return;  // Dừng việc cập nhật nếu ngày kết thúc đã qua
+            }
+
             const updatedStatus = checked ? 1 : 0;
             const updatedVoucher = { ...record, trangThai: updatedStatus };
 
