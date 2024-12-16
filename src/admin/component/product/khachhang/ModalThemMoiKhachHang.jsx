@@ -16,8 +16,8 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
   const [email, setEmail] = useState("");
   const [sdt, setSdt] = useState("");
   const [ngaySinh, setNgaySinh] = useState(null);
-  const [gioiTinh, setGioiTinh] = useState(true);  
-  const [ngayTao, setNgayTao] = useState(moment()); 
+  const [gioiTinh, setGioiTinh] = useState(true);
+  const [ngayTao, setNgayTao] = useState(moment());
   const [trangThai, setTrangThai] = useState(true);
   const [fileList, setFileList] = useState([]);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -28,7 +28,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
 
   const handleConfirmAdd = () => {
     // Kiểm tra dữ liệu đầu vào
-    if (!ten || !ma || !email || !sdt || !ngaySinh) {
+    if (!ten || !email || !sdt || !ngaySinh || !diaChiStr) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ thông tin!",
@@ -84,20 +84,24 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       diaChiStr,
       avatar: avatarUrl,  // Lưu URL avatar
     });
- 
 
 
-  // Làm sạch các ô nhập sau khi thêm thành công
-  setTen('');
-  setMa('');
-  setEmail('');
-  setSdt('');
-  setNgaySinh(null);
-  setGioiTinh(true);
-  setNgayTao(moment());
-  setTrangThai(true);
-  setFileList([]);
-};
+
+
+    // Làm sạch các ô nhập sau khi thêm thành công
+    setTen('');
+    setMa('');
+    setEmail('');
+    setSdt('');
+    setNgaySinh(null);
+    setGioiTinh(true);
+    setNgayTao(moment());
+    setTrangThai(true);
+    setFileList([]);
+    setDiaChiStr(""); // Reset địa chỉ
+    setAddressOptions([]); // Reset các options địa chỉ
+  };
+
 
   // Xử lý thay đổi tệp tải lên
   const handleChange = ({ fileList: newFileList }) => setFileList(newFileList);
@@ -129,15 +133,15 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
     </div>
   );
 
-  
+
   const customRequest = async ({ file, onSuccess, onError }) => {
     try {
       const storageRef = ref(storage, 'avatars/' + file.name);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
-      uploadTask.on('state_changed', 
+      uploadTask.on('state_changed',
         (snapshot) => {
-          
+
         },
         (error) => {
           onError(error);
@@ -145,13 +149,14 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           onSuccess(null, file);
-          setFileList([{ url: downloadURL }]);  
+          setFileList([{ url: downloadURL }]);
         }
       );
     } catch (error) {
       onError(error);
     }
   };
+  
   const handleAddressSearch = debounce(async (value) => {
     if (value.length > 2) {
       try {
@@ -170,7 +175,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
   }, 300);
 
   const handleAddressSelect = async (value) => {
-     setDiaChiStr(value);
+    setDiaChiStr(value);
   };
   return (
     <Modal
@@ -200,12 +205,12 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
         </Col>
         <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Mã khách hàng
+            <span className="text-red-600">*</span> Ngày sinh
           </label>
-          <Input
-            value={ma}
-            onChange={(e) => setMa(e.target.value)}
-            placeholder="Nhập mã khách hàng"
+          <DatePicker
+            style={{ width: "100%" }}
+            value={ngaySinh}
+            onChange={(date) => setNgaySinh(date)}
           />
         </Col>
       </Row>
@@ -236,16 +241,6 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
       <Row className="flex justify-between mb-3">
         <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Ngày sinh
-          </label>
-          <DatePicker
-            style={{ width: "100%" }}
-            value={ngaySinh}
-            onChange={(date) => setNgaySinh(date)}
-          />
-        </Col>
-        <Col span={11}>
-          <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Giới tính
           </label>
           <Select
@@ -259,12 +254,23 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
             <Option value="Khác">Khác</Option>
           </Select>
         </Col>
+
+        <Col span={8}>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Trạng thái
+          </label>
+          <Switch
+            checked={trangThai}
+            onChange={(checked) => setTrangThai(checked)}
+            checkedChildren="Hoạt động"
+            unCheckedChildren="Không hoạt động"
+          />
+        </Col>
       </Row>
 
-      
 
       <Row className="flex justify-between mb-3">
-      <Col span={24}>
+        <Col span={24}>
           {/* <label className="text-sm block mb-2">Ngày tạo</label>
           <Input value={ngayTao ? ngayTao.format('DD/MM/YYYY') : ''} disabled /> */}
           <Form.Item
@@ -273,16 +279,16 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
             wrapperCol={{ span: 24 }}
           >
             <AutoComplete
+              value={diaChiStr}  // Liên kết với state diaChiStr
               options={addressOptions}
               onSearch={handleAddressSearch}
-               onSelect={handleAddressSelect}
+              onSelect={handleAddressSelect}
+              onChange={(value) => setDiaChiStr(value)}  // Cập nhật giá trị khi người dùng gõ
               placeholder="Nhập địa chỉ"
               size="large"
             />
           </Form.Item>
         </Col>
-       
-       
       </Row>
 
       {/* Cột Upload ảnh */}
@@ -306,20 +312,15 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
             />
           )}
         </Col>
-        <Col span={8}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Trạng thái
-          </label>
-          <Switch
-            checked={trangThai}
-            onChange={(checked) => setTrangThai(checked)}
-            checkedChildren="Hoạt động"
-            unCheckedChildren="Không hoạt động"
-          />
-        </Col>
       </Row>
+
     </Modal>
   );
 
+
 }
+
+
+
+
 export default ModalThemMoiKhachHang;

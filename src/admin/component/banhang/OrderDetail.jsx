@@ -35,6 +35,23 @@ const OrderDetail = () => {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [cancelNote, setCancelNote] = useState("");
 
+ const [userInfo, setUserInfo] = useState(null);
+
+     useEffect(() => {
+            const storedUserInfo = localStorage.getItem("userInfo");
+            if (storedUserInfo) {
+                const parsedUserInfo = JSON.parse(storedUserInfo);
+                setUserInfo(parsedUserInfo);
+                console.log('Stored user info:', storedUserInfo);
+                console.log('Parsed user info:', parsedUserInfo);
+               
+            } else {
+                console.log('No stored user info, using default userId: 1');
+             
+            }
+        }, []);
+
+
   const statusSteps = {
     WAITING: 0,
     ACCEPTED: 1,
@@ -119,7 +136,7 @@ const OrderDetail = () => {
       const response = await axios.post(
         "http://localhost:8080/api/v1/shop-on/update-status-bill",
         {
-          idNhanvien: 1,
+          idNhanvien: userInfo?.id,
           idHoaDon: orderData.hoaDonResponse.id,
           status: "CANCELLED",
           ghiChu: cancelNote,
@@ -157,7 +174,7 @@ const OrderDetail = () => {
       const response = await axios.post(
         "http://localhost:8080/api/v1/shop-on/update-status-bill",
         {
-          idNhanvien: 1,
+          idNhanvien: userInfo?.id,
           idHoaDon: orderData.hoaDonResponse.id,
           status: nextStatus,
         }
@@ -199,9 +216,16 @@ const OrderDetail = () => {
       title: statusConfig[status].title,
       icon: statusConfig[status].icon,
       description: historyItem ? (
-        <Text type="secondary" className="text-xs">
+        <>
+        <Text type="secondary" className="text-xs block">
           {new Date(historyItem.createdAt).toLocaleString()}
         </Text>
+        {statusSteps[status] >= statusSteps.ACCEPTED && (
+          <Text type="secondary" className="text-xs">
+            Created by: {historyItem.createdBy}
+          </Text>
+        )}
+      </>
       ) : null,
     };
   });

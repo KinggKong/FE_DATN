@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { Form, Input, Radio, Space, Spin, Image, message, notification, AutoComplete } from 'antd';
+import { Form, Input, Radio, Space, Spin, Image, message, notification, AutoComplete, Select, Tooltip } from 'antd';
 import { CreditCard, Truck, Tag } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import useCartStore from "../cart/useCartStore";
@@ -25,6 +25,8 @@ const PreCheckout = () => {
     const { fetchCart } = useCartStore();
 
     const [addressOptions, setAddressOptions] = useState([]);
+    const [vouchers, setVouchers] = useState([]);
+    const [selectedVoucherId, setSelectedVoucherId] = useState(null); // Added state for selected voucher ID
 
     const apiKey = 'DFt7PndsFeTuDNGggyzQyLr0dzqU9Sf0hb0mMZX5'; // Replace with your Goong API key
     const originLat = 21.038059779392608;
@@ -110,7 +112,8 @@ const PreCheckout = () => {
             setUserInfo(parsedUserInfo);
             console.log('Stored user info:', storedUserInfo);
             console.log('Parsed user info:', parsedUserInfo);
-            fetchData(parsedUserInfo.id);
+
+            fetchData(parsedUserInfo?.id);
 
         } else {
             console.log('No stored user info, using default userId: 1');
@@ -141,6 +144,8 @@ const PreCheckout = () => {
                 }
 
                 setShip(shippingCost);
+                const totalAmount = checkoutData.totalPrice + shippingCost;
+                fetchVouchers(totalAmount);
             } else {
                 throw new Error('Unable to calculate distance');
             }
@@ -181,23 +186,53 @@ const PreCheckout = () => {
         }
     };
 
+    const fetchVouchers = async (totalAmount) => {
+        try {
+            const response = await axios.get(`http://localhost:8080/api/v1/vouchers/can-use?tongTien=${totalAmount}`);
+            if (response.data.code === 1000) {
+                setVouchers(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching vouchers:', error);
+        }
+    };
+
     const handleSubmit = async (values) => {
         setCheckoutLoading(true);
         try {
+            const selectedVoucher = vouchers.find(v => v.id === values.idVoucher);
+            let discountAmount = 0;
+
+            if (selectedVoucher) {
+                const totalBeforeDiscount = checkoutData.totalPrice + ship;
+
+                if (selectedVoucher.hinhThucGiam === 'VND') {
+                    discountAmount = selectedVoucher.giaTriGiam;
+                } else if (selectedVoucher.hinhThucGiam === '%') {
+                    discountAmount = Math.min(
+                        (totalBeforeDiscount * selectedVoucher.giaTriGiam) / 100,
+                        selectedVoucher.giaTriGiamToiDa
+                    );
+                }
+
+                // Ensure the discount doesn't exceed the total amount
+                discountAmount = Math.min(discountAmount, totalBeforeDiscount);
+            }
+
             const hoaDonRequest = {
                 idGioHang: values.idGioHang,
                 tenNguoiNhan: values.tenNguoiNhan,
                 diaChiNhan: values.address,
                 sdt: values.sdt,
                 tongTien: checkoutData.totalPrice + ship,
-                tienSauGiam: checkoutData.totalPrice + ship,
+                tienSauGiam: checkoutData.totalPrice + ship - discountAmount,
                 tienShip: ship,
                 ghiChu: values.ghiChu,
                 email: values.email,
                 idKhachHang: values.idKhachHang,
-                idVoucher: null,
+                idVoucher: values.idVoucher,
                 hinhThucThanhToan: paymentMethod,
-                soTienGiam: 0
+                soTienGiam: discountAmount
             };
 
             let response;
@@ -222,7 +257,8 @@ const PreCheckout = () => {
                     navigate(`/infor-order?maHoaDon=${maHoaDon}`);
                     fetchCart();
                 } else {
-                    throw new Error('Checkout failed');
+                    message.error(response.data.message);
+                    // throw new Error('Checkout failed');
                 }
             }
         } catch (err) {
@@ -310,10 +346,18 @@ const PreCheckout = () => {
                             </Form.Item>
 
                             <Form.Item
-                                label="Địa chỉ email (tùy chọn)"
+                                label="Địa chỉ email"
                                 name="email"
+                                required
+                                rules={[
+                                    { required: true, message: 'Vui lòng nhập địa chỉ email' },
+                                    {
+                                        type: 'email',
+                                        message: 'Địa chỉ email không đúng định dạng!'
+                                    },
+                                ]}
                             >
-                                <Input size="large" />
+                                <Input size="large" placeholder="Nhập địa chỉ email" />
                             </Form.Item>
 
                             <div className="space-y-4">
@@ -328,6 +372,26 @@ const PreCheckout = () => {
                                     />
                                 </Form.Item>
                             </div>
+                            <Form.Item name="idVoucher" label="Chọn voucher">
+                                <Select
+                                    placeholder="Chọn voucher"
+                                    options={[
+                                        { value: null, label: 'Không sử dụng voucher' },
+                                        ...vouchers.map(v => ({
+                                            value: v.id,
+                                            label: (
+                                                <Tooltip title={`${v.tenVoucher} - Giảm ${v.giaTriGiam}${v.hinhThucGiam === 'VND' ? 'đ' : '%'} - Đơn tối thiểu ${v.giaTriDonHangToiThieu.toLocaleString()}đ`}>
+                                                    <span>
+                                                        {v.tenVoucher} - Giảm {v.giaTriGiam}{v.hinhThucGiam === 'VND' ? 'đ' : '%'}
+                                                        {v.hinhThucGiam === '%' ? ` (tối đa ${v.giaTriGiamToiDa.toLocaleString()}đ)` : ''}
+                                                    </span>
+                                                </Tooltip>
+                                            )
+                                        }))]}
+                                    onChange={(value) => setSelectedVoucherId(value)}
+                                    style={{ width: '100%' }}
+                                />
+                            </Form.Item>
                         </Form>
                     </div>
 
@@ -376,12 +440,53 @@ const PreCheckout = () => {
                                     <Tag className="w-5 h-5" />
                                     <span>Giảm giá</span>
                                 </div>
-                                <span className="text-red-500">0₫</span>
+                                <span className="text-red-500">
+                                    {(() => {
+                                        const selectedVoucher = vouchers.find(v => v.id === selectedVoucherId); // Use selectedVoucherId
+                                        if (!selectedVoucher) return '0₫';
+
+                                        let discountAmount = 0;
+                                        const totalBeforeDiscount = totalPrice + ship;
+
+                                        if (selectedVoucher.hinhThucGiam === 'VND') {
+                                            discountAmount = selectedVoucher.giaTriGiam;
+                                        } else if (selectedVoucher.hinhThucGiam === '%') {
+                                            discountAmount = Math.min(
+                                                (totalBeforeDiscount * selectedVoucher.giaTriGiam) / 100,
+                                                selectedVoucher.giaTriGiamToiDa
+                                            );
+                                        }
+
+                                        discountAmount = Math.min(discountAmount, totalBeforeDiscount);
+                                        return `${discountAmount.toLocaleString()}₫`;
+                                    })()}
+                                </span>
                             </div>
 
                             <div className="flex justify-between font-bold text-lg">
                                 <span>Tổng</span>
-                                <span>{(totalPrice + ship).toLocaleString()}₫</span>
+                                <span>
+                                    {(() => {
+                                        const selectedVoucher = vouchers.find(v => v.id === selectedVoucherId); // Use selectedVoucherId
+                                        let discountAmount = 0;
+                                        const totalBeforeDiscount = totalPrice + ship;
+
+                                        if (selectedVoucher) {
+                                            if (selectedVoucher.hinhThucGiam === 'VND') {
+                                                discountAmount = selectedVoucher.giaTriGiam;
+                                            } else if (selectedVoucher.hinhThucGiam === '%') {
+                                                discountAmount = Math.min(
+                                                    (totalBeforeDiscount * selectedVoucher.giaTriGiam) / 100,
+                                                    selectedVoucher.giaTriGiamToiDa
+                                                );
+                                            }
+                                            discountAmount = Math.min(discountAmount, totalBeforeDiscount);
+                                        }
+
+                                        const finalTotal = totalBeforeDiscount - discountAmount;
+                                        return `${finalTotal.toLocaleString()}₫`;
+                                    })()}
+                                </span>
                             </div>
 
                             <div className="space-y-4">

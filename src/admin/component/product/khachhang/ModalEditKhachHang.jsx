@@ -51,7 +51,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
 
   const handleConfirmEdit = () => {
 
-    if (!ten || !ma || !email || !sdt || !ngaySinh) {
+    if (!ten || !email || !sdt || !ngaySinh || !diaChiStr) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ các trường!",
@@ -165,7 +165,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
   }, 300);
 
   const handleAddressSelect = async (value) => {
-     setDiaChiStr(value);
+    setDiaChiStr(value);
   };
 
   const uploadButton = (
@@ -203,12 +203,12 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
         </Col>
         <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Mã khách hàng
+            <span className="text-red-600">*</span> Ngày sinh
           </label>
-          <Input
-            value={ma}
-            onChange={(e) => setMa(e.target.value)}
-            placeholder="Nhập mã khách hàng"
+          <DatePicker
+            style={{ width: "100%" }}
+            value={ngaySinh}
+            onChange={(date) => setNgaySinh(date)}
           />
         </Col>
       </Row>
@@ -237,16 +237,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
       </Row>
 
       <Row className="flex justify-between mb-3">
-        <Col span={11}>
-          <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Ngày sinh
-          </label>
-          <DatePicker
-            style={{ width: "100%" }}
-            value={ngaySinh}
-            onChange={(date) => setNgaySinh(date)}
-          />
-        </Col>
+        
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Giới tính
@@ -262,6 +253,15 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
             <Option value="Khác">Khác</Option>
           </Select>
         </Col>
+        <Col span={8}>
+          <label className="text-sm block mb-2">Trạng thái</label>
+          <Switch
+            checked={trangThai}
+            onChange={(checked) => setTrangThai(checked)}
+            checkedChildren="Hoạt động"
+            unCheckedChildren="Không hoạt động"
+          />
+        </Col>
       </Row>
 
 
@@ -273,20 +273,20 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
             label="Địa chỉ"
             labelCol={{ span: 24 }} // Đẩy label thành 100% chiều rộng
             wrapperCol={{ span: 24 }}
-            
+
           >
             <AutoComplete
               value={diaChiStr}
               options={addressOptions}
               onSearch={handleAddressSearch}
-               onSelect={handleAddressSelect}
+              onSelect={handleAddressSelect}
               onChange={(value) => setDiaChiStr(value)}
               placeholder="Nhập địa chỉ"
               size="large"
             />
           </Form.Item>
         </Col>
-        
+
       </Row>
 
 
@@ -310,15 +310,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
             />
           )} */}
         </Col>
-        <Col span={8}>
-          <label className="text-sm block mb-2">Trạng thái</label>
-          <Switch
-            checked={trangThai}
-            onChange={(checked) => setTrangThai(checked)}
-            checkedChildren="Hoạt động"
-            unCheckedChildren="Không hoạt động"
-          />
-        </Col>
+        
       </Row>
     </Modal>
   );
