@@ -70,9 +70,9 @@ const PreCheckout = () => {
         setShippingLoading(true);
         try {
             const distanceResponse = await axios.get(`https://rsapi.goong.io/DistanceMatrix?origins=${originLat},${originLng}&destinations=${lat},${lng}&api_key=${apiKey}`);
-            
+
             if (distanceResponse.data.rows && distanceResponse.data.rows[0].elements && distanceResponse.data.rows[0].elements[0].distance) {
-                const distanceKm = distanceResponse.data.rows[0].elements[0].distance.value / 1000; 
+                const distanceKm = distanceResponse.data.rows[0].elements[0].distance.value / 1000;
                 let shippingCost;
 
                 if (distanceKm < 40) {
@@ -288,10 +288,18 @@ const PreCheckout = () => {
                             </Form.Item>
 
                             <Form.Item
-                                label="Địa chỉ email (tùy chọn)"
+                                label="Địa chỉ email"
                                 name="email"
+                                required
+                                rules={[
+                                    { required: true, message: 'Vui lòng nhập địa chỉ email' },
+                                    {
+                                        type: 'email',
+                                        message: 'Địa chỉ email không đúng định dạng!'
+                                    },
+                                ]}
                             >
-                                <Input size="large" />
+                                <Input size="large" placeholder="Nhập địa chỉ email" />
                             </Form.Item>
 
                             <div className="space-y-4">
@@ -312,16 +320,16 @@ const PreCheckout = () => {
                                     options={[
                                         { value: null, label: 'Không sử dụng voucher' },
                                         ...vouchers.map(v => ({
-                                        value: v.id,
-                                        label: (
-                                            <Tooltip title={`${v.tenVoucher} - Giảm ${v.giaTriGiam}${v.hinhThucGiam === 'VND' ? 'đ' : '%'} - Đơn tối thiểu ${v.giaTriDonHangToiThieu.toLocaleString()}đ`}>
-                                                <span>
-                                                    {v.tenVoucher} - Giảm {v.giaTriGiam}{v.hinhThucGiam === 'VND' ? 'đ' : '%'}
-                                                    {v.hinhThucGiam === '%' ? ` (tối đa ${v.giaTriGiamToiDa.toLocaleString()}đ)` : ''}
-                                                </span>
-                                            </Tooltip>
-                                        )
-                                    }))]}
+                                            value: v.id,
+                                            label: (
+                                                <Tooltip title={`${v.tenVoucher} - Giảm ${v.giaTriGiam}${v.hinhThucGiam === 'VND' ? 'đ' : '%'} - Đơn tối thiểu ${v.giaTriDonHangToiThieu.toLocaleString()}đ`}>
+                                                    <span>
+                                                        {v.tenVoucher} - Giảm {v.giaTriGiam}{v.hinhThucGiam === 'VND' ? 'đ' : '%'}
+                                                        {v.hinhThucGiam === '%' ? ` (tối đa ${v.giaTriGiamToiDa.toLocaleString()}đ)` : ''}
+                                                    </span>
+                                                </Tooltip>
+                                            )
+                                        }))]}
                                     onChange={(value) => setSelectedVoucherId(value)}
                                     style={{ width: '100%' }}
                                 />
@@ -378,7 +386,7 @@ const PreCheckout = () => {
                                     {(() => {
                                         const selectedVoucher = vouchers.find(v => v.id === selectedVoucherId); // Use selectedVoucherId
                                         if (!selectedVoucher) return '0₫';
-                                        
+
                                         let discountAmount = 0;
                                         const totalBeforeDiscount = totalPrice + ship;
 
