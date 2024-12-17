@@ -200,8 +200,11 @@ const TableVoucher = () => {
       }
 
       // Kiểm tra tên và mã voucher, nhưng loại trừ voucher hiện tại bằng cách truyền thêm id
-      const existsByName = await checkVoucherExists(updateVoucher.tenVoucher, 'name', id);
-      const existsByCode = await checkVoucherExists(updateVoucher.maVoucher, 'code', id);
+      const trimmedTenVoucher = updateVoucher.tenVoucher.trim();
+      const trimmedMaVoucher = updateVoucher.maVoucher.trim();
+
+      const existsByName = await checkVoucherExists(trimmedTenVoucher, 'name', id);
+      const existsByCode = await checkVoucherExists(trimmedMaVoucher, 'code', id);
 
       if (existsByName) {
         notification.error({
@@ -279,9 +282,15 @@ const TableVoucher = () => {
         return;
       }
 
-      const existsByName = await checkVoucherExists(newVoucher.tenVoucher, 'name');
-      const existsByCode = await checkVoucherExists(newVoucher.maVoucher, 'code');
+      // Loại bỏ dấu cách thừa ở đầu và cuối tên và mã voucher
+      const trimmedTenVoucher = newVoucher.tenVoucher.trim();
+      const trimmedMaVoucher = newVoucher.maVoucher.trim();
 
+      // Kiểm tra tên và mã voucher
+      const existsByName = await checkVoucherExists(trimmedTenVoucher, 'name');
+      const existsByCode = await checkVoucherExists(trimmedMaVoucher, 'code');
+
+      // Kiểm tra nếu tên voucher đã tồn tại
       if (existsByName) {
         notification.error({
           message: "Lỗi",
@@ -291,6 +300,7 @@ const TableVoucher = () => {
         return;
       }
 
+      // Kiểm tra nếu mã voucher đã tồn tại
       if (existsByCode) {
         notification.error({
           message: "Lỗi",
