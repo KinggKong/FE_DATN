@@ -267,8 +267,6 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
 
       <Row className="flex justify-between mb-3">
         <Col span={24}>
-          {/* <label className="text-sm block mb-2">Ngày tạo</label>
-          <Input value={ngayTao ? ngayTao.format('DD/MM/YYYY') : ''} disabled /> */}
           <Form.Item
             label="Địa chỉ"
             labelCol={{ span: 24 }} // Đẩy label thành 100% chiều rộng
