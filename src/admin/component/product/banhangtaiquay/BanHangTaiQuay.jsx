@@ -573,15 +573,15 @@ const ShoppingCart = () => {
       if (!isShipping) {
         setShip(0);
         setDiaChi("");
-        setTenKhachHang("Khách lẻ");
-        setSdt(0);
+       
         setGhiChu("");
 
       }
+      const processedName = tenKhachHang?.trim() || "Khách lẻ";
+      const processedPhone = sdt?.trim() || "";
 
-
-
-      const res = await confirmPayment(id, selectedMethod, diaChi, ship, tenKhachHang, sdt, ghiChu);
+      const res = await confirmPayment(id, selectedMethod, diaChi, ship, processedName,
+        processedPhone, ghiChu);
 
 
       // const res = await confirmPayment(id, selectedMethod, diaChi, ship);
@@ -604,12 +604,16 @@ const ShoppingCart = () => {
         });
 
         form.resetFields();
+        
         setCurrentInvoice(null);
+       
         toast.success("Thanh toán hóa đơn thành công!");
         setConfirmPaymets(false);
         setPartialPayment(0);
         setShip(0);
         setDiaChi("");
+        setIsShipping(false);
+        setCurrentCustomer(null);
 
 
       }
@@ -1831,7 +1835,7 @@ const ShoppingCart = () => {
           width: "100%",
         }}
       >
-        {/* {currentInvoice?.loaiHoaDon === "ONLINE" && (
+        {currentInvoice?.loaiHoaDon === "ONLINE" && (
           <div style={{ width: "48%", marginTop: "40px" }}>
             <Title level={3}>Thông tin giao hàng</Title>
           
@@ -1843,19 +1847,13 @@ const ShoppingCart = () => {
                 tenNguoiNhan: currentCustomer?.ten,
                 sdt: currentCustomer?.sdt,
                 email: currentCustomer?.email,
+                
               }}
               onFinish={handleSubmit}
             >
-                tenNguoiNhan: currentInvoice?.tenNguoiNhan,
-                sdt: currentInvoice?.sdt,
-                province: currentCustomer?.diaChi?.tinh,
-                email: currentInvoice?.email,
-                district: currentCustomer?.diaChi?.quan,
-                ward: currentCustomer?.diaChi?.huyen,
-
-              }}
-
-            >
+               
+              
+            
               <Form.Item name="idGioHang" hidden>
                 <Input type="hidden" />
               </Form.Item>
@@ -1886,7 +1884,8 @@ const ShoppingCart = () => {
                   { max: 10, message: "Số điện thoại chỉ được 10 ký tự" },
                   {
                     pattern: /^[0-9]+$/,
-                    message: "Số điện thoại chỉ được chứa số",
+                    message: "Số điện thoại chỉ được chứa số"},
+
 
                   {
                     pattern: /^(0|\+84)[3-9][0-9]{8}$/,
@@ -1905,7 +1904,7 @@ const ShoppingCart = () => {
                 name="address"
                 required
                 rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
-                rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
+               
               >
                 <AutoComplete
                   options={addressOptions}
@@ -1934,9 +1933,9 @@ const ShoppingCart = () => {
               </div>
             </Form>
           </div>
-        )} */}
+        )}
 
-        {currentInvoice?.loaiHoaDon === "ONLINE" && (
+        {/* {currentInvoice?.loaiHoaDon === "ONLINE" && (
           <div style={{ width: "48%", marginTop: "40px" }}>
             <Title level={3}>Thông tin giao hàng</Title>
 
@@ -2015,7 +2014,7 @@ const ShoppingCart = () => {
               </div>
             </Form>
           </div>
-        )}
+        )} */}
 
         {/* Form Thông tin thanh toán - Luôn hiển thị */}
         {currentInvoice?.id && (
