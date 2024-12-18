@@ -100,9 +100,29 @@ const TableMauSac = () => {
     setIsModalEditOpen(true);
   };
 
+  // validate trùng tên màu sắc
+  const checkMauSacExists = async (tenMau) => {
+    const params = { tenMau };
+    const res = await getAllMauSacApi(params);
+    return res.data.content.some((item) => item.tenMau === tenMau);
+  };
   const handleConfirmEdit = async (id, updateMauSac) => {
     setLoading(true);
     try {
+
+      const isExists = await checkMauSacExists(updateMauSac.tenMau);
+      if (isExists) {
+        notification.error({
+          message: "Error",
+          duration: 4,
+          pauseOnHover: false,
+          showProgress: true,
+          description: `Màu sắc ${updateMauSac.tenMau} đã tồn tại!`,
+        });
+        return;
+      }
+      
+      
       await updateMauSacApi(id, updateMauSac);
       notification.success({
         message: "Success",

@@ -251,8 +251,9 @@ const ViewEditDotGiamGia = () => {
     }, [fetchTenChienDich]);
 
     const checkDuplicateName = (rule, value) => {
+        const trimmedValue = value?.trim();
 
-        if (exitsTenChienDich.includes(value)) {
+        if (exitsTenChienDich.includes(trimmedValue)) {
             console.log(exitsTenChienDich);
             return Promise.reject('Tên đợt giảm giá đã tồn tại!');
         }

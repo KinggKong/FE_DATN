@@ -6,7 +6,7 @@ const ModalEdit = ({ isOpen, handleClose, title, handleSubmit, mausac }) => {
   const [newColorName, setNewColorName] = useState("");
 
   const handleConfirmEdit = () => {
-    handleSubmit(mausac?.id, { tenMau: newColorName });
+    handleSubmit(mausac?.id, { tenMau: newColorName , trangThai: 1 });
   };
 
   useEffect(() => {

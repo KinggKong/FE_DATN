@@ -83,6 +83,8 @@ const PreCheckout = () => {
                                 const { lat, lng } = detailResponse.data.result.geometry.location;
                                 calculateShippingCost(lat, lng); // Gọi hàm tính phí ship
                                 setAddress(response.data.data.gioHangChiTietList[0].gioHang.khachHang.diaChi);
+                                fetchVouchers(response.data.data.totalPrice + ship);
+
                             }
                         }
                     } catch (error) {
@@ -144,8 +146,12 @@ const PreCheckout = () => {
                 }
 
                 setShip(shippingCost);
-                const totalAmount = checkoutData.totalPrice + shippingCost;
-                fetchVouchers(totalAmount);
+                 let totalAmount =0
+                if(checkoutData){
+                 totalAmount = checkoutData.totalPrice + shippingCost;
+                 fetchVouchers(totalAmount);
+                }
+                
             } else {
                 throw new Error('Unable to calculate distance');
             }

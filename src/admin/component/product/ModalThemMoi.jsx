@@ -7,7 +7,7 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
   const [newColorName,setNewColorName] = useState();
 
   const handleConfirmAdd = () => {
-    handleSubmit(newColorName);
+    handleSubmit(newColorName.trim());
     setNewColorName('');
   };
   

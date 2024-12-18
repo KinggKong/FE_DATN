@@ -74,12 +74,25 @@ const TableDeGiay = () => {
     }
 
 
-
+    // validate trùng tên
+    const checkChatLieuDeExists = async (tenChatLieu) => {
+        const params = { tenChatLieu };
+        const res = await getAllChatLieuDeApi(params);
+        return res.data.content.some((item) => item.tenChatLieu === tenChatLieu);
+    };
 
 
     const handleConfirmUpdate = async (id, itemUpdate) => {
         setLoading(true);
         try {
+            const isExif = await checkChatLieuDeExists(itemUpdate.tenChatLieu);
+            if (isExif)  {
+                notification.error({
+                    message: "Error",
+                    description: "Tên chất liệu đế đã tồn tại",
+                });
+                return;
+            }
             await updateChatLieuDeApi(id, itemUpdate);
             notification.success({
                 duration: 4,

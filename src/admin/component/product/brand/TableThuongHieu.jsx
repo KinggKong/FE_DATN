@@ -91,8 +91,23 @@ const TableThuongHieu = () => {
     setEditItem(record);
     setIsModalEditOpen(true);
   };
+  const checkThuongHieuExists = async (tenThuongHieu) => {
+    const params = { tenThuongHieu };
+    const res = await getAllThuongHieuApi(params);
+    return res.data.content.some((item) => item.tenThuongHieu === tenThuongHieu);
+  };
+
 
   const handleConfirmEdit = async (id, updateThuongHieu) => {
+    const isExists = await checkThuongHieuExists(updateThuongHieu.tenThuongHieu);
+    if (isExists) {
+      notification.error({
+        message: "Lỗi",
+        description: `Thương hiệu ${updateThuongHieu.tenThuongHieu} đã tồn tại!`,
+      });
+      return;
+    }
+    
     try {
       console.log("Dữ liệu gửi đi:", updateThuongHieu); 
       await updateThuongHieuApi(id, updateThuongHieu);
@@ -114,6 +129,8 @@ const TableThuongHieu = () => {
     setIsModalAddOpen(true);
   };
 
+  // hàm check trùng tên thương hiệu
+  
   const handleConfirmAdd = async (newColorName) => {
     try {
       await createThuongHieuApi({ tenThuongHieu: newColorName, trangThai: 1 });
@@ -139,7 +156,7 @@ const TableThuongHieu = () => {
         await updateThuongHieuApi(record.id, updatedData);
         notification.success({
             message: "Cập nhật trạng thái thành công",
-            description: `Trạng thái chất liệu đế  ${record.tenThuongHieu} đã được ${checked ? "ngừng hoạt động" : "hoạt động"}!`,
+            description: `Trạng thái chất liệu đế  ${record.tenThuongHieu} đã được ${checked ? " hoạt động" : " ngừng hoạt động"}!`,
         });
         await fetchData();
     } catch (error) {

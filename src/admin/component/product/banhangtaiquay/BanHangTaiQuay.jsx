@@ -43,7 +43,7 @@ import TabPane from "antd/es/tabs/TabPane";
 import { getAllKhachHang } from "../../../../api/KhachHang";
 import axiosClient from "../../../../api/axiosClient";
 import ModalThemMoiKhachHang from "../khachhang/ModalThemMoiKhachHang";
-import { createKhachHangApi } from "../../../../api/KhachHangApi";
+import { createKhachHangApi, getAllKhachHangApi } from "../../../../api/KhachHangApi";
 import { useNavigate } from "react-router-dom";
 import TextArea from "antd/es/input/TextArea";
 import image from "../../../../util/cart-empty-img.8b677cb3.png";
@@ -52,6 +52,7 @@ import { getAllDanhMucApi } from "../../../../api/DanhMucService";
 import { getAllThuongHieuApi } from "../../../../api/ThuongHieuService";
 import { getAllChatLieuDeApi } from "../../../../api/ChatLieuDeApi";
 import { getAllChatLieuVaiApi } from "../../../../api/ChatLieuVaiApi";
+import TimKiem from "../TimKiem";
 
 const ShoppingCart = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -76,6 +77,7 @@ const ShoppingCart = () => {
   const [confirmPayments, setConfirmPaymets] = useState(false);
 
   const [addressOptions, setAddressOptions] = useState([]);
+  const [valueSearch, setValueSearch] = useState("");
 
   const notificationMessage = (type, message) => {
     toast.dismiss();
@@ -382,15 +384,23 @@ const ShoppingCart = () => {
   const fetchDataKhachHang = async () => {
     setLoading(true);
     try {
-      const res = await getAllKhachHang();
+
+      const params = {
+        pageNumber: currentPage - 1,
+        pageSize,
+        ten: valueSearch,
+      };
+      const res = await getAllKhachHangApi(params);
+      
       console.log(res);
 
-      if (res?.data && Array.isArray(res.data)) {
-        const dataWithKey = res.data.map((item) => ({
+      if (res?.data && Array.isArray(res.data.content)) {
+        const dataWithKey = res.data.content.map((item) => ({
           ...item,
           key: item.id,
         }));
         setCustomer(dataWithKey);
+        setTotalItems(res.data.totalElements);
       } else {
         console.error(
           "Dữ liệu không đúng định dạng hoặc không có content:",
@@ -406,7 +416,7 @@ const ShoppingCart = () => {
 
   useEffect(() => {
     fetchDataKhachHang();
-  }, []);
+  }, [currentPage, pageSize,valueSearch]);
 
   const showModalAddSPCT = () => {
     setIsModalOpen(true);
@@ -573,7 +583,7 @@ const ShoppingCart = () => {
       if (!isShipping) {
         setShip(0);
         setDiaChi("");
-       
+
         setGhiChu("");
 
       }
@@ -604,9 +614,9 @@ const ShoppingCart = () => {
         });
 
         form.resetFields();
-        
+
         setCurrentInvoice(null);
-       
+
         toast.success("Thanh toán hóa đơn thành công!");
         setConfirmPaymets(false);
         setPartialPayment(0);
@@ -1843,7 +1853,7 @@ const ShoppingCart = () => {
         {currentInvoice?.loaiHoaDon === "ONLINE" && (
           <div style={{ width: "48%", marginTop: "40px" }}>
             <Title level={3}>Thông tin giao hàng</Title>
-          
+
             <Form
               form={form}
               layout="vertical"
@@ -1852,13 +1862,13 @@ const ShoppingCart = () => {
                 tenNguoiNhan: currentCustomer?.ten,
                 sdt: currentCustomer?.sdt,
                 email: currentCustomer?.email,
-                
+
               }}
               onFinish={handleSubmit}
             >
-               
-              
-            
+
+
+
               <Form.Item name="idGioHang" hidden>
                 <Input type="hidden" />
               </Form.Item>
@@ -1889,7 +1899,8 @@ const ShoppingCart = () => {
                   { max: 10, message: "Số điện thoại chỉ được 10 ký tự" },
                   {
                     pattern: /^[0-9]+$/,
-                    message: "Số điện thoại chỉ được chứa số"},
+                    message: "Số điện thoại chỉ được chứa số"
+                  },
 
 
                   {
@@ -1909,7 +1920,7 @@ const ShoppingCart = () => {
                 name="address"
                 required
                 rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
-               
+
               >
                 <AutoComplete
                   options={addressOptions}
@@ -2216,6 +2227,7 @@ const ShoppingCart = () => {
               cancelText="Hủy"
               onOk={handleCreateCustomer}
             >
+              <Input placeholder="Tìm kiếm khách hàng" onChange={(e) => setValueSearch(e.target.value)} />
               <Table
                 rowKey="key"
                 columns={columnsKhachHang}
@@ -2225,12 +2237,13 @@ const ShoppingCart = () => {
                   pageSize: pageSize,
                   total: totalItems,
                   showSizeChanger: true,
-                  pageSizeOptions: ["5", "10", "20", "50", "100"],
+                  pageSizeOptions: ["10", "20", "50", "100"],
                   onChange: (page, pageSize) => {
                     setCurrentPage(page);
                     setPageSize(pageSize);
                   },
                 }}
+                
                 loading={loading}
                 onRow={(record) => ({
                   onClick: () => selectCustomer(record),

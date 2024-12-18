@@ -6,7 +6,7 @@ const ModalEdit1 = ({ isOpen, handleClose, title, handleSubmit, kichthuoc }) => 
   const [newSizeName, setNewSizeName] = useState("");
 
   const handleConfirmEdit = () => {
-    handleSubmit(kichthuoc?.id, { tenKichThuoc: newSizeName }); // Cập nhật tên kích thước
+    handleSubmit(kichthuoc?.id, { tenKichThuoc: newSizeName.trim() }); // Cập nhật tên kích thước
   };
 
   useEffect(() => {

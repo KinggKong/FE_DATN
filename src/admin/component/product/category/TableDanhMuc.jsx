@@ -93,8 +93,25 @@ const TableDanhMuc = () => {
     setIsModalEditOpen(true);
   };
 
+
+  // Validate trùng tên danh mục
+  const checkDanhMucExists = async (tenDanhMuc) => {
+    const params = { tenDanhMuc };
+    const res = await getAllDanhMucApi(params);
+    return res.data.content.some((item) => item.tenDanhMuc === tenDanhMuc);
+  };
+
   const handleConfirmEdit = async (id, updateDanhMuc) => {
+    const isExists = await checkDanhMucExists(updateDanhMuc.tenDanhMuc);
+      if (isExists) {
+        notification.error({
+          message: "Error",
+          description: `Danh mục ${updateDanhMuc.tenDanhMuc} đã tồn tại!`,
+        });
+        return;
+      }
     try {
+      
       console.log("Dữ liệu gửi đi:", updateDanhMuc);
       await updateDanhMucApi(id, updateDanhMuc);
       notification.success({
@@ -121,7 +138,7 @@ const TableDanhMuc = () => {
       await updateDanhMucApi(record.id, updatedData);
       notification.success({
         message: "Cập nhật trạng thái thành công",
-        description: `Trạng thái danh mục ${record.tenDanhMuc} đã được ${checked ? "ngừng hoạt động" : "hoạt động"}!`,
+        description: `Trạng thái danh mục ${record.tenDanhMuc} đã được ${checked ? "hoạt động" : " ngừng hoạt động"}!`,
       });
       await fetchData();
     } catch (error) {

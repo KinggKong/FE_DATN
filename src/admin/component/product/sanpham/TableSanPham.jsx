@@ -414,11 +414,11 @@ const TableSanPham = () => {
             }}
             placeholder="Tất cả thương hiệu"
             optionFilterProp="label"
-            filterSort={(optionA, optionB) =>
-              (optionA?.label ?? "")
-                .toLowerCase()
-                .localeCompare((optionB?.label ?? "").toLowerCase())
-            }
+            // filterSort={(optionA, optionB) =>
+            //   (optionA?.label ?? "")
+            //     .toLowerCase()
+            //     .localeCompare((optionB?.label ?? "").toLowerCase())
+            // }
             value={idThuongHieu}
             onChange={(value) => {
               setIdThuongHieu(value);
@@ -447,11 +447,11 @@ const TableSanPham = () => {
             }}
             placeholder="Tất cả danh mục"
             optionFilterProp="label"
-            filterSort={(optionA, optionB) =>
-              (optionA?.label ?? "")
-                .toLowerCase()
-                .localeCompare((optionB?.label ?? "").toLowerCase())
-            }
+            // filterSort={(optionA, optionB) =>
+            //   (optionA?.label ?? "")
+            //     .toLowerCase()
+            //     .localeCompare((optionB?.label ?? "").toLowerCase())
+            // }
             options={[
               { value: "", label: "Tất cả danh mục" },
               ...dataDanhMuc?.map((danhMuc) => ({
@@ -476,11 +476,11 @@ const TableSanPham = () => {
             }}
             placeholder="Tất cả chất liệu vải"
             optionFilterProp="label"
-            filterSort={(optionA, optionB) =>
-              (optionA?.label ?? "")
-                .toLowerCase()
-                .localeCompare((optionB?.label ?? "").toLowerCase())
-            }
+            // filterSort={(optionA, optionB) =>
+            //   (optionA?.label ?? "")
+            //     .toLowerCase()
+            //     .localeCompare((optionB?.label ?? "").toLowerCase())
+            // }
             options={[
               { value: "", label: "Tất cả chất liệu vải" },
               ...dataChatLieuVai?.map((vai) => ({
@@ -505,11 +505,11 @@ const TableSanPham = () => {
             }}
             placeholder="Tất cả chất liệu đế"
             optionFilterProp="label"
-            filterSort={(optionA, optionB) =>
-              (optionA?.label ?? "")
-                .toLowerCase()
-                .localeCompare((optionB?.label ?? "").toLowerCase())
-            }
+            // filterSort={(optionA, optionB) =>
+            //   (optionA?.label ?? "")
+            //     .toLowerCase()
+            //     .localeCompare((optionB?.label ?? "").toLowerCase())
+            // }
             options={[
               { value: "", label: "Tất cả chất liệu đế" },
               ...dataChatLieuDe?.map((de) => ({
