@@ -430,7 +430,9 @@ const ShoppingCart = () => {
       console.log(res);
 
       if (res?.data && Array.isArray(res.data.content)) {
-        const dataWithKey = res.data.content.map((item) => ({
+        const filteredData = res.data.content.filter((item) => item.id !== 1);
+
+        const dataWithKey = filteredData.map((item) => ({
           ...item,
           key: item.id,
         }));
@@ -2166,7 +2168,7 @@ const ShoppingCart = () => {
                   pageSize: pageSize,
                   total: totalItems,
                   showSizeChanger: true,
-                  pageSizeOptions: ["10", "20", "50", "100"],
+                  pageSizeOptions: ["5","10", "20", "50", "100"],
                   onChange: (page, pageSize) => {
                     setCurrentPage(page);
                     setPageSize(pageSize);
