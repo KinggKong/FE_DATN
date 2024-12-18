@@ -44,31 +44,31 @@ const AdminRouters = {
   children: [
     {
       path: "sanpham",
-      element: <PrivateRoute element={<SanPham />} allowedRoles={["ROLE_ADMIN", "ROLE_STAFF"]} />,
+      element: <PrivateRoute element={<SanPham />} allowedRoles={["ROLE_ADMIN"]} />,
     },
     {
       path: "degiay",
-      element: <PrivateRoute element={<DeGiay />} allowedRoles={["ROLE_ADMIN", "ROLE_STAFF"]} />,
+      element: <PrivateRoute element={<DeGiay />} allowedRoles={["ROLE_ADMIN"]} />,
     },
     {
       path: "kichthuoc",
-      element: <PrivateRoute element={<KichThuoc />} allowedRoles={["ROLE_ADMIN", "ROLE_STAFF"]} />,
+      element: <PrivateRoute element={<KichThuoc />} allowedRoles={["ROLE_ADMIN"]} />,
     },
     {
       path: "chatlieu",
-      element: <PrivateRoute element={<ChatLieu />} allowedRoles={["ROLE_ADMIN", "ROLE_STAFF"]} />,
+      element: <PrivateRoute element={<ChatLieu />} allowedRoles={["ROLE_ADMIN"]} />,
     },
     {
       path: "thuonghieu",
-      element: <PrivateRoute element={<ThuongHieu />} allowedRoles={["ROLE_ADMIN", "ROLE_STAFF"]} />,
+      element: <PrivateRoute element={<ThuongHieu />} allowedRoles={["ROLE_ADMIN"]} />,
     },
     {
       path: "mausac",
-      element: <PrivateRoute element={<MauSac />} allowedRoles={["ROLE_ADMIN", "ROLE_STAFF"]} />,
+      element: <PrivateRoute element={<MauSac />} allowedRoles={["ROLE_ADMIN"]} />,
     },
     {
       path: "danhmuc",
-      element: <PrivateRoute element={<DanhMuc />} allowedRoles={["ROLE_ADMIN", "ROLE_STAFF"]} />,
+      element: <PrivateRoute element={<DanhMuc />} allowedRoles={["ROLE_ADMIN"]} />,
     },
     {
       path: "banhang",
@@ -76,7 +76,7 @@ const AdminRouters = {
     },
     {
       path: "giamgia",
-      element: <PrivateRoute element={<GiamGia />} allowedRoles={["ROLE_ADMIN", "ROLE_STAFF"]} />,
+      element: <PrivateRoute element={<GiamGia />} allowedRoles={["ROLE_ADMIN"]} />,
     },
     {
       path: "nhanvien",
@@ -92,7 +92,7 @@ const AdminRouters = {
     },
     {
       path: "sanphamchitiet",
-      element: <PrivateRoute element={<SanPhamChiTiet />} allowedRoles={["ROLE_ADMIN", "ROLE_STAFF"]} />,
+      element: <PrivateRoute element={<SanPhamChiTiet />} allowedRoles={["ROLE_ADMIN"]} />,
     },
     {
       path: "sale",
