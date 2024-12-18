@@ -88,14 +88,17 @@ const ShoppingCart = () => {
   const originLng = 105.74668196761013;
   const [isShipping, setIsShipping] = useState(false);
   const [ship, setShip] = useState(0);
-  const [diaChi, setDiaChi] = useState(null);
+  const [diaChi, setDiaChi] = useState("");
+  const [tenKhachHang, setTenKhachHang] = useState("Khách lẻ");
+  const [sdt, setSdt] = useState(0);
+  const [ghiChu, setGhiChu] = useState("");
 
   //update Gia khi tat mo sale trong hoa don cho
   const updateHoaDonCT_Sale = async () => {
     try {
       const res = await updateHoaDonCT_Sale();
       if (res?.data) {
-       console.log(res.data);
+        console.log(res.data);
       }
     } catch (error) {
       console.error("Update gia trong hoa don cho error:", error);
@@ -287,6 +290,9 @@ const ShoppingCart = () => {
   const selectCustomer = async (payload) => {
     setCurrentCustomer(payload);
     console.log("Current customer:", payload);
+    setTenKhachHang(payload?.ten);
+    setSdt(payload?.sdt);
+
     form.setFieldsValue({
       tenNguoiNhan: payload?.ten,
       sdt: payload?.sdt,
@@ -423,14 +429,59 @@ const ShoppingCart = () => {
     }
   }, [activeTab]);
 
+
+  //Hàm validate form thanh toán
+  const validateForm = () => {
+    // Kiểm tra loại hóa đơn
+    if (currentInvoice?.loaiHoaDon === "ONLINE") {
+      // Lấy giá trị từ form
+      const values = form.getFieldsValue();
+
+      // Kiểm tra tên người nhận
+      if (!values.tenNguoiNhan || values.tenNguoiNhan.trim() === "") {
+        toast.warning("Vui lòng nhập tên người nhận!");
+        return false;
+      }
+
+      // Kiểm tra số điện thoại
+      if (!values.sdt || values.sdt.trim() === "") {
+        toast.warning("Vui lòng nhập số điện thoại!");
+        return false;
+      }
+      if (!/^[0-9]{10}$/.test(values.sdt)) {
+        toast.warning("Số điện thoại không đúng định dạng (10 chữ số)!");
+        return false;
+      }
+
+      // Kiểm tra địa chỉ
+      if (!values.address || values.address.trim() === "") {
+        toast.warning("Vui lòng nhập địa chỉ giao hàng!");
+        return false;
+      }
+    }
+
+    // Trả về true nếu tất cả điều kiện hợp lệ
+    return true;
+  };
+
   const handleXacNhanThanhToan = async (id) => {
     setLoading(true);
+
     try {
       if (!currentInvoice) {
         setIsShow(true);
         setConfirmPaymets(false);
         toast.warning("Vui lòng chọn hóa đơn");
         return;
+      }
+
+      // Kiểm tra thông tin cần thiết cho loại hóa đơn ONLINE
+      if (currentInvoice?.loaiHoaDon === "ONLINE") {
+        const isValid = validateForm();
+        if (!isValid) {
+          setLoading(false);
+          return; // Dừng xử lý nếu không hợp lệ
+        }
       }
 
       if (
@@ -445,10 +496,15 @@ const ShoppingCart = () => {
 
       if (!isShipping) {
         setShip(0);
-        setDiaChi(null);
+        setDiaChi("");
+        setTenKhachHang("Khách lẻ");
+        setSdt(0);
+        setGhiChu("");
+       
       }
 
-      const res = await confirmPayment(id, selectedMethod, diaChi, ship);
+      
+      const res = await confirmPayment(id, selectedMethod, diaChi, ship, tenKhachHang, sdt, ghiChu);
       console.log(res);
 
       if (res?.code === 200) {
@@ -466,9 +522,18 @@ const ShoppingCart = () => {
           }
           return newInvoices;
         });
+        form.resetFields();
+        setCurrentInvoice(null);
         toast.success("Thanh toán hóa đơn thành công!");
         setConfirmPaymets(false);
         setPartialPayment(0);
+        setShip(0);
+        setDiaChi("");
+
+
+      }
+      if(res?.code === 1014){
+        toast.error("voucher đã hết hạn");
       }
     } catch (error) {
       console.log(error);
@@ -1392,156 +1457,156 @@ const ShoppingCart = () => {
           flexDirection: "column",
         }}
       >
-        
-          <Row className="flex justify-between">
-            <Col span={8}>
-            <label className="text-sm block mb-2" htmlFor="">
-                Sản phẩm
-              </label>
-              <Select
-                showSearch
-                style={{
-                  width: "100%",
-                }}
-                placeholder="Tất cả sản phẩm"
-                optionFilterProp="label"
-                filterSort={(optionA, optionB) =>
-                  (optionA?.label ?? "")
-                    .toLowerCase()
-                    .localeCompare((optionB?.label ?? "").toLowerCase())
-                }
-                value={idSanPham}
-                onChange={(value) => {
-                  setIdSanPham(value);
-                }}
-                options={[
-                  { value: "", label: "Tất cả sản phẩm" },
-                  ...dataSanPham?.map((sanPham) => ({
-                    value: sanPham.id,
-                    label: sanPham.tenSanPham,
-                  })),
-                ]}
-              />
-            </Col>
 
-            <Col span={3}>
-              <label className="text-sm block mb-2" htmlFor="">
-                Thương hiệu
-              </label>
-              <Select
-                showSearch
-                style={{
-                  width: "100%",
-                }}
-                placeholder="Tất cả thương hiệu"
-                optionFilterProp="label"
-                filterSort={(optionA, optionB) =>
-                  (optionA?.label ?? "")
-                    .toLowerCase()
-                    .localeCompare((optionB?.label ?? "").toLowerCase())
-                }
-                value={idThuongHieu}
-                onChange={(value) => {
-                  setIdThuongHieu(value);
-                }}
-                options={[
-                  { value: "", label: "Tất cả thương hiệu" },
-                  ...dataThuongHieu?.map((thuongHieu) => ({
-                    value: thuongHieu.id,
-                    label: thuongHieu.tenThuongHieu,
-                  })),
-                ]}
-              />
-            </Col>
-            <Col span={3}>
-              <label className="text-sm block mb-2" htmlFor="">
-                Danh mục
-              </label>
-              <Select
-                showSearch
-                style={{
-                  width: "100%",
-                }}
-                value={idDanhMuc}
-                onChange={(value) => {
-                  setIdDanhMuc(value);
-                }}
-                placeholder="Tất cả danh mục"
-                optionFilterProp="label"
-                filterSort={(optionA, optionB) =>
-                  (optionA?.label ?? "")
-                    .toLowerCase()
-                    .localeCompare((optionB?.label ?? "").toLowerCase())
-                }
-                options={[
-                  { value: "", label: "Tất cả danh mục" },
-                  ...dataDanhMuc?.map((danhMuc) => ({
-                    value: danhMuc.id,
-                    label: danhMuc.tenDanhMuc,
-                  })),
-                ]}
-              />
-            </Col>
-            <Col span={3}>
-              <label className="text-sm block mb-2" htmlFor="">
-                Chất liệu vải
-              </label>
-              <Select
-                showSearch
-                style={{
-                  width: "100%",
-                }}
-                value={idChatLieuVai}
-                onChange={(value) => {
-                  setIdChatLieuVai(value);
-                }}
-                placeholder="Tất cả chất vải"
-                optionFilterProp="label"
-                filterSort={(optionA, optionB) =>
-                  (optionA?.label ?? "")
-                    .toLowerCase()
-                    .localeCompare((optionB?.label ?? "").toLowerCase())
-                }
-                options={[
-                  { value: "", label: "Tất cả chất vải" },
-                  ...dataChatLieuVai?.map((vai) => ({
-                    value: vai.id,
-                    label: vai.tenChatLieuVai,
-                  })),
-                ]}
-              />
-            </Col>
-            <Col span={3}>
-              <label className="text-sm block mb-2" htmlFor="">
-                Chất liệu đế
-              </label>
-              <Select
-                showSearch
-                style={{
-                  width: "100%",
-                }}
-                value={idChatLieuDe}
-                onChange={(value) => {
-                  setIdChatLieuDe(value);
-                }}
-                placeholder="Tất cả chất đế"
-                optionFilterProp="label"
-                filterSort={(optionA, optionB) =>
-                  (optionA?.label ?? "")
-                    .toLowerCase()
-                    .localeCompare((optionB?.label ?? "").toLowerCase())
-                }
-                options={[
-                  { value: "", label: "Tất cả chất đế" },
-                  ...dataChatLieuDe?.map((de) => ({
-                    value: de.id,
-                    label: de.tenChatLieu,
-                  })),
-                ]}
-              />
-            </Col>
-          </Row>
-        
+        <Row className="flex justify-between">
+          <Col span={8}>
+            <label className="text-sm block mb-2" htmlFor="">
+              Sản phẩm
+            </label>
+            <Select
+              showSearch
+              style={{
+                width: "100%",
+              }}
+              placeholder="Tất cả sản phẩm"
+              optionFilterProp="label"
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? "")
+                  .toLowerCase()
+                  .localeCompare((optionB?.label ?? "").toLowerCase())
+              }
+              value={idSanPham}
+              onChange={(value) => {
+                setIdSanPham(value);
+              }}
+              options={[
+                { value: "", label: "Tất cả sản phẩm" },
+                ...dataSanPham?.map((sanPham) => ({
+                  value: sanPham.id,
+                  label: sanPham.tenSanPham,
+                })),
+              ]}
+            />
+          </Col>
+
+          <Col span={3}>
+            <label className="text-sm block mb-2" htmlFor="">
+              Thương hiệu
+            </label>
+            <Select
+              showSearch
+              style={{
+                width: "100%",
+              }}
+              placeholder="Tất cả thương hiệu"
+              optionFilterProp="label"
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? "")
+                  .toLowerCase()
+                  .localeCompare((optionB?.label ?? "").toLowerCase())
+              }
+              value={idThuongHieu}
+              onChange={(value) => {
+                setIdThuongHieu(value);
+              }}
+              options={[
+                { value: "", label: "Tất cả thương hiệu" },
+                ...dataThuongHieu?.map((thuongHieu) => ({
+                  value: thuongHieu.id,
+                  label: thuongHieu.tenThuongHieu,
+                })),
+              ]}
+            />
+          </Col>
+          <Col span={3}>
+            <label className="text-sm block mb-2" htmlFor="">
+              Danh mục
+            </label>
+            <Select
+              showSearch
+              style={{
+                width: "100%",
+              }}
+              value={idDanhMuc}
+              onChange={(value) => {
+                setIdDanhMuc(value);
+              }}
+              placeholder="Tất cả danh mục"
+              optionFilterProp="label"
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? "")
+                  .toLowerCase()
+                  .localeCompare((optionB?.label ?? "").toLowerCase())
+              }
+              options={[
+                { value: "", label: "Tất cả danh mục" },
+                ...dataDanhMuc?.map((danhMuc) => ({
+                  value: danhMuc.id,
+                  label: danhMuc.tenDanhMuc,
+                })),
+              ]}
+            />
+          </Col>
+          <Col span={3}>
+            <label className="text-sm block mb-2" htmlFor="">
+              Chất liệu vải
+            </label>
+            <Select
+              showSearch
+              style={{
+                width: "100%",
+              }}
+              value={idChatLieuVai}
+              onChange={(value) => {
+                setIdChatLieuVai(value);
+              }}
+              placeholder="Tất cả chất vải"
+              optionFilterProp="label"
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? "")
+                  .toLowerCase()
+                  .localeCompare((optionB?.label ?? "").toLowerCase())
+              }
+              options={[
+                { value: "", label: "Tất cả chất vải" },
+                ...dataChatLieuVai?.map((vai) => ({
+                  value: vai.id,
+                  label: vai.tenChatLieuVai,
+                })),
+              ]}
+            />
+          </Col>
+          <Col span={3}>
+            <label className="text-sm block mb-2" htmlFor="">
+              Chất liệu đế
+            </label>
+            <Select
+              showSearch
+              style={{
+                width: "100%",
+              }}
+              value={idChatLieuDe}
+              onChange={(value) => {
+                setIdChatLieuDe(value);
+              }}
+              placeholder="Tất cả chất đế"
+              optionFilterProp="label"
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? "")
+                  .toLowerCase()
+                  .localeCompare((optionB?.label ?? "").toLowerCase())
+              }
+              options={[
+                { value: "", label: "Tất cả chất đế" },
+                ...dataChatLieuDe?.map((de) => ({
+                  value: de.id,
+                  label: de.tenChatLieu,
+                })),
+              ]}
+            />
+          </Col>
+        </Row>
+
 
         <div
           style={{
@@ -1677,7 +1742,7 @@ const ShoppingCart = () => {
                 ward: currentCustomer?.diaChi?.huyen,
 
               }}
-              onFinish={handleSubmit}
+
             >
 
               <Form.Item name="idGioHang" hidden>
@@ -1689,21 +1754,33 @@ const ShoppingCart = () => {
               <Form.Item
                 label="Tên"
                 name="tenNguoiNhan"
+                value={currentInvoice?.tenKhachHang}
                 required
                 rules={[{ required: true, message: "Vui lòng nhập tên" }]}
               >
-                <Input size="large" />
+                <Input size="large"
+                  onChange={(e) => setTenKhachHang(e.target.value)}
+                />
               </Form.Item>
 
               <Form.Item
                 label="Số điện thoại"
                 name="sdt"
+
                 required
                 rules={[
                   { required: true, message: "Vui lòng nhập số điện thoại" },
+                  { min: 10, message: "Số điện thoại phải có ít nhất 10 ký tự" },
+                  { max: 10, message: "Số điện thoại chỉ được 10 ký tự" },
+                  {
+                    pattern: /^[0-9]+$/,
+                    message: "Số điện thoại chỉ được chứa số",
+                  },
                 ]}
               >
-                <Input size="large" />
+                <Input size="large"
+                  onChange={(e) => setSdt(e.target.value)}
+                />
               </Form.Item>
               <Form.Item
                 label="Địa chỉ"
@@ -1732,6 +1809,7 @@ const ShoppingCart = () => {
                   <TextArea
                     rows={4}
                     placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
+                    onChange={(e) => setGhiChu(e.target.value)}
                   />
                 </Form.Item>
               </div>

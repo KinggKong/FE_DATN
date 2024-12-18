@@ -24,8 +24,8 @@ const CartDrawer = ({ showDrawer, isOpenDrawer }) => {
             justifyContent: "space-between",
           }}
         >
-          <Button type="default" onClick={() => console.log("Xem giỏ hàng")}>
-            Xem giỏ hàng
+          <Button type="default" onClick={() => console.log("Xem giỏ hàng")}disabled>
+           
           </Button>
           <Link to={"payment"} >
             <Button type="primary" onClick={() => showDrawer(!isOpenDrawer)}>

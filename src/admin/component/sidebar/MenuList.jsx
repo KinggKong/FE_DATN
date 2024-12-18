@@ -1,4 +1,4 @@
-import { Menu } from "antd";
+import { Menu, Modal } from "antd";
 import {
   AreaChartOutlined,
   UserOutlined,
@@ -6,7 +6,7 @@ import {
   ProductOutlined,
   BgColorsOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaEye } from "react-icons/fa6";
 import { MdLocalShipping } from "react-icons/md";
 import { IoExitOutline } from "react-icons/io5";
@@ -24,8 +24,33 @@ import { FaUserCircle } from "react-icons/fa";
 import { BiSolidDiscount } from "react-icons/bi";
 import { CiDiscount1 } from "react-icons/ci";
 import { FaFileInvoice } from "react-icons/fa";
+import { useState } from "react";
 
 const MenuList = ({ darkTheme }) => {
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { confirm } = Modal;
+
+  const handleLogout = () => {
+    confirm({
+      title: "Xác nhận đăng xuất",
+      content: "Bạn có chắc chắn muốn đăng xuất không?",
+      okText: "Đăng xuất",
+      cancelText: "Hủy",
+      onOk() {
+        // Xử lý đăng xuất
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userInfo");
+        setIsLoggedIn(false);
+
+        navigate("/auth/login-admin"); // Điều hướng về trang đăng nhập
+      },
+      onCancel() {
+        console.log("Hủy đăng xuất");
+      },
+    });
+
+  };
   return (
     <div>
       <Menu
@@ -34,8 +59,8 @@ const MenuList = ({ darkTheme }) => {
         className="menu-bar"
       >
         <Menu.Item key="home" icon={<FaEye />}>
-        <Link to={"tong-quan"}>Tổng quan</Link>
-          
+          <Link to={"tong-quan"}>Tổng quan</Link>
+
         </Menu.Item>
 
         <Menu.Item key="activity" icon={<MdLocalShipping />}>
@@ -104,20 +129,18 @@ const MenuList = ({ darkTheme }) => {
           icon={<BiSolidDiscount />}
           title="Giảm giá"
         >
-           <Menu.Item key="sub3-t1" icon={<MdDiscount />}>
-          <Link to={"giamgia"}>Phiếu giảm giá</Link>
+          <Menu.Item key="sub3-t1" icon={<MdDiscount />}>
+            <Link to={"giamgia"}>Phiếu giảm giá</Link>
           </Menu.Item>
           <Menu.Item key="sub3-t2" icon={<CiDiscount1 />}>
-          <Link to={"sale"}>Đợt giảm giá</Link>
+            <Link to={"sale"}>Đợt giảm giá</Link>
           </Menu.Item>
         </Menu.SubMenu>
-       
 
-        <Menu.Item key="setting" icon={<SettingOutlined />}>
-          Cài đặt
-        </Menu.Item>
-        <Menu.Item key="exit" icon={<IoExitOutline />}>
-          Thoát
+
+        
+        <Menu.Item key="exit" icon={<IoExitOutline />} onClick={handleLogout}>
+          Đăng xuất
         </Menu.Item>
       </Menu>
     </div>
