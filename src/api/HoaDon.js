@@ -50,4 +50,10 @@ const changeTypeBill = (id) => {
     return axiosClient.put(url);
 }
 
-export {getAllHoaDon, getHoaDonById, createHoaDon, deleteHoaDon, updateHoaDon, confirmPayment, processPayment, addCustomerToInvoice, updateSoLuongAndTongTienHoaDon, changeTypeBill};
+const updateCustomer = (idHoaDon, idKhachHang) => {
+    const url = `/api/v1/hoaDon/addKhachHang?idHoaDon=${idHoaDon}&idKhachHang=${idKhachHang}`;
+    return axiosClient.put(url);
+}
+
+
+export {getAllHoaDon, getHoaDonById, createHoaDon, deleteHoaDon, updateHoaDon, confirmPayment, processPayment, addCustomerToInvoice, updateSoLuongAndTongTienHoaDon, changeTypeBill, updateCustomer};
