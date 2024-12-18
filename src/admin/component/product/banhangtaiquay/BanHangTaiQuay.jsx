@@ -31,6 +31,7 @@ import {
   confirmPayment,
   addCustomerToInvoice,
   changeTypeBill,
+  updateCustomer,
 } from "../../../../api/HoaDon";
 import {
   getAllHdctByIdHoaDon,
@@ -76,6 +77,34 @@ const ShoppingCart = () => {
   const [confirmPayments, setConfirmPaymets] = useState(false);
 
   const [addressOptions, setAddressOptions] = useState([]);
+
+  const [paymentAmount, setPaymentAmount] = useState(
+    localStorage.getItem(currentInvoice?.id) || "0.0"
+  );
+
+  const formatCurrency = (value) => {
+    const number = parseFloat(value);
+    if (isNaN(number)) return "0.0 VND"; // Trả về 0.0 VND nếu giá trị không hợp lệ
+    return number.toLocaleString("vi-VN") + " VND"; // Định dạng tiền theo kiểu Việt Nam
+  };
+
+  const handlePaymentChange = (value) => {
+    // Loại bỏ ký tự không phải là số và cập nhật lại giá trị
+    const formattedValue = value.replace(/[^\d]/g, "");
+    setPaymentAmount(formattedValue);
+    localStorage.setItem(currentInvoice?.id, formattedValue);
+  };
+
+  useEffect(() => {
+    // Cập nhật giá trị từ localStorage khi currentInvoice thay đổi
+    if (currentInvoice?.id && localStorage.getItem(currentInvoice?.id)) {
+      setPaymentAmount(localStorage.getItem(currentInvoice?.id));
+    }
+  }, [currentInvoice]);
+
+  // useEffect(() => {
+  //   setPaymentAmount(currentInvoice?.tienSauGiam);
+  // }, [currentInvoice]);
 
   const notificationMessage = (type, message) => {
     toast.dismiss();
@@ -300,9 +329,15 @@ const ShoppingCart = () => {
     }
   }, [currentInvoice]);
 
+  const addKhachHang = (idHoaDon, idKhachHang) => {
+    updateCustomer(idHoaDon, idKhachHang);
+    console.log(idHoaDon, idKhachHang);
+    
+  }
+
   const selectCustomer = async (payload) => {
     setCurrentCustomer(payload);
-
+    addKhachHang(currentInvoice?.id, payload?.id)
     console.log("Current customer:", payload);
     setTenKhachHang(payload?.ten);
     setSdt(payload?.sdt);
@@ -476,69 +511,14 @@ const ShoppingCart = () => {
   };
 
 
-  // const handleXacNhanThanhToan = async (id) => {
-  //   setLoading(true);
-  //   try {
-  //     if (!currentInvoice) {
-  //       setIsShow(true);
-  //       setConfirmPaymets(false);
-  //       notificationMessage("warning", "Vui lòng chọn hóa đơn");
-  //       return;
-  //     }
-
-  //     if (
-  //       Number(localStorage.getItem(currentInvoice?.id)) !==
-  //       currentInvoice.tienSauGiam
-  //     ) {
-  //       console.log();
-  //       setConfirmPaymets(false);
-  //       notificationMessage("warning", "Vui lòng thanh toán đơn hàng!");
-  //       return;
-  //     }
-
-  //     if (!isShipping) {
-  //       setShip(0);
-  //       setDiaChi(null);
-  //     }
-
-  //     const res = await confirmPayment(id, selectedMethod, diaChi, ship);
-  //     console.log(res);
-
-  //     if (res?.code === 200) {
-  //       localStorage.removeItem(currentInvoice?.id);
-
-  //       setInvoices((prevInvoices) => {
-  //         const newInvoices = prevInvoices.filter(
-  //           (invoice) => invoice.id !== id
-  //         );
-  //         if (newInvoices.length > 0 && newInvoices[0]?.id) {
-  //           setActiveTab(newInvoices[0]?.id);
-  //         } else {
-  //           setActiveTab("noInvoice");
-  //         }
-  //         return newInvoices;
-  //       });
-  //       notificationMessage("success", "Thanh toán hóa đơn thành công!");
-  //       setShip(0);
-  //       setDiaChi(null);
-  //       setConfirmPaymets(false);
-  //       setPartialPayment(0);
-  //       console.log("Data: ", res?.code);
-  //     }
-  //     if(res?.code === 1041) {
-  //       notificationMessage('warning', "Voucher da het han");
-  //       return;
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //     notificationMessage("error", "Số lương voucher đã hết !");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  useEffect(() => {
+      getOrderById(currentInvoice?.id);
+      localStorage.getItem(currentInvoice?.id)
+  }, [currentInvoice?.id])
 
   const handleXacNhanThanhToan = async (id) => {
     setLoading(true);
+    
 
     try {
       if (!currentInvoice) {
@@ -547,9 +527,11 @@ const ShoppingCart = () => {
         notificationMessage("warning", "Vui lòng chọn hóa đơn");
         return;
       }
-
-
-      // Kiểm tra thông tin cần thiết cho loại hóa đơn ONLINE
+      if(currentInvoice?.tongTien == 0) {
+        setConfirmPaymets(false);
+        notificationMessage("warning", "Vui lòng thêm sản phẩm !");
+        return;
+      }
       if (currentInvoice?.loaiHoaDon === "ONLINE") {
         const isValid = validateForm();
         if (!isValid) {
@@ -557,12 +539,10 @@ const ShoppingCart = () => {
           return; // Dừng xử lý nếu không hợp lệ
         }
       }
-
-
-
-
+     
+  
       if (
-        Number(localStorage.getItem(currentInvoice?.id)) !==
+        Number(localStorage.getItem(currentInvoice?.id)) <
         currentInvoice.tienSauGiam
       ) {
         setConfirmPaymets(false);
@@ -572,11 +552,9 @@ const ShoppingCart = () => {
 
       if (!isShipping) {
         setShip(0);
-        setDiaChi("");
-       
-        setGhiChu("");
-
+        setDiaChi(null);
       }
+  
       const processedName = tenKhachHang?.trim() || "Khách lẻ";
       const processedPhone = sdt?.trim() || "";
 
@@ -585,7 +563,6 @@ const ShoppingCart = () => {
 
 
       // const res = await confirmPayment(id, selectedMethod, diaChi, ship);
-
       console.log(res);
 
       if (res?.code === 200) {
@@ -612,73 +589,27 @@ const ShoppingCart = () => {
         setPartialPayment(0);
         setShip(0);
         setDiaChi("");
+        setPaymentAmount(0)
         setIsShipping(false);
         setCurrentCustomer(null);
-
-
+        console.log("Data: ", res?.code);
       }
-      //       if(res?.code === 1014){
-      //         toast.error("voucher đã hết hạn");
-      // =======
-      //         notificationMessage("success", "Thanh toán hóa đơn thành công!");
-      //         setShip(0);
-      //         setDiaChi(null);
-      //         setConfirmPaymets(false);
-      //         setPartialPayment(0);
-      //         console.log("Data: ", res?.code);
-      // >>>>>>> master
-      //       }
-
+  
       // Xử lý khi voucher hết hạn (code 1041)
       if (res?.code === 1041) {
-        notificationMessage('warning', "Voucher đã hết hạn");
+        notificationMessage("warning", "Voucher đã hết hạn");
         return; // Kết thúc hàm nếu voucher hết hạn
       }
-
+  
     } catch (error) {
       console.log(error);
-      notificationMessage('warning', "Voucher đã dừng áp dụng !");
+      notificationMessage("warning", "Voucher đã dừng áp dụng !");
     } finally {
       setLoading(false);
     }
   };
-
-  // const handleAddressSearch = debounce(async (value) => {
-  //   if (value.length > 2) {
-  //     try {
-  //       const response = await axios.get(
-  //         `https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(
-  //           value
-  //         )}`
-  //       );
-  //       if (response.data.predictions) {
-  //         setAddressOptions(
-  //           response.data.predictions.map((prediction) => ({
-  //             value: prediction.description,
-  //             label: prediction.description,
-  //             place_id: prediction.place_id,
-  //           }))
-  //         );
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching address suggestions:", error);
-  //     }
-  //   }
-  // }, 300);
-
-  // const handleAddressSelect = async (value, option) => {
-  //   try {
-  //     const detailResponse = await axios.get(
-  //       `https://rsapi.goong.io/Place/Detail?place_id=${option.place_id}&api_key=${apiKey}`
-  //     );
-  //     if (detailResponse.data.result && detailResponse.data.result.geometry) {
-  //       const { lat, lng } = detailResponse.data.result.geometry.location;
-  //       calculateShippingCost(lat, lng);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching place details:", error);
-  //   }
-  // };
+  
+ 
   const [partialPayment, setPartialPayment] = useState(0);
   const [modalPaymentAmount, setModalPaymentAmount] = useState(0);
   const showModalThanhToan = () => setIsModalVisible(true);
@@ -686,7 +617,7 @@ const ShoppingCart = () => {
   const handleOkThanhToan = () => {
     setPartialPayment(currentInvoice?.tienSauGiam);
     console.log(modalPaymentAmount);
-    localStorage.setItem(`${currentInvoice.id}`, currentInvoice?.tienSauGiam);
+    localStorage.setItem(`${currentInvoice.id}`, paymentAmount);
     setIsModalVisible(false);
   };
 
@@ -1556,7 +1487,6 @@ const ShoppingCart = () => {
         </div>
       )}
 
-      {/* Modal QR Code Scanner */}
       <Modal
         title="QR Code Scanner"
         visible={isModalVisibleQR}
@@ -1768,8 +1698,8 @@ const ShoppingCart = () => {
           <Button key="cancel" onClick={handleCancelThanhToan}>
             Hủy
           </Button>,
-          <Button key="confirm"
-            type="primary" onClick={handleOkThanhToan}
+          <Button key="confirm" 
+          type="primary" onClick={handleOkThanhToan}
           >
             Xác nhận
           </Button>,
@@ -1795,39 +1725,31 @@ const ShoppingCart = () => {
               </Button>
             </Button.Group>
           </Form.Item>
+
+          {/* Số tiền khách thanh toán */}
           <Form.Item label="Số tiền khách thanh toán">
             <Input
               type="text"
-              value={
-                currentInvoice?.tienSauGiam &&
-                  !isNaN(currentInvoice?.tienSauGiam)
-                  ? (
-                    currentInvoice?.tienSauGiam + (ship || 0)
-                  ).toLocaleString() + " VND"
-                  : "0.0 VND"
-              }
+              value={formatCurrency(paymentAmount)}  
               placeholder="Nhập số tiền thanh toán"
+              onChange={(e) => handlePaymentChange(e.target.value)}
             />
           </Form.Item>
+
           <Divider />
-          <Divider />
+
           <Text strong>
-            {/* Khách thanh toán: {partialPayment.toLocaleString()} VND */}
-            Khách thanh toán:
-            {
-              // Check if the value is stored in localStorage and whether a shipping cost exists
-              localStorage.getItem(currentInvoice?.id) === null
-                ? "0.0 VND" // If no value in localStorage, show "0.0 VND"
-                : (
-                  (parseFloat(localStorage.getItem(currentInvoice?.id)) ||
-                    0) + (ship || 0)
-                ) // Add ship if exists
-                  .toLocaleString() + " VND" // Format with commas and append " VND"
-            }
-          </Text>
-          <br />
-          <Text strong style={{ color: "red" }}>
-            {/* Tiền thiếu: {remainingAmount.toLocaleString()} VND */}
+            Số tiền của đơn hàng: 
+            {formatCurrency(currentInvoice?.tienSauGiam + (ship || 0))}
+            <br/>
+           <br/>
+            {paymentAmount - currentInvoice?.tienSauGiam - (ship || 0) < 0
+              ? `Tiền khách thiếu: ${Math.abs(
+                  paymentAmount - currentInvoice?.tienSauGiam - (ship || 0)
+                ).toLocaleString()} VND` // Nếu là âm, hiển thị "Tiền khách thiếu"
+              : `Tiền trả lại khách: ${Math.abs(
+                  paymentAmount - currentInvoice?.tienSauGiam - (ship || 0)
+                ).toLocaleString()} VND`}
           </Text>
         </Form>
       </Modal>
@@ -1840,7 +1762,7 @@ const ShoppingCart = () => {
           width: "100%",
         }}
       >
-        {currentInvoice?.loaiHoaDon === "ONLINE" && (
+        {/* {currentInvoice?.loaiHoaDon === "ONLINE" && (
           <div style={{ width: "48%", marginTop: "40px" }}>
             <Title level={3}>Thông tin giao hàng</Title>
           
@@ -1852,13 +1774,19 @@ const ShoppingCart = () => {
                 tenNguoiNhan: currentCustomer?.ten,
                 sdt: currentCustomer?.sdt,
                 email: currentCustomer?.email,
-                
               }}
               onFinish={handleSubmit}
             >
-               
-              
-            
+                tenNguoiNhan: currentInvoice?.tenNguoiNhan,
+                sdt: currentInvoice?.sdt,
+                province: currentCustomer?.diaChi?.tinh,
+                email: currentInvoice?.email,
+                district: currentCustomer?.diaChi?.quan,
+                ward: currentCustomer?.diaChi?.huyen,
+
+              }}
+              onFinish={handleSubmit}
+            >
               <Form.Item name="idGioHang" hidden>
                 <Input type="hidden" />
               </Form.Item>
@@ -1868,40 +1796,25 @@ const ShoppingCart = () => {
               <Form.Item
                 label="Tên"
                 name="tenNguoiNhan"
-                value={currentInvoice?.tenKhachHang}
                 required
                 rules={[{ required: true, message: "Vui lòng nhập tên" }]}
               >
-                <Input size="large"
-                  onChange={(e) => setTenKhachHang(e.target.value)}
-                />
+                <Input size="large" />
               </Form.Item>
 
               <Form.Item
                 label="Số điện thoại"
                 name="sdt"
-
                 required
                 rules={[
                   { required: true, message: "Vui lòng nhập số điện thoại" },
-
-                  { min: 10, message: "Số điện thoại phải có ít nhất 10 ký tự" },
-                  { max: 10, message: "Số điện thoại chỉ được 10 ký tự" },
-                  {
-                    pattern: /^[0-9]+$/,
-                    message: "Số điện thoại chỉ được chứa số"},
-
-
                   {
                     pattern: /^(0|\+84)[3-9][0-9]{8}$/,
                     message: "Số điện thoại không đúng định dạng!",
-
                   },
                 ]}
               >
-                <Input size="large"
-                  onChange={(e) => setSdt(e.target.value)}
-                />
+                <Input size="large" />
               </Form.Item>
 
               <Form.Item
@@ -1909,7 +1822,7 @@ const ShoppingCart = () => {
                 name="address"
                 required
                 rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
-               
+                rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
               >
                 <AutoComplete
                   options={addressOptions}
@@ -1932,15 +1845,14 @@ const ShoppingCart = () => {
                   <TextArea
                     rows={4}
                     placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
-                    onChange={(e) => setGhiChu(e.target.value)}
                   />
                 </Form.Item>
               </div>
             </Form>
           </div>
-        )}
+        )} */}
 
-        {/* {currentInvoice?.loaiHoaDon === "ONLINE" && (
+        {currentInvoice?.loaiHoaDon === "ONLINE" && (
           <div style={{ width: "48%", marginTop: "40px" }}>
             <Title level={3}>Thông tin giao hàng</Title>
 
@@ -2019,7 +1931,7 @@ const ShoppingCart = () => {
               </div>
             </Form>
           </div>
-        )} */}
+        )} 
 
         {/* Form Thông tin thanh toán - Luôn hiển thị */}
         {currentInvoice?.id && (
@@ -2039,17 +1951,11 @@ const ShoppingCart = () => {
                     />
                   </Col>
                   <Col style={{ paddingLeft: "8px" }}>
-                    {/* <Text strong>{partialPayment.toLocaleString()} VND</Text> */}
                     <Text strong>
-                      {localStorage.getItem(currentInvoice?.id)
-                        ? (
-                          (parseFloat(
-                            localStorage.getItem(currentInvoice?.id)
-                          ) || 0) + (ship || 0)
-                        ) // Add ship if exists
-                          .toLocaleString()
-                        : "0"}{" "}
-                      VND
+                    {localStorage.getItem(currentInvoice?.id) < (currentInvoice?.tienSauGiam + (ship || 0))
+                     ? <Tag color="red">Thanh toán thất bại</Tag> 
+                     : 
+                     <Tag color="success">Thanh toán thành công</Tag>}
                     </Text>
                   </Col>
                 </Row>
@@ -2067,18 +1973,6 @@ const ShoppingCart = () => {
                   </Col>
                 </Row>
               </Form.Item>
-              {/* <Form.Item label="Giao Hàng">
-                <Switch
-                  checked={currentInvoice?.loaiHoaDon !== "OFFLINE"} // Bật nếu loại hóa đơn không phải OFFLINE
-                  onChange={() => {
-                    const newLoaiHoaDon =
-                      currentInvoice?.loaiHoaDon === "OFFLINE"
-                        ? "ONLINE"
-                        : "OFFLINE"; // Đảo ngược trạng thái loại hóa đơn
-                    changeType(currentInvoice?.id, newLoaiHoaDon); // Giả sử `changeType` là hàm cập nhật lại loại hóa đơn
-                  }}
-                />
-              </Form.Item> */}
               <Form.Item label="Giao Hàng">
                 <Switch
                   checked={currentInvoice?.loaiHoaDon !== "OFFLINE"} // Bật nếu loại hóa đơn không phải OFFLINE
@@ -2215,7 +2109,7 @@ const ShoppingCart = () => {
               okText="Thêm khách hàng"
               cancelText="Hủy"
               onOk={handleCreateCustomer}
-            >
+            >  
               <Table
                 rowKey="key"
                 columns={columnsKhachHang}
@@ -2234,7 +2128,7 @@ const ShoppingCart = () => {
                 loading={loading}
                 onRow={(record) => ({
                   onClick: () => selectCustomer(record),
-                  onChange: () => selectCustomer(record),
+                  // onChange: () => selectCustomer(record),
                 })}
               />
             </Modal>
