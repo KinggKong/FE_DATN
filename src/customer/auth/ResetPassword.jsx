@@ -21,7 +21,7 @@ const ResetPassword = () => {
         "http://localhost:8080/api/v1/auth/forgot-password",
         {
           token: token,
-          newPasswrod: values.password
+          newPasswrod: values.password.trim()
         }
       );
       console.log("Change password: Success:", response.data);

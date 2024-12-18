@@ -30,11 +30,11 @@ const Register = () => {
     setIsLoading(true);
     try {
       const signupRequest = {
-        username: values.username,
-        name: values.name,
-        email: values.email,
-        code: values.code,
-        password: values.password,  
+        username: values.username.trim(),
+        name: values.name.trim(),
+        email: values.email.trim(),
+        code: values.code.trim(),
+        password: values.password.trim(),  
       };
 
       const response = await axios.post(

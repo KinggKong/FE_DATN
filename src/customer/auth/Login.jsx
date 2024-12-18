@@ -22,8 +22,8 @@ const Login = () => {
       const response = await axios.post(
         "http://localhost:8080/api/v1/auth/login",
         {
-          username: values.username,
-          password: values.password,
+          username: values.username.trim(),
+          password: values.password.trim(),
         }
       );
 

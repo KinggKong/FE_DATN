@@ -22,8 +22,8 @@ const LoginAdmin = () => {
       const response = await axios.post(
         "http://localhost:8080/api/v1/auth/admin/login",
         {
-          username: values.username,
-          password: values.password,
+          username: values.username.trim(),
+          password: values.password.trim(),
         }
       );
 
@@ -150,7 +150,7 @@ const LoginAdmin = () => {
         </Form>
         <div className="text-center mt-3">
           <Link
-            to="/auth/forgot-password"
+            to="/auth/forgot-password-admin"
             className="text-sm text-purple-600 hover:text-purple-800 transition-colors duration-300"
             onClick={handleForgotPassword}
           >
