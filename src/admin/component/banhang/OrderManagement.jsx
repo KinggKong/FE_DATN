@@ -20,8 +20,22 @@ export default function OrderManagement() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const navigate = useNavigate();
+    const [userInfo, setUserInfo] = useState(null);
+    const [keywordSearch, setKeywordSearch] = useState('');
 
-
+     useEffect(() => {
+            const storedUserInfo = localStorage.getItem("userInfo");
+            if (storedUserInfo) {
+                const parsedUserInfo = JSON.parse(storedUserInfo);
+                setUserInfo(parsedUserInfo);
+                console.log('Stored user info:', storedUserInfo);
+                console.log('Parsed user info:', parsedUserInfo);
+               
+            } else {
+                console.log('No stored user info, using default userId: 1');
+             
+            }
+        }, []);
 
     const handleGenerateInvoice = async (orderCode) => {
         try {
@@ -97,7 +111,7 @@ export default function OrderManagement() {
 
     useEffect(() => {
         fetchOrders();
-    }, [selectedTab, searchText, dateRange, pagination.current, pagination.pageSize]);
+    }, [selectedTab, searchText, dateRange, pagination.current, pagination.pageSize,keywordSearch]);
 
     const fetchOrders = async () => {
         setLoading(true);
@@ -109,6 +123,9 @@ export default function OrderManagement() {
             }
             if (dateRange) {
                 url += `&startDate=${dateRange[0].format('YYYY-MM-DD')}&endDate=${dateRange[1].format('YYYY-MM-DD')}`;
+            }
+            if (keywordSearch) { 
+                url += `&keySearch=${keywordSearch}`; 
             }
             url += `&page=${pagination.current - 1}&size=${pagination.pageSize}`;
 
@@ -164,7 +181,7 @@ export default function OrderManagement() {
         try {
             const nextStatus = statusConfig[selectedOrder.status].nextStatus;
             const response = await axios.post('http://localhost:8080/api/v1/shop-on/update-status-bill', {
-                idNhanvien: 1, 
+                idNhanvien: userInfo?.id, 
                 idHoaDon: selectedOrder.key,
                 status: nextStatus
             });
@@ -306,7 +323,7 @@ export default function OrderManagement() {
                 <Input
                     placeholder="Tìm kiếm theo mã hóa đơn, tên khách hàng, số điện thoại..."
                     prefix={<SearchOutlined />}
-                    onChange={(e) => handleSearch(e.target.value)}
+                    onChange={(e) => setKeywordSearch(e.target.value)}
                     className="flex-grow"
                 />
                 <RangePicker

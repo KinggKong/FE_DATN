@@ -1,7 +1,9 @@
 import ForgotPassword from "../customer/auth/ForgotPassword";
 import Login from "../customer/auth/Login";
+import LoginAdmin from "../customer/auth/LoginAdmin";
 import LoginSuccess from "../customer/auth/LoginSuccess";
 import Register from "../customer/auth/Register";
+import ResetPassword from "../customer/auth/ResetPassword";
 
 const AuthRouters = {
     path: "/auth",
@@ -21,8 +23,15 @@ const AuthRouters = {
       {
         path: "login-success",
         element: <LoginSuccess />,
+      },      
+      {
+        path: "reset-password",
+        element: <ResetPassword />,
       },
-
+      {
+        path: "login-admin",
+        element: <LoginAdmin />,
+      },
     ],
 };
 

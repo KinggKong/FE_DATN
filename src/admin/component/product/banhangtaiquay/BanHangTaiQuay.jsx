@@ -417,6 +417,66 @@ const ShoppingCart = () => {
     }
   }, [activeTab]);
 
+  // const handleXacNhanThanhToan = async (id) => {
+  //   setLoading(true);
+  //   try {
+  //     if (!currentInvoice) {
+  //       setIsShow(true);
+  //       setConfirmPaymets(false);
+  //       notificationMessage("warning", "Vui lòng chọn hóa đơn");
+  //       return;
+  //     }
+
+  //     if (
+  //       Number(localStorage.getItem(currentInvoice?.id)) !==
+  //       currentInvoice.tienSauGiam
+  //     ) {
+  //       console.log();
+  //       setConfirmPaymets(false);
+  //       notificationMessage("warning", "Vui lòng thanh toán đơn hàng!");
+  //       return;
+  //     }
+
+  //     if (!isShipping) {
+  //       setShip(0);
+  //       setDiaChi(null);
+  //     }
+
+  //     const res = await confirmPayment(id, selectedMethod, diaChi, ship);
+  //     console.log(res);
+
+  //     if (res?.code === 200) {
+  //       localStorage.removeItem(currentInvoice?.id);
+
+  //       setInvoices((prevInvoices) => {
+  //         const newInvoices = prevInvoices.filter(
+  //           (invoice) => invoice.id !== id
+  //         );
+  //         if (newInvoices.length > 0 && newInvoices[0]?.id) {
+  //           setActiveTab(newInvoices[0]?.id);
+  //         } else {
+  //           setActiveTab("noInvoice");
+  //         }
+  //         return newInvoices;
+  //       });
+  //       notificationMessage("success", "Thanh toán hóa đơn thành công!");
+  //       setShip(0);
+  //       setDiaChi(null);
+  //       setConfirmPaymets(false);
+  //       setPartialPayment(0);
+  //       console.log("Data: ", res?.code);
+  //     }
+  //     if(res?.code === 1041) {
+  //       notificationMessage('warning', "Voucher da het han");
+  //       return;
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     notificationMessage("error", "Số lương voucher đã hết !");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleXacNhanThanhToan = async (id) => {
     setLoading(true);
     try {
@@ -426,28 +486,27 @@ const ShoppingCart = () => {
         notificationMessage("warning", "Vui lòng chọn hóa đơn");
         return;
       }
-
+  
       if (
         Number(localStorage.getItem(currentInvoice?.id)) !==
         currentInvoice.tienSauGiam
       ) {
-        console.log();
         setConfirmPaymets(false);
         notificationMessage("warning", "Vui lòng thanh toán đơn hàng!");
         return;
       }
-
+  
       if (!isShipping) {
         setShip(0);
         setDiaChi(null);
       }
-
+  
       const res = await confirmPayment(id, selectedMethod, diaChi, ship);
       console.log(res);
-
+  
       if (res?.code === 200) {
         localStorage.removeItem(currentInvoice?.id);
-
+  
         setInvoices((prevInvoices) => {
           const newInvoices = prevInvoices.filter(
             (invoice) => invoice.id !== id
@@ -461,17 +520,26 @@ const ShoppingCart = () => {
         });
         notificationMessage("success", "Thanh toán hóa đơn thành công!");
         setShip(0);
+        setDiaChi(null);
         setConfirmPaymets(false);
         setPartialPayment(0);
+        console.log("Data: ", res?.code);
       }
+  
+      // Xử lý khi voucher hết hạn (code 1041)
+      if (res?.code === 1041) {
+        notificationMessage('warning', "Voucher đã hết hạn");
+        return; // Kết thúc hàm nếu voucher hết hạn
+      }
+  
     } catch (error) {
       console.log(error);
-      notificationMessage("error", "Số lương voucher đã hết !");
+      notificationMessage('warning', "Voucher đã dừng áp dụng !");
     } finally {
       setLoading(false);
     }
   };
-
+  
   const handleAddressSearch = debounce(async (value) => {
     if (value.length > 2) {
       try {
@@ -1562,7 +1630,9 @@ const ShoppingCart = () => {
           <Button key="cancel" onClick={handleCancelThanhToan}>
             Hủy
           </Button>,
-          <Button key="confirm" type="primary" onClick={handleOkThanhToan}>
+          <Button key="confirm" 
+          type="primary" onClick={handleOkThanhToan}
+          >
             Xác nhận
           </Button>,
         ]}
@@ -1922,11 +1992,10 @@ const ShoppingCart = () => {
                       setDiaChi("");
                     }
 
-                    changeType(currentInvoice?.id, newLoaiHoaDon); // Giả sử `changeType` là hàm cập nhật loại hóa đơn
+                    changeType(currentInvoice?.id, newLoaiHoaDon); 
                   }}
                 />
               </Form.Item>
-              ;
               <Form.Item label="Tiền hàng">
                 <Text>
                   <strong>

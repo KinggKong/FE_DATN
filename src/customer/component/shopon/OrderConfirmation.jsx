@@ -91,7 +91,7 @@ export default function OrderConfirmation() {
                                         <Text>Màu sắc: {item.sanPhamChiTietResponse.tenMauSac}</Text>
                                         <Text>Số lượng: {item.soLuong}</Text>
                                         <Text>Kích thước: {item.sanPhamChiTietResponse.tenKichThuoc}</Text>
-                                        <Text>Giá tiền: {item.giaTien}</Text>
+                                        <Text>Giá tiền: {(item.giaTien).toLocaleString()}đ</Text>
                                     </div>
                                     <Text strong className="mt-2 block">Thành tiền: {(item.giaTien * item.soLuong).toLocaleString()}đ</Text>
                                 </div>
