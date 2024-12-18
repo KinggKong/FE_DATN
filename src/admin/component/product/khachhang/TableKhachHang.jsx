@@ -35,8 +35,12 @@ const TableKhachHang = () => {
       };
       const res = await getAllKhachHangApi(params);
 
-      if (res && res.data && res.data.content) {
-        const dataWithKey = res.data.content.map((item, index) => ({
+      if (res && res.data && res.data.content) {      
+        const filteredData = res.data.content.filter(
+          (item) => item.id !== 1 && item.id !== 2
+        );
+  
+        const dataWithKey = filteredData.map((item,index) => ({
           ...item,
           key: item.id,
           stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,

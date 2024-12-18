@@ -129,7 +129,7 @@ export default function InvoiceLookup() {
         throw new Error(response.data.message);
       }
     } catch (error) {
-      message.error('Không thể hủy đơn hàng:');
+      message.error('Không thể hủy đơn hàng: '+ error.response?.data?.message);
     }
   };
 
