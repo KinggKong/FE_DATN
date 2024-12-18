@@ -47,11 +47,11 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
     }
 
     // Kiểm tra số điện thoại 
-    const phoneRegex = /^[0-9]{10,11}$/;
+    const phoneRegex = /^0[0-9]{9,10}$/;
     if (!phoneRegex.test(sdt)) {
       notification.error({
         message: "Lỗi",
-        description: "Vui lòng nhập số điện thoại hợp lệ (10-11)!",
+        description: "Vui lòng nhập số điện thoại hợp lệ (10-11 chữ số)!",
       });
       return;
     }
@@ -101,6 +101,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
     setDiaChiStr(""); // Reset địa chỉ
     setAddressOptions([]); // Reset các options địa chỉ
   };
+
 
   // Xử lý thay đổi tệp tải lên
   const handleChange = ({ fileList: newFileList }) => setFileList(newFileList);
@@ -313,6 +314,11 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
 
     </Modal>
   );
-};
+
+
+}
+
+
+
 
 export default ModalThemMoiKhachHang;

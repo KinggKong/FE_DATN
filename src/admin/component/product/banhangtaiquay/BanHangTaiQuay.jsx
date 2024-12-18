@@ -103,7 +103,26 @@ const ShoppingCart = () => {
   const originLng = 105.74668196761013;
   const [isShipping, setIsShipping] = useState(false);
   const [ship, setShip] = useState(0);
-  const [diaChi, setDiaChi] = useState(null);
+  const [diaChi, setDiaChi] = useState("");
+  const [tenKhachHang, setTenKhachHang] = useState("Khách lẻ");
+  const [sdt, setSdt] = useState(0);
+  const [ghiChu, setGhiChu] = useState("");
+
+  //update Gia khi tat mo sale trong hoa don cho
+  const updateHoaDonCT_Sale = async () => {
+    try {
+      const res = await updateHoaDonCT_Sale();
+      if (res?.data) {
+        console.log(res.data);
+      }
+    } catch (error) {
+      console.error("Update gia trong hoa don cho error:", error);
+    }
+  };
+
+  useEffect(() => {
+    updateHoaDonCT_Sale();
+  }, []);
 
   //datafilter SPCT
   const [idDanhMuc, setIdDanhMuc] = useState();
@@ -285,6 +304,9 @@ const ShoppingCart = () => {
     setCurrentCustomer(payload);
 
     console.log("Current customer:", payload);
+    setTenKhachHang(payload?.ten);
+    setSdt(payload?.sdt);
+
     form.setFieldsValue({
       tenNguoiNhan: payload?.ten,
       sdt: payload?.sdt,
@@ -417,6 +439,43 @@ const ShoppingCart = () => {
     }
   }, [activeTab]);
 
+
+
+  //Hàm validate form thanh toán
+  const validateForm = () => {
+    // Kiểm tra loại hóa đơn
+    if (currentInvoice?.loaiHoaDon === "ONLINE") {
+      // Lấy giá trị từ form
+      const values = form.getFieldsValue();
+
+      // Kiểm tra tên người nhận
+      if (!values.tenNguoiNhan || values.tenNguoiNhan.trim() === "") {
+        toast.warning("Vui lòng nhập tên người nhận!");
+        return false;
+      }
+
+      // Kiểm tra số điện thoại
+      if (!values.sdt || values.sdt.trim() === "") {
+        toast.warning("Vui lòng nhập số điện thoại!");
+        return false;
+      }
+      if (!/^[0-9]{10}$/.test(values.sdt)) {
+        toast.warning("Số điện thoại không đúng định dạng (10 chữ số)!");
+        return false;
+      }
+
+      // Kiểm tra địa chỉ
+      if (!values.address || values.address.trim() === "") {
+        toast.warning("Vui lòng nhập địa chỉ giao hàng!");
+        return false;
+      }
+    }
+
+    // Trả về true nếu tất cả điều kiện hợp lệ
+    return true;
+  };
+
+
   // const handleXacNhanThanhToan = async (id) => {
   //   setLoading(true);
   //   try {
@@ -477,8 +536,10 @@ const ShoppingCart = () => {
   //     setLoading(false);
   //   }
   // };
+
   const handleXacNhanThanhToan = async (id) => {
     setLoading(true);
+
     try {
       if (!currentInvoice) {
         setIsShow(true);
@@ -486,7 +547,20 @@ const ShoppingCart = () => {
         notificationMessage("warning", "Vui lòng chọn hóa đơn");
         return;
       }
-  
+
+
+      // Kiểm tra thông tin cần thiết cho loại hóa đơn ONLINE
+      if (currentInvoice?.loaiHoaDon === "ONLINE") {
+        const isValid = validateForm();
+        if (!isValid) {
+          setLoading(false);
+          return; // Dừng xử lý nếu không hợp lệ
+        }
+      }
+
+
+
+
       if (
         Number(localStorage.getItem(currentInvoice?.id)) !==
         currentInvoice.tienSauGiam
@@ -495,18 +569,28 @@ const ShoppingCart = () => {
         notificationMessage("warning", "Vui lòng thanh toán đơn hàng!");
         return;
       }
-  
+
       if (!isShipping) {
         setShip(0);
-        setDiaChi(null);
+        setDiaChi("");
+       
+        setGhiChu("");
+
       }
-  
-      const res = await confirmPayment(id, selectedMethod, diaChi, ship);
+      const processedName = tenKhachHang?.trim() || "Khách lẻ";
+      const processedPhone = sdt?.trim() || "";
+
+      const res = await confirmPayment(id, selectedMethod, diaChi, ship, processedName,
+        processedPhone, ghiChu);
+
+
+      // const res = await confirmPayment(id, selectedMethod, diaChi, ship);
+
       console.log(res);
-  
+
       if (res?.code === 200) {
         localStorage.removeItem(currentInvoice?.id);
-  
+
         setInvoices((prevInvoices) => {
           const newInvoices = prevInvoices.filter(
             (invoice) => invoice.id !== id
@@ -518,20 +602,39 @@ const ShoppingCart = () => {
           }
           return newInvoices;
         });
-        notificationMessage("success", "Thanh toán hóa đơn thành công!");
-        setShip(0);
-        setDiaChi(null);
+
+        form.resetFields();
+        
+        setCurrentInvoice(null);
+       
+        toast.success("Thanh toán hóa đơn thành công!");
         setConfirmPaymets(false);
         setPartialPayment(0);
-        console.log("Data: ", res?.code);
+        setShip(0);
+        setDiaChi("");
+        setIsShipping(false);
+        setCurrentCustomer(null);
+
+
       }
-  
+      //       if(res?.code === 1014){
+      //         toast.error("voucher đã hết hạn");
+      // =======
+      //         notificationMessage("success", "Thanh toán hóa đơn thành công!");
+      //         setShip(0);
+      //         setDiaChi(null);
+      //         setConfirmPaymets(false);
+      //         setPartialPayment(0);
+      //         console.log("Data: ", res?.code);
+      // >>>>>>> master
+      //       }
+
       // Xử lý khi voucher hết hạn (code 1041)
       if (res?.code === 1041) {
         notificationMessage('warning', "Voucher đã hết hạn");
         return; // Kết thúc hàm nếu voucher hết hạn
       }
-  
+
     } catch (error) {
       console.log(error);
       notificationMessage('warning', "Voucher đã dừng áp dụng !");
@@ -539,43 +642,43 @@ const ShoppingCart = () => {
       setLoading(false);
     }
   };
-  
-  const handleAddressSearch = debounce(async (value) => {
-    if (value.length > 2) {
-      try {
-        const response = await axios.get(
-          `https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(
-            value
-          )}`
-        );
-        if (response.data.predictions) {
-          setAddressOptions(
-            response.data.predictions.map((prediction) => ({
-              value: prediction.description,
-              label: prediction.description,
-              place_id: prediction.place_id,
-            }))
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching address suggestions:", error);
-      }
-    }
-  }, 300);
 
-  const handleAddressSelect = async (value, option) => {
-    try {
-      const detailResponse = await axios.get(
-        `https://rsapi.goong.io/Place/Detail?place_id=${option.place_id}&api_key=${apiKey}`
-      );
-      if (detailResponse.data.result && detailResponse.data.result.geometry) {
-        const { lat, lng } = detailResponse.data.result.geometry.location;
-        calculateShippingCost(lat, lng);
-      }
-    } catch (error) {
-      console.error("Error fetching place details:", error);
-    }
-  };
+  // const handleAddressSearch = debounce(async (value) => {
+  //   if (value.length > 2) {
+  //     try {
+  //       const response = await axios.get(
+  //         `https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(
+  //           value
+  //         )}`
+  //       );
+  //       if (response.data.predictions) {
+  //         setAddressOptions(
+  //           response.data.predictions.map((prediction) => ({
+  //             value: prediction.description,
+  //             label: prediction.description,
+  //             place_id: prediction.place_id,
+  //           }))
+  //         );
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching address suggestions:", error);
+  //     }
+  //   }
+  // }, 300);
+
+  // const handleAddressSelect = async (value, option) => {
+  //   try {
+  //     const detailResponse = await axios.get(
+  //       `https://rsapi.goong.io/Place/Detail?place_id=${option.place_id}&api_key=${apiKey}`
+  //     );
+  //     if (detailResponse.data.result && detailResponse.data.result.geometry) {
+  //       const { lat, lng } = detailResponse.data.result.geometry.location;
+  //       calculateShippingCost(lat, lng);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching place details:", error);
+  //   }
+  // };
   const [partialPayment, setPartialPayment] = useState(0);
   const [modalPaymentAmount, setModalPaymentAmount] = useState(0);
   const showModalThanhToan = () => setIsModalVisible(true);
@@ -619,7 +722,7 @@ const ShoppingCart = () => {
     },
     {
       title: "Giá Bán",
-      dataIndex: "giaBan",
+      dataIndex: "giaBanSauKhiGiam",
       key: "price",
       render: (price) => `${price.toLocaleString()} VND`,
     },
@@ -956,8 +1059,8 @@ const ShoppingCart = () => {
       if (response?.data) {
         const updatedData = Array.isArray(hoaDonChiTiet)
           ? hoaDonChiTiet.map((item) =>
-              item.id === record.id ? { ...item, ...response.data } : item
-            )
+            item.id === record.id ? { ...item, ...response.data } : item
+          )
           : [];
 
         setHoaDonChiTiet(updatedData);
@@ -1002,8 +1105,8 @@ const ShoppingCart = () => {
       if (response?.data) {
         const updatedData = Array.isArray(hoaDonChiTiet)
           ? hoaDonChiTiet.map((item) =>
-              item.id === record.id ? { ...item, ...response.data } : item
-            )
+            item.id === record.id ? { ...item, ...response.data } : item
+          )
           : [];
 
         setHoaDonChiTiet(updatedData);
@@ -1220,6 +1323,37 @@ const ShoppingCart = () => {
 
 
 
+  const handleAddressSearch = debounce(async (value) => {
+    if (value.length > 2) {
+      try {
+        const response = await axios.get(`https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(value)}`);
+        if (response.data.predictions) {
+          setAddressOptions(response.data.predictions.map(prediction => ({
+            value: prediction.description,
+            label: prediction.description,
+            place_id: prediction.place_id
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching address suggestions:', error);
+      }
+    }
+  }, 300);
+
+  const handleAddressSelect = async (value, option) => {
+    try {
+      const detailResponse = await axios.get(`https://rsapi.goong.io/Place/Detail?place_id=${option.place_id}&api_key=${apiKey}`);
+      if (detailResponse.data.result && detailResponse.data.result.geometry) {
+        const { lat, lng } = detailResponse.data.result.geometry.location;
+        calculateShippingCost(lat, lng);
+        setDiaChi(value);
+      }
+    } catch (error) {
+      console.error('Error fetching place details:', error);
+    }
+  };
+
+
 
   // useEffect(() => {
   //   getOrderById(currentInvoice?.id);
@@ -1397,7 +1531,7 @@ const ShoppingCart = () => {
       </p>
       <Divider />
       {currentInvoice?.tenKhachHang &&
-      currentInvoice.tenKhachHang !== "Khách lẻ" ? (
+        currentInvoice.tenKhachHang !== "Khách lẻ" ? (
         <div>
           <div>
             <span>Tên khách hàng</span>: {currentInvoice.tenKhachHang}
@@ -1446,6 +1580,8 @@ const ShoppingCart = () => {
           flexDirection: "column",
         }}
       >
+
+
         <Row className="flex justify-between">
           <Col span={8}>
             <label className="text-sm block mb-2" htmlFor="">
@@ -1469,7 +1605,6 @@ const ShoppingCart = () => {
               }}
               options={[
                 { value: "", label: "Tất cả sản phẩm" },
-                // eslint-disable-next-line no-unsafe-optional-chaining
                 ...dataSanPham?.map((sanPham) => ({
                   value: sanPham.id,
                   label: sanPham.tenSanPham,
@@ -1477,6 +1612,7 @@ const ShoppingCart = () => {
               ]}
             />
           </Col>
+
 
           <Col span={3}>
             <label className="text-sm block mb-2" htmlFor="">
@@ -1500,7 +1636,6 @@ const ShoppingCart = () => {
               }}
               options={[
                 { value: "", label: "Tất cả thương hiệu" },
-                // eslint-disable-next-line no-unsafe-optional-chaining
                 ...dataThuongHieu?.map((thuongHieu) => ({
                   value: thuongHieu.id,
                   label: thuongHieu.tenThuongHieu,
@@ -1530,7 +1665,6 @@ const ShoppingCart = () => {
               }
               options={[
                 { value: "", label: "Tất cả danh mục" },
-                // eslint-disable-next-line no-unsafe-optional-chaining
                 ...dataDanhMuc?.map((danhMuc) => ({
                   value: danhMuc.id,
                   label: danhMuc.tenDanhMuc,
@@ -1560,7 +1694,6 @@ const ShoppingCart = () => {
               }
               options={[
                 { value: "", label: "Tất cả chất vải" },
-                // eslint-disable-next-line no-unsafe-optional-chaining
                 ...dataChatLieuVai?.map((vai) => ({
                   value: vai.id,
                   label: vai.tenChatLieuVai,
@@ -1590,7 +1723,6 @@ const ShoppingCart = () => {
               }
               options={[
                 { value: "", label: "Tất cả chất đế" },
-                // eslint-disable-next-line no-unsafe-optional-chaining
                 ...dataChatLieuDe?.map((de) => ({
                   value: de.id,
                   label: de.tenChatLieu,
@@ -1636,8 +1768,8 @@ const ShoppingCart = () => {
           <Button key="cancel" onClick={handleCancelThanhToan}>
             Hủy
           </Button>,
-          <Button key="confirm" 
-          type="primary" onClick={handleOkThanhToan}
+          <Button key="confirm"
+            type="primary" onClick={handleOkThanhToan}
           >
             Xác nhận
           </Button>,
@@ -1668,10 +1800,10 @@ const ShoppingCart = () => {
               type="text"
               value={
                 currentInvoice?.tienSauGiam &&
-                !isNaN(currentInvoice?.tienSauGiam)
+                  !isNaN(currentInvoice?.tienSauGiam)
                   ? (
-                      currentInvoice?.tienSauGiam + (ship || 0)
-                    ).toLocaleString() + " VND"
+                    currentInvoice?.tienSauGiam + (ship || 0)
+                  ).toLocaleString() + " VND"
                   : "0.0 VND"
               }
               placeholder="Nhập số tiền thanh toán"
@@ -1687,10 +1819,10 @@ const ShoppingCart = () => {
               localStorage.getItem(currentInvoice?.id) === null
                 ? "0.0 VND" // If no value in localStorage, show "0.0 VND"
                 : (
-                    (parseFloat(localStorage.getItem(currentInvoice?.id)) ||
-                      0) + (ship || 0)
-                  ) // Add ship if exists
-                    .toLocaleString() + " VND" // Format with commas and append " VND"
+                  (parseFloat(localStorage.getItem(currentInvoice?.id)) ||
+                    0) + (ship || 0)
+                ) // Add ship if exists
+                  .toLocaleString() + " VND" // Format with commas and append " VND"
             }
           </Text>
           <br />
@@ -1708,7 +1840,7 @@ const ShoppingCart = () => {
           width: "100%",
         }}
       >
-        {/* {currentInvoice?.loaiHoaDon === "ONLINE" && (
+        {currentInvoice?.loaiHoaDon === "ONLINE" && (
           <div style={{ width: "48%", marginTop: "40px" }}>
             <Title level={3}>Thông tin giao hàng</Title>
           
@@ -1720,16 +1852,109 @@ const ShoppingCart = () => {
                 tenNguoiNhan: currentCustomer?.ten,
                 sdt: currentCustomer?.sdt,
                 email: currentCustomer?.email,
+                
               }}
               onFinish={handleSubmit}
             >
-                tenNguoiNhan: currentInvoice?.tenNguoiNhan,
-                sdt: currentInvoice?.sdt,
+               
+              
+            
+              <Form.Item name="idGioHang" hidden>
+                <Input type="hidden" />
+              </Form.Item>
+              <Form.Item name="idKhachHang" hidden>
+                <Input type="hidden" />
+              </Form.Item>
+              <Form.Item
+                label="Tên"
+                name="tenNguoiNhan"
+                value={currentInvoice?.tenKhachHang}
+                required
+                rules={[{ required: true, message: "Vui lòng nhập tên" }]}
+              >
+                <Input size="large"
+                  onChange={(e) => setTenKhachHang(e.target.value)}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Số điện thoại"
+                name="sdt"
+
+                required
+                rules={[
+                  { required: true, message: "Vui lòng nhập số điện thoại" },
+
+                  { min: 10, message: "Số điện thoại phải có ít nhất 10 ký tự" },
+                  { max: 10, message: "Số điện thoại chỉ được 10 ký tự" },
+                  {
+                    pattern: /^[0-9]+$/,
+                    message: "Số điện thoại chỉ được chứa số"},
+
+
+                  {
+                    pattern: /^(0|\+84)[3-9][0-9]{8}$/,
+                    message: "Số điện thoại không đúng định dạng!",
+
+                  },
+                ]}
+              >
+                <Input size="large"
+                  onChange={(e) => setSdt(e.target.value)}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Địa chỉ"
+                name="address"
+                required
+                rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
+               
+              >
+                <AutoComplete
+                  options={addressOptions}
+                  onSearch={handleAddressSearch}
+                  onSelect={handleAddressSelect}
+                  placeholder="Nhập địa chỉ"
+                  size="large"
+                />
+              </Form.Item>
+
+
+
+              <Form.Item label="Địa chỉ email (tùy chọn)" name="email">
+                <Input size="large" />
+              </Form.Item>
+
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">THÔNG TIN BỔ SUNG</h3>
+                <Form.Item label="Ghi chú đơn hàng (tùy chọn)" name="ghiChu">
+                  <TextArea
+                    rows={4}
+                    placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
+                    onChange={(e) => setGhiChu(e.target.value)}
+                  />
+                </Form.Item>
+              </div>
+            </Form>
+          </div>
+        )}
+
+        {/* {currentInvoice?.loaiHoaDon === "ONLINE" && (
+          <div style={{ width: "48%", marginTop: "40px" }}>
+            <Title level={3}>Thông tin giao hàng</Title>
+
+            <Form
+              form={form}
+              layout="vertical"
+              className="space-y-4"
+              initialValues={{
+                tenNguoiNhan: currentCustomer?.ten,
+                sdt: currentCustomer?.sdt,
+                email: currentCustomer?.email,
                 province: currentCustomer?.diaChi?.tinh,
-                email: currentInvoice?.email,
                 district: currentCustomer?.diaChi?.quan,
                 ward: currentCustomer?.diaChi?.huyen,
-
               }}
               onFinish={handleSubmit}
             >
@@ -1739,6 +1964,7 @@ const ShoppingCart = () => {
               <Form.Item name="idKhachHang" hidden>
                 <Input type="hidden" />
               </Form.Item>
+
               <Form.Item
                 label="Tên"
                 name="tenNguoiNhan"
@@ -1768,7 +1994,6 @@ const ShoppingCart = () => {
                 name="address"
                 required
                 rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
-                rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
               >
                 <AutoComplete
                   options={addressOptions}
@@ -1778,8 +2003,6 @@ const ShoppingCart = () => {
                   size="large"
                 />
               </Form.Item>
-
-
 
               <Form.Item label="Địa chỉ email (tùy chọn)" name="email">
                 <Input size="large" />
@@ -1797,87 +2020,6 @@ const ShoppingCart = () => {
             </Form>
           </div>
         )} */}
-
-        {currentInvoice?.loaiHoaDon === "ONLINE" && (
-          <div style={{ width: "48%", marginTop: "40px" }}>
-            <Title level={3}>Thông tin giao hàng</Title>
-
-            <Form
-              form={form}
-              layout="vertical"
-              className="space-y-4"
-              initialValues={{
-                tenNguoiNhan: currentCustomer?.ten,
-                sdt: currentCustomer?.sdt,
-                email: currentCustomer?.email,
-                province: currentCustomer?.diaChi?.tinh,
-                district: currentCustomer?.diaChi?.quan,
-                ward: currentCustomer?.diaChi?.huyen,
-              }}
-              onFinish={handleSubmit}
-            >
-              <Form.Item name="idGioHang" hidden>
-                <Input type="hidden" />
-              </Form.Item>
-              <Form.Item name="idKhachHang" hidden>
-                <Input type="hidden" />
-              </Form.Item>
-
-              <Form.Item
-                label="Tên"
-                name="tenNguoiNhan"
-                required
-                rules={[{ required: true, message: "Vui lòng nhập tên" }]}
-              >
-                <Input size="large" />
-              </Form.Item>
-
-              <Form.Item
-                label="Số điện thoại"
-                name="sdt"
-                required
-                rules={[
-                  { required: true, message: "Vui lòng nhập số điện thoại" },
-                  {
-                    pattern: /^(0|\+84)[3-9][0-9]{8}$/,
-                    message: "Số điện thoại không đúng định dạng!",
-                  },
-                ]}
-              >
-                <Input size="large" />
-              </Form.Item>
-
-              <Form.Item
-                label="Địa chỉ"
-                name="address"
-                required
-                rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
-              >
-                <AutoComplete
-                  options={addressOptions}
-                  onSearch={handleAddressSearch}
-                  onSelect={handleAddressSelect}
-                  placeholder="Nhập địa chỉ"
-                  size="large"
-                />
-              </Form.Item>
-
-              <Form.Item label="Địa chỉ email (tùy chọn)" name="email">
-                <Input size="large" />
-              </Form.Item>
-
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold">THÔNG TIN BỔ SUNG</h3>
-                <Form.Item label="Ghi chú đơn hàng (tùy chọn)" name="ghiChu">
-                  <TextArea
-                    rows={4}
-                    placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
-                  />
-                </Form.Item>
-              </div>
-            </Form>
-          </div>
-        )}
 
         {/* Form Thông tin thanh toán - Luôn hiển thị */}
         {currentInvoice?.id && (
@@ -1901,11 +2043,11 @@ const ShoppingCart = () => {
                     <Text strong>
                       {localStorage.getItem(currentInvoice?.id)
                         ? (
-                            (parseFloat(
-                              localStorage.getItem(currentInvoice?.id)
-                            ) || 0) + (ship || 0)
-                          ) // Add ship if exists
-                            .toLocaleString()
+                          (parseFloat(
+                            localStorage.getItem(currentInvoice?.id)
+                          ) || 0) + (ship || 0)
+                        ) // Add ship if exists
+                          .toLocaleString()
                         : "0"}{" "}
                       VND
                     </Text>
@@ -1998,7 +2140,7 @@ const ShoppingCart = () => {
                       setDiaChi("");
                     }
 
-                    changeType(currentInvoice?.id, newLoaiHoaDon); 
+                    changeType(currentInvoice?.id, newLoaiHoaDon);
                   }}
                 />
               </Form.Item>
@@ -2014,7 +2156,7 @@ const ShoppingCart = () => {
               <Form.Item label="Giảm giá">
                 <Text>
                   {currentInvoice?.soTienGiam &&
-                  !isNaN(currentInvoice.soTienGiam)
+                    !isNaN(currentInvoice.soTienGiam)
                     ? currentInvoice.soTienGiam.toLocaleString() + " VND"
                     : "0.0 VND"}
                 </Text>
@@ -2031,9 +2173,9 @@ const ShoppingCart = () => {
               <Form.Item label="Tổng tiền">
                 <Title level={4} style={{ color: "red" }}>
                   {currentInvoice?.tienSauGiam + ship &&
-                  !isNaN(currentInvoice.tienSauGiam + ship)
+                    !isNaN(currentInvoice.tienSauGiam + ship)
                     ? (currentInvoice.tienSauGiam + ship).toLocaleString() +
-                      " VND"
+                    " VND"
                     : "0.0 VND"}
                 </Title>
               </Form.Item>

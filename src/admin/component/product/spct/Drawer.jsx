@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Modal, Flex, Form, Select, Row, Col, Space, Button, Table, Input, Upload, notification, Drawer, Image, Spin } from 'antd';
+import { Modal, Flex, Form, Select, Row, Col, Space, Button, Table, Input, Upload, notification, Drawer, Image, Spin, InputNumber } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 
 import { createMauSacApi, getAllMauSacApi, getMauSacByIdApi } from '../../../../api/MauSacApi';
@@ -39,6 +39,7 @@ const DrawerAdd = ({
   const [form] = Form.useForm();
   const [previewImage, setPreviewImage] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [formModalSLVaGia] = Form.useForm();
 
   //Data của thuộc tính sản phảm trong modal thêm nhanh sản phẩm
   const [dataDanhMuc, setDataDanhMuc] = useState([]);
@@ -146,7 +147,7 @@ const DrawerAdd = ({
     }
 
     try {
-      await createKichThuocApi({ tenKichThuoc: newKichThuocName , trangThai: 1});
+      await createKichThuocApi({ tenKichThuoc: newKichThuocName, trangThai: 1 });
       notification.success({
         duration: 4,
         pauseOnHover: false,
@@ -173,11 +174,11 @@ const DrawerAdd = ({
       const res = await getAllDanhMucApi(params);
       if (res && res.data) {
         const dataWithKey = res.data.content
-        .filter((item) => item.trangThai === 1)
-        .map((item) => ({
-          ...item,
-          key: item.id,
-        }));
+          .filter((item) => item.trangThai === 1)
+          .map((item) => ({
+            ...item,
+            key: item.id,
+          }));
         setDataDanhMuc(dataWithKey);
       }
     } catch (error) {
@@ -201,11 +202,11 @@ const DrawerAdd = ({
       const res = await getAllThuongHieuApi(params);
       if (res && res.data) {
         const dataWithKey = res.data.content
-        .filter((item) => item.trangThai === 1)
-        .map((item) => ({
-          ...item,
-          key: item.id,
-        }));
+          .filter((item) => item.trangThai === 1)
+          .map((item) => ({
+            ...item,
+            key: item.id,
+          }));
         setDataThuongHieu(dataWithKey);
       }
     } catch (error) {
@@ -229,11 +230,11 @@ const DrawerAdd = ({
       const res = await getAllChatLieuDeApi(params);
       if (res && res.data) {
         const dataWithKey = res.data.content
-        .filter((item) => item.trangThai === 1)
-        .map((item) => ({
-          ...item,
-          key: item.id,
-        }));
+          .filter((item) => item.trangThai === 1)
+          .map((item) => ({
+            ...item,
+            key: item.id,
+          }));
         setDataChatLieuDe(dataWithKey);
       }
     } catch (error) {
@@ -257,11 +258,11 @@ const DrawerAdd = ({
       const res = await getAllChatLieuVaiApi(params);
       if (res && res.data) {
         const dataWithKey = res.data.content
-        .filter((item) => item.trangThai === 1)
-        .map((item) => ({
-          ...item,
-          key: item.id,
-        }));
+          .filter((item) => item.trangThai === 1)
+          .map((item) => ({
+            ...item,
+            key: item.id,
+          }));
         setDatChatLieuVai(dataWithKey);
       }
     } catch (error) {
@@ -314,7 +315,7 @@ const DrawerAdd = ({
         getAllSanPhamMoiApi()
       ]);
       console.log('san pham', productsResponse);
-  
+
       // Kiểm tra và lọc kích thước với trạng thái == 1
       if (Array.isArray(sizesResponse.data.content)) {
         const filteredSizes = sizesResponse.data.content.filter(size => size.trangThai === 1);
@@ -323,7 +324,7 @@ const DrawerAdd = ({
       } else {
         console.error('API phản hồi kích thước không phải là mảng:', sizesResponse.data);
       }
-  
+
       // Kiểm tra và lọc màu sắc với trạng thái == 1
       if (Array.isArray(colorsResponse.data.content)) {
         const filteredColors = colorsResponse.data.content.filter(color => color.trangThai === 1);
@@ -332,7 +333,7 @@ const DrawerAdd = ({
       } else {
         console.error('API phản hồi màu sắc không phải là mảng:', colorsResponse.data);
       }
-  
+
       // Kiểm tra và lọc sản phẩm với trạng thái == 1
       if (Array.isArray(productsResponse.data)) {
         const filteredProducts = productsResponse.data.filter(product => product.trangThai === 1);
@@ -345,7 +346,7 @@ const DrawerAdd = ({
       console.error('Lỗi khi gọi API:', error);
     }
   };
-  
+
   useEffect(() => {
     let isMounted = true;
 
@@ -442,20 +443,31 @@ const DrawerAdd = ({
     setTableData(updatedData);
   };
 
-  const handleModalOk = () => {
+  const handleModalOk = async () => {
+    try {
+      // Kích hoạt validation
+      const values = await formModalSLVaGia.validateFields();
+      // Nếu validation thành công, thực hiện các hành động bạn muốn
+      console.log(values);
+
+      const updatedData = tableData.map((item) => {
+        if (selectedRowKeys.includes(item.key)) {
+          return { ...item, soLuong: commonQuantity, giaBan: commonPrice };
+        }
+        return item;
+      });
+      setTableData(updatedData);
+      formModalSLVaGia.resetFields(); // Đặt lại trường form
+      setSelectedRowKeys([]); // Bỏ chọn tất cả các dòng
+      setHasSelected(false); // Bỏ chọn tất cả các dòng
+      setIsModalVisible(false); // Đóng modal
+    } catch (error) {
+      // Nếu có lỗi, chỉ cần thông báo
+      console.log("Validation failed:", error);
+    }
     // Cập nhật giá và số lượng chung cho các dòng được chọn
-    const updatedData = tableData.map((item) => {
-      if (selectedRowKeys.includes(item.key)) {
-        return { ...item, soLuong: commonQuantity, giaBan: commonPrice };
-      }
-      return item;
-    });
-    setTableData(updatedData);
-    setCommonPrice(0); // Đặt giá chung về 0
-    setCommonQuantity(0); // Đặt số lượng chung về 0
-    setSelectedRowKeys([]); // Bỏ chọn tất cả các dòng
-    setHasSelected(false); // Bỏ chọn tất cả các dòng
-    setIsModalVisible(false); // Đóng modal
+    
+
   };
 
   const handleModalCancel = () => {
@@ -679,12 +691,12 @@ const DrawerAdd = ({
         }}
         extra={
           <Space>
-            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={onClose}>Hủy</Button>
             <Button onClick={async () => {
               await handleAddProduct(tableData);
               resetFrom();
             }} type="primary">
-              Submit
+              Tạo sản phẩm chi tiết
             </Button>
           </Space>
         }
@@ -692,8 +704,8 @@ const DrawerAdd = ({
         {loadingDrawer ? (
           <Spin size="large" />
         ) : (
-        <>
-                  <Form
+          <>
+            <Form
               form={form}
               name="validate_other"
               // {...formItemLayout}
@@ -873,24 +885,37 @@ const DrawerAdd = ({
               {/* {hasSelected ? `Selected ${selectedRowKeys.length} items` : null} */}
             </Flex>
             <Table rowSelection={rowSelection} columns={columns} dataSource={tableData} />
-        </>
+          </>
 
 
-  
+
         )}
 
 
 
-          </Drawer>
+      </Drawer>
       {/* Modal nhập giá và số lượng chung */}
-      <Modal
+      {/* <Modal
         title="Set số lượng và giá chung"
         visible={isModalVisible}
         onOk={handleModalOk}
         onCancel={handleModalCancel}
       >
         <Form layout="vertical">
-          <Form.Item label="Số lượng chung">
+          <Form.Item label="Số lượng chung"
+           name="commonQuantity"
+           rules={[
+            { 
+              required: true, 
+              message: "Số lượng chung không được để trống!" 
+            },
+            {
+              type: 'number', 
+              min: 0, 
+              message: "Số lượng phải là số dương!",
+            }
+          ]}
+          >
             <Input
               type="number"
               min={0}
@@ -906,6 +931,62 @@ const DrawerAdd = ({
               value={commonPrice}
               onChange={(e) => setCommonPrice(e.target.value)}
               suffix={<span>VNĐ</span>}
+            />
+          </Form.Item>
+        </Form>
+      </Modal> */}
+      <Modal
+        title="Set số lượng và giá chung"
+        visible={isModalVisible}
+        onOk={handleModalOk}
+        onCancel={handleModalCancel}
+      >
+        <Form
+          form={formModalSLVaGia} // Gán form instance vào form
+          layout="vertical"
+        >
+          <Form.Item
+            label="Số lượng chung"
+            name="commonQuantity"
+            rules={[
+              { required: true, message: "Số lượng chung không được để trống!" },
+              {
+                type: "number",
+                min: 0,
+                message: "Số lượng phải là số dương!",
+              },
+            ]}
+          >
+            <InputNumber
+             style={{ width: "100%" }}
+              type="number"
+              min={0}
+              value={commonQuantity}
+              onChange={(value) => setCommonQuantity(value)}
+              suffix={<span>Đôi</span>}
+            />
+          </Form.Item>
+          <Form.Item
+            label="Giá chung"
+            name="commonPrice"
+            rules={[
+              { required: true, message: "Giá chung không được để trống!" },
+              {
+                type: "number",
+                min: 0,
+                max: 500000000, // Giới hạn giá trị tối đa là 500 triệu
+                message: "Giá phải là số dương và nhỏ hơn 500 triệu!",
+              },
+            ]}
+          >
+            <InputNumber
+             style={{ width: "100%" }}
+              type="number"
+              min={0}
+              value={commonPrice}
+              onChange={(value) => setCommonPrice(value)}
+              suffix={<span>VNĐ</span>}
+
             />
           </Form.Item>
         </Form>

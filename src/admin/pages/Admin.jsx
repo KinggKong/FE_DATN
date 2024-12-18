@@ -7,6 +7,7 @@ import { MenuUnfoldOutlined, MenuFoldOutlined } from "@ant-design/icons";
 import { Outlet, Link } from "react-router-dom";
 import { Content } from "antd/es/layout/layout";
 import ToggleThemeButton from "../component/sidebar/ToggleThemeButton";
+import { getNhanVienByIdApi, getTaiKhoanByIdOwner } from "../../api/NhanVienApi";
 
 
 const { Header, Sider } = Layout;
@@ -16,6 +17,7 @@ function Admin() {
   const [collapse, setCollapse] = useState(false);
   const [userInfo, setUserInfo] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [idRole, setIdRole] = useState(1);
 
   const user = null;
   // const user = {
@@ -30,10 +32,29 @@ function Admin() {
     token: { colorBgContainer },
   } = theme.useToken();
 
-  useEffect(() => {
+  const fetchUser = async () => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (storedUserInfo) {
       const parsedUserInfo = JSON.parse(storedUserInfo);
+      const id = parsedUserInfo.id;
+      const params = {
+        email: parsedUserInfo.email,
+      };
+      const res = await getTaiKhoanByIdOwner(params);
+      console.log(res);
+      if (res.data) {
+        setIdRole(res.data.vaiTro.id);
+      }
+    }
+  }
+
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem("userInfo");
+    if (storedUserInfo) {
+
+      const parsedUserInfo = JSON.parse(storedUserInfo);
+      const id = parsedUserInfo.id;
+      fetchUser();
       setUserInfo(parsedUserInfo);
       console.log('Stored user info:', storedUserInfo);
       console.log('Parsed user info:', parsedUserInfo);
@@ -98,13 +119,13 @@ function Admin() {
                     {userInfo.ten}
                   </span>
                   <span style={{ color: "#888", fontSize: "14px" }}>
-                    {userInfo.role}
+                    {idRole === 1 ? "Chủ cửa hàng" : "Nhân viên"}
                   </span>
                 </div>
                 <Avatar size={40} src={userInfo.avatar} />
               </>
             ) : (
-              <Link to="/auth/login">
+              <Link to="/auth/login-admin">
                 <Button type="primary">Đăng nhập</Button>
               </Link>
             )}

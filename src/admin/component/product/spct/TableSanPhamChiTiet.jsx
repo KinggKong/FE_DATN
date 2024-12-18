@@ -253,7 +253,7 @@ const TableSanPhamChiTiet = () => {
             render: (soLuong) => `${soLuong} đôi`,
         },
         {
-            title: 'Giá ',
+            title: 'Giá gốc',
             dataIndex: 'giaBan',
             sorter: {
                 compare: (a, b) => a.giaBan - b.giaBan,
@@ -262,13 +262,22 @@ const TableSanPhamChiTiet = () => {
             render: (giaBan) => giaBan.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }),
         },
         {
-            title: 'Ngày tạo',
-            dataIndex: 'createdAt',
+            title: 'Giá khuyến mãi',
+            dataIndex: 'giaBanSauKhiGiam',
             sorter: {
-                compare: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-                multiple: 1,
+                compare: (a, b) => a.giaBan - b.giaBan,
+                multiple: 2,
             },
+            render: (giaBan) => giaBan.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }),
         },
+        // {
+        //     title: 'Ngày tạo',
+        //     dataIndex: 'createdAt',
+        //     sorter: {
+        //         compare: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+        //         multiple: 1,
+        //     },
+        // },
         {
             title: 'Trạng thái',
             dataIndex: 'trangThai',
@@ -342,7 +351,19 @@ const TableSanPhamChiTiet = () => {
     const handleConfirmEdit = async (id, updateProduct) => {
         setLoading(true);
         console.log(updateProduct);
+        // //Check mỗi sản phẩm cần ít nhất 1 ảnh
+        // const isAllProductsHaveImage = updateProduct.hinhAnh && updateProduct.hinhAnh.length > 0;
+
         try {
+            // if (!isAllProductsHaveImage) {
+            //     notification.error({
+            //         duration: 4,
+            //         pauseOnHover: false,
+            //         message: "Error",
+            //         description: "Mỗi sản phẩm chi tiết cần ít nhất 1 ảnh!",
+            //     });
+            //     return;
+            // }
             await updateSanPhamChiTietApi(id, updateProduct);
             notification.success({
                 message: "Success",
@@ -434,7 +455,7 @@ const TableSanPhamChiTiet = () => {
     };
 
     const handleAddProduct = async (tableData) => {
-        
+
         console.log(tableData);
         if (!tableData || tableData.length === 0) {
             notification.error({
@@ -446,8 +467,33 @@ const TableSanPhamChiTiet = () => {
             return;
         }
 
+
+
         try {
             // setLoading(true);
+            //Check mỗi sản phẩm cần ít nhất 1 ảnh
+            const isAllProductsHaveImage = tableData.every((item) => item.image && item.image.length > 0);
+            if (!isAllProductsHaveImage) {
+                notification.error({
+                    duration: 4,
+                    pauseOnHover: false,
+                    message: "Error",
+                    description: "Mỗi sản phẩm chi tiết cần ít nhất 1 ảnh!",
+                });
+                return;
+            }
+
+            //check giá nhỏ hơn 500 triệu
+            const isAllProductsHavePrice = tableData.every((item) => item.giaBan < 500000000);
+            if (!isAllProductsHavePrice) {
+                notification.error({
+                    duration: 4,
+                    pauseOnHover: false,
+                    message: "Error",
+                    description: "Giá sản phẩm phải nhỏ hơn 500 triệu!",
+                });
+                return;
+            }
             setLoadingDrawerAdd(true);
             const checkPromises = tableData.map(async (item) => {
                 const params = {

@@ -56,7 +56,13 @@ const TongQuan = () => {
       <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
         {data.map((item, index) => (
           <Col xs={24} sm={12} md={6} key={index}>
-            <Link to="/admin/order-management">
+            <Link
+              to={
+                index === 3 // Nếu là item thứ 4
+                  ? "/admin/sanphamchitiet"
+                  : "/admin/order-management" // 3 item đầu
+              }
+            >
               <Card
                 bordered={false}
                 style={{
@@ -77,6 +83,7 @@ const TongQuan = () => {
           </Col>
         ))}
       </Row>
+
       <Row style={{ marginTop: "20px", justifyContent: "center", textAlign: "center" }}>
         <Col>
           <Space direction="vertical" align="center">
@@ -92,9 +99,9 @@ const TongQuan = () => {
       <Row style={{ marginTop: "20px", justifyContent: "center", textAlign: "center" }}>
         <Col>
           <img
-            src={logo} 
+            src={logo}
             alt="Logo"
-            style={{ width: "150px", height: "auto" }} 
+            style={{ width: "150px", height: "auto" }}
           />
         </Col>
       </Row>
