@@ -78,11 +78,11 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
     }
 
 
-    const phoneRegex = /^[0-9]{10,11}$/;
+    const phoneRegex = /^0[0-9]{9,10}$/;
     if (!phoneRegex.test(sdt)) {
       notification.error({
         message: "Lỗi",
-        description: "Vui lòng nhập số điện thoại hợp lệ (10-11)!",
+        description: "Vui lòng nhập số điện thoại hợp lệ (10-11 chữ số)!",
       });
       return;
     }
@@ -237,7 +237,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
       </Row>
 
       <Row className="flex justify-between mb-3">
-        
+
         <Col span={11}>
           <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Giới tính
@@ -308,7 +308,7 @@ const ModalEditKhachHang = ({ isOpen, handleClose, title, handleSubmit, khachHan
             />
           )} */}
         </Col>
-        
+
       </Row>
     </Modal>
   );

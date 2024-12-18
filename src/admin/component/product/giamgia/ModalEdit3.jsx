@@ -16,10 +16,13 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
   const [hinhThucGiam, setHinhThucGiam] = useState("");
   const [soLuong, setSoLuong] = useState("");
   const [trangThai, setTrangThai] = useState(true);
+
+
   const handleConfirmEdit = () => {
     const giaTriGiamFloat = parseFloat(giaTriGiam);
     const giaTriGiamToiDaFloat = parseFloat(giaTriGiamToiDa);
 
+    // Kiểm tra điều kiện cho giá trị giảm
     if (parseFloat(giaTriDonHangToiThieu) <= 0 || parseFloat(giaTriGiamToiDa) <= 0) {
       notification.error({
         message: "Lỗi",
@@ -62,7 +65,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       return;
     }
 
-    // Kiểm tra số lượng phải lớn hơn hoặc bằng 0, bao gồm 0
+    // Kiểm tra số lượng phải lớn hơn hoặc bằng 0
     if (parseInt(soLuong, 10) < 0) {
       notification.error({
         message: "Lỗi",
@@ -71,7 +74,19 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       return;
     }
 
+    // Kiểm tra ngày kết thúc phải lớn hơn ngày bắt đầu ít nhất 24h (1 ngày)
+    if (ngayBatDau && ngayKetThuc) {
+      const diffInHours = ngayKetThuc.diff(ngayBatDau, 'hours'); // Tính sự khác biệt giữa ngày kết thúc và ngày bắt đầu (theo giờ)
+      if (diffInHours < 24) {
+        notification.error({
+          message: "Lỗi",
+          description: "Ngày kết thúc phải lớn hơn ngày bắt đầu!",
+        });
+        return;
+      }
+    }
 
+    // Tiến hành submit
     handleSubmit(voucher?.id, {
       tenVoucher: newVoucherName,
       maVoucher,
@@ -85,6 +100,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       trangThai: soLuong === "0" ? 0 : trangThai ? 1 : 0,
     });
   };
+
 
 
   // Cập nhật trạng thái khi số lượng thay đổi
