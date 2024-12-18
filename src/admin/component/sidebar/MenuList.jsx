@@ -1,3 +1,4 @@
+import { useState,useEffect } from "react";
 import { Menu } from "antd";
 import {
   AreaChartOutlined,
@@ -26,6 +27,17 @@ import { CiDiscount1 } from "react-icons/ci";
 import { FaFileInvoice } from "react-icons/fa";
 
 const MenuList = ({ darkTheme }) => {
+  const [userInfo, setUserInfo] = useState(null);
+
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem("userInfo");
+    if (storedUserInfo) {
+      const parsedUserInfo = JSON.parse(storedUserInfo);
+      setUserInfo(parsedUserInfo);
+    }
+  }, []);
+
+  const isStaff = userInfo?.vaiTro === "ROLE_STAFF";
   return (
     <div>
       <Menu
@@ -104,7 +116,7 @@ const MenuList = ({ darkTheme }) => {
           icon={<BiSolidDiscount />}
           title="Giảm giá"
         >
-           <Menu.Item key="sub3-t1" icon={<MdDiscount />}>
+           <Menu.Item key="sub3-t1" icon={<MdDiscount />} >
           <Link to={"giamgia"}>Phiếu giảm giá</Link>
           </Menu.Item>
           <Menu.Item key="sub3-t2" icon={<CiDiscount1 />}>
@@ -112,10 +124,6 @@ const MenuList = ({ darkTheme }) => {
           </Menu.Item>
         </Menu.SubMenu>
        
-
-        <Menu.Item key="setting" icon={<SettingOutlined />}>
-          Cài đặt
-        </Menu.Item>
         <Menu.Item key="exit" icon={<IoExitOutline />}>
           Thoát
         </Menu.Item>

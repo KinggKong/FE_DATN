@@ -135,6 +135,7 @@ const PreCheckout = () => {
             const response = await axios.get(`http://localhost:8080/api/v1/vouchers/can-use?tongTien=${totalAmount}`);
             if (response.data.code === 1000) {
                 setVouchers(response.data.data);
+                console.log("data vourcher",response.data.data)
             }
         } catch (error) {
             console.error('Error fetching vouchers:', error);
@@ -146,11 +147,11 @@ const PreCheckout = () => {
         try {
             const selectedVoucher = vouchers.find(v => v.id === values.idVoucher);
             let discountAmount = 0;
-
+    
             if (selectedVoucher) {
                 const totalBeforeDiscount = checkoutData.totalPrice + ship;
-
-                if (selectedVoucher.hinhThucGiam === 'VND') {
+    
+                if (selectedVoucher.hinhThucGiam === 'VNĐ') {
                     discountAmount = selectedVoucher.giaTriGiam;
                 } else if (selectedVoucher.hinhThucGiam === '%') {
                     discountAmount = Math.min(
@@ -158,11 +159,11 @@ const PreCheckout = () => {
                         selectedVoucher.giaTriGiamToiDa
                     );
                 }
-
+    
                 // Ensure the discount doesn't exceed the total amount
                 discountAmount = Math.min(discountAmount, totalBeforeDiscount);
             }
-
+    
             const hoaDonRequest = {
                 idGioHang: values.idGioHang,
                 tenNguoiNhan: values.tenNguoiNhan,
@@ -178,14 +179,14 @@ const PreCheckout = () => {
                 hinhThucThanhToan: paymentMethod,
                 soTienGiam: discountAmount
             };
-
+    
             let response;
             if (paymentMethod === 'VNPAY') {
                 response = await axios.post('http://localhost:8080/api/payment/submitOrder', hoaDonRequest);
                 if (response.data.code === 1000) {
                     window.location.href = response.data.data;
                 } else {
-                    throw new Error('VNPay payment initiation failed');
+                    throw new Error(response.data.message || 'VNPay payment initiation failed');
                 }
             } else {
                 response = await axios.post('http://localhost:8080/api/v1/shop-on/checkout', hoaDonRequest);
@@ -201,17 +202,22 @@ const PreCheckout = () => {
                     navigate(`/infor-order?maHoaDon=${maHoaDon}`);
                     fetchCart();
                 } else {
-                    message.error(response.data.message);
-                    // throw new Error('Checkout failed');
+                    throw new Error(response.data.message || 'Checkout failed');
                 }
             }
         } catch (err) {
-            message.error('Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.');
-            console.log(err);
+            // Lấy thông tin lỗi từ API
+            const errorMessage =
+                err.response?.data?.message || // Thông báo lỗi từ server
+                err.message || // Thông báo lỗi từ client
+                'Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.'; // Thông báo mặc định nếu không có thông tin lỗi
+            message.error(errorMessage);
+            console.log('Error details:', err);
         } finally {
             setCheckoutLoading(false);
         }
     };
+    
 
     if (loading) {
         return <Spin size="large" />;
@@ -322,9 +328,9 @@ const PreCheckout = () => {
                                         ...vouchers.map(v => ({
                                             value: v.id,
                                             label: (
-                                                <Tooltip title={`${v.tenVoucher} - Giảm ${v.giaTriGiam}${v.hinhThucGiam === 'VND' ? 'đ' : '%'} - Đơn tối thiểu ${v.giaTriDonHangToiThieu.toLocaleString()}đ`}>
+                                                <Tooltip title={`${v.tenVoucher} - Giảm ${v.giaTriGiam}${v.hinhThucGiam === 'VNĐ' ? 'đ' : '%'} - Đơn tối thiểu ${v.giaTriDonHangToiThieu.toLocaleString()}đ`}>
                                                     <span>
-                                                        {v.tenVoucher} - Giảm {v.giaTriGiam}{v.hinhThucGiam === 'VND' ? 'đ' : '%'}
+                                                        {v.tenVoucher} - Giảm {v.giaTriGiam}{v.hinhThucGiam === 'VNĐ' ? 'đ' : '%'}
                                                         {v.hinhThucGiam === '%' ? ` (tối đa ${v.giaTriGiamToiDa.toLocaleString()}đ)` : ''}
                                                     </span>
                                                 </Tooltip>
@@ -390,7 +396,7 @@ const PreCheckout = () => {
                                         let discountAmount = 0;
                                         const totalBeforeDiscount = totalPrice + ship;
 
-                                        if (selectedVoucher.hinhThucGiam === 'VND') {
+                                        if (selectedVoucher.hinhThucGiam === 'VNĐ') {
                                             discountAmount = selectedVoucher.giaTriGiam;
                                         } else if (selectedVoucher.hinhThucGiam === '%') {
                                             discountAmount = Math.min(
@@ -414,7 +420,7 @@ const PreCheckout = () => {
                                         const totalBeforeDiscount = totalPrice + ship;
 
                                         if (selectedVoucher) {
-                                            if (selectedVoucher.hinhThucGiam === 'VND') {
+                                            if (selectedVoucher.hinhThucGiam === 'VNĐ') {
                                                 discountAmount = selectedVoucher.giaTriGiam;
                                             } else if (selectedVoucher.hinhThucGiam === '%') {
                                                 discountAmount = Math.min(

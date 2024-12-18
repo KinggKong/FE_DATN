@@ -35,22 +35,19 @@ const OrderDetail = () => {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [cancelNote, setCancelNote] = useState("");
 
- const [userInfo, setUserInfo] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
 
-     useEffect(() => {
-            const storedUserInfo = localStorage.getItem("userInfo");
-            if (storedUserInfo) {
-                const parsedUserInfo = JSON.parse(storedUserInfo);
-                setUserInfo(parsedUserInfo);
-                console.log('Stored user info:', storedUserInfo);
-                console.log('Parsed user info:', parsedUserInfo);
-               
-            } else {
-                console.log('No stored user info, using default userId: 1');
-             
-            }
-        }, []);
-
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem("userInfo");
+    if (storedUserInfo) {
+      const parsedUserInfo = JSON.parse(storedUserInfo);
+      setUserInfo(parsedUserInfo);
+      console.log("Stored user info:", storedUserInfo);
+      console.log("Parsed user info:", parsedUserInfo);
+    } else {
+      console.log("No stored user info, using default userId: 1");
+    }
+  }, []);
 
   const statusSteps = {
     WAITING: 0,
@@ -190,10 +187,21 @@ const OrderDetail = () => {
         setCurrentStatus(nextStatus);
         fetchOrderDetail();
       } else {
-        throw new Error(response.data.message);
+        // Nếu API trả về lỗi nhưng không ném exception
+        const errorMessage =
+          response.data.message || "Lỗi không xác định từ server";
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      message.error("Không thể cập nhật trạng thái đơn hàng: " + error.message);
+      // Lấy thông báo lỗi từ API hoặc mặc định
+      const errorMessage =
+        error.response?.data?.message || // Thông báo từ server
+        error.message || // Thông báo lỗi từ client
+        "Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại."; // Thông báo mặc định
+
+      // Hiển thị thông báo lỗi
+      message.error(`Không thể cập nhật trạng thái đơn hàng: ${errorMessage}`);
+      console.error("Error details:", error); // Log lỗi chi tiết để debug
     }
   };
 
@@ -217,15 +225,15 @@ const OrderDetail = () => {
       icon: statusConfig[status].icon,
       description: historyItem ? (
         <>
-        <Text type="secondary" className="text-xs block">
-          {new Date(historyItem.createdAt).toLocaleString()}
-        </Text>
-        {statusSteps[status] >= statusSteps.ACCEPTED && (
-          <Text type="secondary" className="text-xs">
-            Created by: {historyItem.createdBy}
+          <Text type="secondary" className="text-xs block">
+            {new Date(historyItem.createdAt).toLocaleString()}
           </Text>
-        )}
-      </>
+          {statusSteps[status] >= statusSteps.ACCEPTED && (
+            <Text type="secondary" className="text-xs">
+              Created by: {historyItem.createdBy}
+            </Text>
+          )}
+        </>
       ) : null,
     };
   });

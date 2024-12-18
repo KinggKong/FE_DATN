@@ -1,4 +1,5 @@
 import ForgotPassword from "../customer/auth/ForgotPassword";
+import ForgotPasswordAdmin from "../customer/auth/ForgotPasswordAdmin";
 import Login from "../customer/auth/Login";
 import LoginAdmin from "../customer/auth/LoginAdmin";
 import LoginSuccess from "../customer/auth/LoginSuccess";
@@ -31,6 +32,10 @@ const AuthRouters = {
       {
         path: "login-admin",
         element: <LoginAdmin />,
+      },
+      {
+        path: "forgot-password-admin",
+        element: <ForgotPasswordAdmin />,
       },
     ],
 };
