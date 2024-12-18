@@ -512,12 +512,12 @@ const PreCheckout = () => {
                                         <Radio value="COD">
                                             Trả tiền mặt khi nhận hàng
                                         </Radio>
-                                        <Radio value="VNPAY">
+                                        {/* <Radio value="VNPAY">
                                             <div className="flex items-center gap-2">
                                                 <CreditCard className="w-5 h-5" />
                                                 Thanh toán VNPay
                                             </div>
-                                        </Radio>
+                                        </Radio> */}
                                     </Space>
                                 </Radio.Group>
                             </div>

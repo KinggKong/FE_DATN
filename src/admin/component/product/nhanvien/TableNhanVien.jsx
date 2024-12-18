@@ -34,7 +34,7 @@ const TableNhanVien = () => {
       };
       const res = await getAllNhanVienApi(params);
       if (res && res.data && res.data.content) {
-        const dataWithKey = res.data.content.map((item,index) => ({
+        const dataWithKey = res.data.content.map((item, index) => ({
           ...item,
           key: item.id,
           stt: currentPage === 1 ? index + 1 : (currentPage - 1) * pageSize + index + 1,
@@ -58,7 +58,7 @@ const TableNhanVien = () => {
     return new Promise((resolve, reject) => {
       const storageRef = ref(storage, `images/${file.name}`); // Tạo tham chiếu tới vị trí lưu trữ trong Firebase
       const uploadTask = uploadBytesResumable(storageRef, file);
-  
+
       // Theo dõi tiến trình tải lên
       uploadTask.on(
         "state_changed",
@@ -123,11 +123,20 @@ const TableNhanVien = () => {
   const handleConfirmEdit = async (id, updatedNhanVien, avatarFile) => {
     setLoading(true);
     try {
+
+      // Kiểm tra tên nhân viên có trống hoặc chỉ chứa khoảng trắng không
+      if (!updatedNhanVien.ten.trim()) {
+        notification.error({
+          message: "Lỗi",
+          description: "Tên nhân viên không được để trống!",
+        });
+        return;
+      }
       // Kiểm tra trùng email
       const existingEmail = dataSource.find(
         (item) => item.id !== id && item.email === updatedNhanVien.email
       );
-  
+
       if (existingEmail) {
         // Thông báo lỗi nếu email đã tồn tại
         notification.error({
@@ -136,12 +145,12 @@ const TableNhanVien = () => {
         });
         return; // Dừng việc cập nhật nếu trùng email
       }
-  
+
       // Kiểm tra trùng số điện thoại
       const existingSdt = dataSource.find(
         (item) => item.id !== id && item.sdt === updatedNhanVien.sdt
       );
-  
+
       if (existingSdt) {
         // Thông báo lỗi nếu số điện thoại đã tồn tại
         notification.error({
@@ -150,21 +159,21 @@ const TableNhanVien = () => {
         });
         return; // Dừng việc cập nhật nếu trùng số điện thoại
       }
-  
+
       // Tiến hành cập nhật nhân viên nếu không có trùng lặp
       let avatarUrl = updatedNhanVien.avatar;
       if (avatarFile) {
         avatarUrl = await uploadImageToFirebase(avatarFile);
       }
-  
+
       const updatedNhanVienWithAvatar = { ...updatedNhanVien, avatar: avatarUrl };
       await updateNhanVienApi(id, updatedNhanVienWithAvatar);
-  
+
       notification.success({
         message: "Thành công",
         description: `Cập nhật nhân viên ${updatedNhanVien.ten} thành công!`,
       });
-  
+
       setIsModalEditOpen(false);
       await fetchData();
     } catch (error) {
@@ -177,8 +186,8 @@ const TableNhanVien = () => {
       setLoading(false);
     }
   };
-  
-  
+
+
 
   const handleAdd = () => {
     setIsModalAddOpen(true);
@@ -187,11 +196,21 @@ const TableNhanVien = () => {
   const handleConfirmAdd = async (newNhanVien, avatarFile) => {
     setLoading(true);
     try {
+
+      // Kiểm tra tên nhân viên có trống hoặc chỉ chứa khoảng trắng không
+      if (!newNhanVien.ten.trim()) {
+        notification.error({
+          message: "Lỗi",
+          description: "Tên nhân viên không được để trống!",
+        });
+        return;
+      }
+
       // Kiểm tra trùng email
       const existingEmail = dataSource.find(
         (item) => item.email === newNhanVien.email
       );
-  
+
       if (existingEmail) {
         // Nếu email đã tồn tại
         notification.error({
@@ -200,12 +219,12 @@ const TableNhanVien = () => {
         });
         return; // Dừng việc thêm mới nếu trùng email
       }
-  
+
       // Kiểm tra trùng số điện thoại
       const existingSdt = dataSource.find(
         (item) => item.sdt === newNhanVien.sdt
       );
-  
+
       if (existingSdt) {
         // Nếu số điện thoại đã tồn tại
         notification.error({
@@ -214,21 +233,21 @@ const TableNhanVien = () => {
         });
         return; // Dừng việc thêm mới nếu trùng số điện thoại
       }
-  
+
       // Tiến hành thêm mới nhân viên nếu không có trùng lặp
       let avatarUrl = '';
       if (avatarFile) {
         avatarUrl = await uploadImageToFirebase(avatarFile); // Tải ảnh lên Firebase
       }
-  
+
       const newNhanVienWithAvatar = { ...newNhanVien, avatar: avatarUrl };
       await createNhanVienApi(newNhanVienWithAvatar);
-  
+
       notification.success({
         message: "Thành công",
         description: `Thêm mới nhân viên ${newNhanVien.ten} thành công!`,
       });
-  
+
       setIsModalAddOpen(false);
       await fetchData();
     } catch (error) {
@@ -241,8 +260,8 @@ const TableNhanVien = () => {
       setLoading(false);
     }
   };
-  
-  
+
+
 
 
   const columns = [

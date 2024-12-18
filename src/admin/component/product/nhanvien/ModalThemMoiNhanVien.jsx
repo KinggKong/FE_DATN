@@ -73,11 +73,11 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
       return;
     }
 
-    const phoneRegex = /^[0-9]{10,11}$/;
+    const phoneRegex = /^0[0-9]{9,10}$/;
     if (!phoneRegex.test(sdt)) {
       notification.error({
         message: "Lỗi",
-        description: "Số điện thoại từ 10 - 11 số!",
+        description: "Vui lòng nhập số điện thoại hợp lệ (10-11 chữ số)!",
       });
       return;
     }
