@@ -269,9 +269,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
 
 
       <Row className="flex justify-between mb-3">
-        <Col span={24}>
-          {/* <label className="text-sm block mb-2">Ngày tạo</label>
-          <Input value={ngayTao ? ngayTao.format('DD/MM/YYYY') : ''} disabled /> */}
+        <Col span={24}>       
           <Form.Item
             label="Địa chỉ"
             labelCol={{ span: 24 }} // Đẩy label thành 100% chiều rộng
@@ -303,13 +301,13 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
           >
             {fileList.length >= 1 ? null : uploadButton}
           </Upload>
-          {fileList.length > 0 && fileList[0].url && (
+          {/* {fileList.length > 0 && fileList[0].url && (
             <Image
               src={fileList[0].url}
               alt="Avatar"
               style={{ width: 100, height: 100, objectFit: 'cover', marginTop: 10 }}
             />
-          )}
+          )} */}
         </Col>
       </Row>
 

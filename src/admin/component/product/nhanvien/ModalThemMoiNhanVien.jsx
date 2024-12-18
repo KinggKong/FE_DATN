@@ -1,10 +1,12 @@
 import moment from 'moment';
-import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select, Upload, Image } from "antd";
+import { Modal, notification, Row, Col, Input, DatePicker, Switch, Select, Button, Upload, Image, Form, AutoComplete } from "antd";
 import { FaUserPlus } from "react-icons/fa";
 import { useState } from "react";
 import { UploadOutlined } from "@ant-design/icons";
 import { storage } from '../spct/firebaseConfig'; // Import tệp cấu hình Firebase
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import axios from "axios";
+import debounce from 'lodash/debounce';
 
 const { Option } = Select;
 
@@ -15,19 +17,43 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
   const [ngaySinh, setNgaySinh] = useState(null);
   const [gioiTinh, setGioiTinh] = useState(true);
   const [trangThai, setTrangThai] = useState(true);
-  const [diaChi, setDiaChi] = useState("");
+  const [diaChiStr, setDiaChiStr] = useState("");
+  const [addressOptions, setAddressOptions] = useState([]);
   const [fileList, setFileList] = useState([]);
+
+  const apiKey = 'DFt7PndsFeTuDNGggyzQyLr0dzqU9Sf0hb0mMZX5';
+
+  // Hàm xử lý tìm kiếm địa chỉ
+  const handleAddressSearch = debounce(async (value) => {
+    if (value.length > 2) { // Chỉ gọi API khi người dùng nhập ít nhất 3 ký tự
+      try {
+        const response = await axios.get(`https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(value)}`);
+        if (response.data.predictions) {
+          setAddressOptions(response.data.predictions.map(prediction => ({
+            value: prediction.description,
+            label: prediction.description,
+            place_id: prediction.place_id
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching address suggestions:', error);
+      }
+    }
+  }, 300); // Debounce 300ms
+
+  const handleAddressSelect = (value) => {
+    setDiaChiStr(value);
+  };
 
   const handleConfirmAdd = () => {
 
-    if (!ten || !email || !sdt || !ngaySinh || !diaChi) {
+    if (!ten || !email || !sdt || !ngaySinh || !diaChiStr) {
       notification.error({
         message: "Lỗi",
         description: "Vui lòng điền đầy đủ các trường!",
       });
       return;
     }
-
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -37,7 +63,6 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
       });
       return;
     }
-
 
     // Kiểm tra ngày sinh không được lớn hơn ngày hiện tại
     if (ngaySinh.isAfter(moment().subtract(18, 'years'), 'day')) {
@@ -65,7 +90,7 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
       ngaySinh: ngaySinh ? ngaySinh.format('YYYY-MM-DD') : null,
       gioiTinh,
       trangThai: trangThai ? 1 : 0,
-      diaChi,
+      diaChi: diaChiStr,
       avatar: fileList.length > 0 && fileList[0].url ? fileList[0].url : "", // Lưu URL avatar
     });
 
@@ -76,7 +101,7 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
     setNgaySinh(null);
     setGioiTinh(true);
     setTrangThai(true);
-    setDiaChi('');
+    setDiaChiStr('');
     setFileList([]);
 
   };
@@ -216,20 +241,6 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
         </Col>
         <Col span={11}>
           <label className="text-sm block mb-2">
-            <span className="text-red-600">*</span> Địa chỉ
-          </label>
-          <Input
-            value={diaChi}
-            onChange={(e) => setDiaChi(e.target.value)}
-            placeholder="Nhập địa chỉ"
-          />
-        </Col>
-      </Row>
-
-      <Row className="flex justify-between mb-3">
-
-        <Col span={11}>
-          <label className="text-sm block mb-2">
             <span className="text-red-600">*</span> Trạng thái
           </label>
           <Switch
@@ -238,6 +249,26 @@ const ModalThemMoiNhanVien = ({ isOpen, handleClose, title, handleSubmit }) => {
             checkedChildren="Hoạt động"
             unCheckedChildren="Không hoạt động"
           />
+        </Col>
+      </Row>
+
+      <Row className="flex justify-between mb-3">
+        <Col span={24}>
+          <Form.Item
+            label="Địa chỉ"
+            labelCol={{ span: 24 }} // Đẩy label thành 100% chiều rộng
+            wrapperCol={{ span: 24 }}
+          >
+            <AutoComplete
+              value={diaChiStr}  // Liên kết với state diaChiStr
+              options={addressOptions}
+              onSearch={handleAddressSearch}
+              onSelect={handleAddressSelect}
+              onChange={(value) => setDiaChiStr(value)}  // Cập nhật giá trị khi người dùng gõ
+              placeholder="Nhập địa chỉ"
+              size="large"
+            />
+          </Form.Item>
         </Col>
       </Row>
 

@@ -15,11 +15,18 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
   const [ngayKetThuc, setNgayKetThuc] = useState(null);
   const [hinhThucGiam, setHinhThucGiam] = useState("");
   const [soLuong, setSoLuong] = useState("");
-  const [trangThai, setTrangThai] = useState(true); // Trạng thái mặc định là hoạt động
-
+  const [trangThai, setTrangThai] = useState(true);
   const handleConfirmEdit = () => {
     const giaTriGiamFloat = parseFloat(giaTriGiam);
     const giaTriGiamToiDaFloat = parseFloat(giaTriGiamToiDa);
+
+    if (parseFloat(giaTriDonHangToiThieu) <= 0 || parseFloat(giaTriGiamToiDa) <= 0) {
+      notification.error({
+        message: "Lỗi",
+        description: "Tất cả các giá trị phải lớn hơn 0!",
+      });
+      return;
+    }
 
     // Kiểm tra điều kiện cho hình thức giảm
     if (hinhThucGiam === "%" && (giaTriGiamFloat <= 0 || giaTriGiamFloat >= 100)) {
@@ -64,34 +71,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       return;
     }
 
-    if (parseFloat(giaTriDonHangToiThieu) <= 0 || parseFloat(giaTriGiamToiDa) <= 0) {
-      notification.error({
-        message: "Lỗi",
-        description: "Tất cả các giá trị phải lớn hơn 0!",
-      });
-      return;
-    }
 
-    // Kiểm tra ngày bắt đầu và ngày kết thúc phải lớn hơn ngày hiện tại
-    const currentDate = moment();
-
-    if (ngayBatDau && ngayBatDau.isBefore(currentDate, 'day')) {
-      notification.error({
-        message: "Lỗi",
-        description: "Ngày bắt đầu phải lớn hơn hoặc bằng ngày hiện tại!",
-      });
-      return;
-    }
-
-    if (ngayBatDau && ngayKetThuc && ngayKetThuc.isBefore(ngayBatDau)) {
-      notification.error({
-        message: "Lỗi",
-        description: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu!",
-      });
-      return;
-    }
-
-    // Gửi thông tin voucher, nếu số lượng là 0 thì trạng thái sẽ là "Không hoạt động"
     handleSubmit(voucher?.id, {
       tenVoucher: newVoucherName,
       maVoucher,
@@ -102,7 +82,7 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
       ngayKetThuc: ngayKetThuc ? ngayKetThuc.format('YYYY-MM-DDTHH:mm:ss') : null,
       hinhThucGiam,
       soLuong: parseInt(soLuong, 10),
-      trangThai: soLuong === "0" ? 0 : trangThai ? 1 : 0, // Trạng thái tự động chuyển thành 0 nếu số lượng là 0
+      trangThai: soLuong === "0" ? 0 : trangThai ? 1 : 0,
     });
   };
 
@@ -110,11 +90,11 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
   // Cập nhật trạng thái khi số lượng thay đổi
   useEffect(() => {
     if (soLuong === "0") {
-      setTrangThai(false); // Đặt trạng thái là không hoạt động khi số lượng là 0
+      setTrangThai(false);
     } else {
-      setTrangThai(true); // Đặt trạng thái là hoạt động khi số lượng không phải là 0
+      setTrangThai(true);
     }
-  }, [soLuong]); // Theo dõi thay đổi số lượng
+  }, [soLuong]);
 
   useEffect(() => {
     if (voucher) {
@@ -250,12 +230,21 @@ const ModalEdit3 = ({ isOpen, handleClose, title, handleSubmit, voucher }) => {
           />
         </Col>
         <Col span={11}>
-          <label className="text-sm block mb-2"><span className="text-red-600">*</span> Trạng thái</label>
+          <label className="text-sm block mb-2">
+            <span className="text-red-600">*</span> Trạng thái
+          </label>
           <Switch
             checked={trangThai}
-            onChange={(checked) => setTrangThai(checked)}
+            onChange={(checked) => {
+              if (soLuong === "0") {
+
+                return;
+              }
+              setTrangThai(checked);
+            }}
             checkedChildren="Hoạt động"
             unCheckedChildren="Không hoạt động"
+            disabled={soLuong === "0"}
           />
         </Col>
       </Row>

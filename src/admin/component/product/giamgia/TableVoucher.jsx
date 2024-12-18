@@ -46,13 +46,18 @@ const TableVoucher = () => {
       const res = await getAllVoucherApi(params);
       if (res && res.data && res.data.content) {
         const dataWithKey = res.data.content.map((item, index) => {
-          // Kiểm tra ngày kết thúc và tự động cập nhật trạng thái nếu ngày hiện tại lớn hơn ngày kết thúc
           const currentDate = new Date();
+          const startDate = new Date(item.ngayBatDau);
           const endDate = new Date(item.ngayKetThuc);
           const updatedItem = { ...item };
 
+          if (startDate > currentDate) {
+            updatedItem.trangThai = 0;
+          }
+
+
           if (endDate < currentDate) {
-            updatedItem.trangThai = 0;  // Đặt trạng thái là "Không hoạt động"
+            updatedItem.trangThai = 0;
           }
 
           return {
@@ -75,6 +80,7 @@ const TableVoucher = () => {
       setLoading(false);
     }
   }, [currentPage, pageSize, valueSearch, thoiGianSearch, statusSearch]);
+
 
   const checkVoucherExists = async (value, type, excludeId) => {
     const params = {
@@ -200,8 +206,11 @@ const TableVoucher = () => {
       }
 
       // Kiểm tra tên và mã voucher, nhưng loại trừ voucher hiện tại bằng cách truyền thêm id
-      const existsByName = await checkVoucherExists(updateVoucher.tenVoucher, 'name', id);
-      const existsByCode = await checkVoucherExists(updateVoucher.maVoucher, 'code', id);
+      const trimmedTenVoucher = updateVoucher.tenVoucher.trim();
+      const trimmedMaVoucher = updateVoucher.maVoucher.trim();
+
+      const existsByName = await checkVoucherExists(trimmedTenVoucher, 'name', id);
+      const existsByCode = await checkVoucherExists(trimmedMaVoucher, 'code', id);
 
       if (existsByName) {
         notification.error({
@@ -279,9 +288,15 @@ const TableVoucher = () => {
         return;
       }
 
-      const existsByName = await checkVoucherExists(newVoucher.tenVoucher, 'name');
-      const existsByCode = await checkVoucherExists(newVoucher.maVoucher, 'code');
+      // Loại bỏ dấu cách thừa ở đầu và cuối tên và mã voucher
+      const trimmedTenVoucher = newVoucher.tenVoucher.trim();
+      const trimmedMaVoucher = newVoucher.maVoucher.trim();
 
+      // Kiểm tra tên và mã voucher
+      const existsByName = await checkVoucherExists(trimmedTenVoucher, 'name');
+      const existsByCode = await checkVoucherExists(trimmedMaVoucher, 'code');
+
+      // Kiểm tra nếu tên voucher đã tồn tại
       if (existsByName) {
         notification.error({
           message: "Lỗi",
@@ -291,6 +306,7 @@ const TableVoucher = () => {
         return;
       }
 
+      // Kiểm tra nếu mã voucher đã tồn tại
       if (existsByCode) {
         notification.error({
           message: "Lỗi",
@@ -394,11 +410,19 @@ const TableVoucher = () => {
     {
       title: "Số lượng",
       dataIndex: "soLuong",
+      sorter: {
+        compare: (a, b) => a.soLuong - b.soLuong,
+        multiple: 2,
+      },
     },
     {
       title: "Ngày bắt đầu",
       dataIndex: "ngayBatDau",
       render: (text) => new Date(text).toLocaleDateString(),
+      sorter: {
+        compare: (a, b) => new Date(a.ngayBatDau) - new Date(b.ngayBatDau),
+        multiple: 3,
+      },
     },
     {
       title: "Ngày kết thúc",
@@ -412,28 +436,49 @@ const TableVoucher = () => {
         <Switch
           checked={text === 1}
           onChange={async (checked) => {
-            const currentDate = new Date();  // Lấy ngày hiện tại
-            const expirationDate = new Date(record.ngayKetThuc);  // Lấy ngày kết thúc của voucher
+            const currentDate = new Date();
+            const startDate = new Date(record.ngayBatDau);
+            const expirationDate = new Date(record.ngayKetThuc);
 
-            // Kiểm tra nếu ngày kết thúc nhỏ hơn ngày hiện tại
+
+            if (record.soLuong === 0) {
+              notification.error({
+                message: "Cập nhật thất bại",
+                description: "Voucher này không thể kích hoạt vì số lượng là 0.",
+              });
+              return;
+            }
+
+
+            if (startDate > currentDate) {
+              notification.error({
+                message: "Cập nhật thất bại",
+                description: "Không thể cập nhật trạng thái khi ngày bắt đầu của voucher chưa đến.",
+              });
+              return;
+            }
+
+
             if (expirationDate < currentDate) {
               notification.error({
                 message: "Cập nhật thất bại",
                 description: "Không thể cập nhật trạng thái khi ngày kết thúc của voucher đã qua.",
               });
-              return;  // Dừng việc cập nhật nếu ngày kết thúc đã qua
+              return;
             }
+
 
             const updatedStatus = checked ? 1 : 0;
             const updatedVoucher = { ...record, trangThai: updatedStatus };
 
             try {
+
               await updateVoucherApi(record.id, updatedVoucher);
               notification.success({
                 message: "Cập nhật trạng thái thành công",
                 description: `Voucher ${record.maVoucher} đã được ${checked ? "kích hoạt" : "tắt"}!`,
               });
-              await fetchData(); // Cập nhật lại danh sách
+              await fetchData();
             } catch (error) {
               console.error("Failed to update voucher status", error);
               notification.error({
@@ -445,6 +490,7 @@ const TableVoucher = () => {
         />
       ),
     },
+
     {
       title: "Thao tác",
       dataIndex: "thaotac",
