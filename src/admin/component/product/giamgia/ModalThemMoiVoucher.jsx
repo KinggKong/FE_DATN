@@ -17,9 +17,19 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
   const [soLuong, setSoLuong] = useState("");
   const [trangThai, setTrangThai] = useState(true);
 
+
   const handleConfirmAdd = () => {
     const giaTriGiamFloat = parseFloat(giaTriGiam);
     const giaTriGiamToiDaFloat = parseFloat(giaTriGiamToiDa);
+
+    // Kiểm tra các giá trị phải lớn hơn 0
+    if (parseFloat(giaTriDonHangToiThieu) <= 0 || parseFloat(giaTriGiamToiDa) <= 0 || parseInt(soLuong, 10) <= 0) {
+      notification.error({
+        message: "Lỗi",
+        description: "Tất cả các giá trị phải lớn hơn 0!",
+      });
+      return;
+    }
 
     // Kiểm tra điều kiện cho hình thức giảm
     if (hinhThucGiam === "%" && (giaTriGiamFloat <= 0 || giaTriGiamFloat >= 100)) {
@@ -55,30 +65,23 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
       return;
     }
 
-    // Kiểm tra các giá trị phải lớn hơn 0
-    if (parseFloat(giaTriDonHangToiThieu) <= 0 || parseFloat(giaTriGiamToiDa) <= 0 || parseInt(soLuong, 10) <= 0) {
+
+
+    // Kiểm tra ngày bắt đầu và ngày kết thúc phải lớn hơn ngày hiện tại
+    const currentDate = moment();
+
+    //  if (ngayBatDau && ngayBatDau.isBefore(currentDate, 'day')) {
+    //    notification.error({
+    //      message: "Lỗi",
+    //      description: "Ngày bắt đầu phải lớn hơn hoặc bằng ngày hiện tại!",
+    //    });
+    //    return;
+    //  }
+
+    if (ngayBatDau && ngayKetThuc && moment(ngayKetThuc).isBefore(moment(ngayBatDau), 'day')) {
       notification.error({
         message: "Lỗi",
-        description: "Tất cả các giá trị phải lớn hơn 0!",
-      });
-      return;
-    }
-    
-     // Kiểm tra ngày bắt đầu và ngày kết thúc phải lớn hơn ngày hiện tại
-     const currentDate = moment();
-
-     if (ngayBatDau && ngayBatDau.isBefore(currentDate, 'day')) {
-       notification.error({
-         message: "Lỗi",
-         description: "Ngày bắt đầu phải lớn hơn hoặc bằng ngày hiện tại!",
-       });
-       return;
-     }
-
-    if (ngayBatDau && ngayKetThuc && ngayKetThuc.isBefore(ngayBatDau)) {
-      notification.error({
-        message: "Lỗi",
-        description: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu!",
+        description: "Ngày kết thúc phải lớn hơn ngày bắt đầu!",
       });
       return;
     }

@@ -12,22 +12,18 @@ import {
   notification,
   Row,
   Select,
-  Slider,
-  Spin,
   Switch,
   Table,
   Tabs,
   Tag,
   Typography,
 } from "antd";
-import { MinusOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
+import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { IoQrCodeSharp } from "react-icons/io5";
-import { Option } from "antd/es/mentions";
-// import Title from "antd/es/skeleton/Title";//
-import { FaBagShopping } from "react-icons/fa6";
 import { MdDelete, MdOutlinePayment } from "react-icons/md";
 import axios from "axios";
+import debounce from "lodash/debounce";
 import {
   createHoaDon,
   getAllHoaDon,
@@ -42,7 +38,7 @@ import {
   createHoaDonChiTiet,
 } from "../../../../api/HoaDonChiTiet";
 import { toast } from "react-toastify";
-import { getAllSanPhamChiTietApi, getAllSanPhamChiTietBanApi } from "../../../../api/SanPhamChiTietAPI";
+import { getAllSanPhamChiTietBanApi } from "../../../../api/SanPhamChiTietAPI";
 import TabPane from "antd/es/tabs/TabPane";
 import { getAllKhachHang } from "../../../../api/KhachHang";
 import axiosClient from "../../../../api/axiosClient";
@@ -51,8 +47,6 @@ import { createKhachHangApi } from "../../../../api/KhachHangApi";
 import { useNavigate } from "react-router-dom";
 import TextArea from "antd/es/input/TextArea";
 import image from "../../../../util/cart-empty-img.8b677cb3.png";
-import debounce from 'lodash/debounce';
-import { set } from "@ant-design/plots/es/core/utils";
 import { getAllSanPhamApi } from "../../../../api/SanPhamApi";
 import { getAllDanhMucApi } from "../../../../api/DanhMucService";
 import { getAllThuongHieuApi } from "../../../../api/ThuongHieuService";
@@ -77,13 +71,34 @@ const ShoppingCart = () => {
   const [currentCustomer, setCurrentCustomer] = useState(null);
   const [isShowModalKhachHang, setIsShowModalKhachHang] = useState(false);
   const [hoaDonChiTiet, setHoaDonChiTiet] = useState(null);
-  const [selectedMethod, setSelectedMethod] = useState("cash");
+  const [selectedMethod, setSelectedMethod] = useState("Tiền mặt");
 
   const [confirmPayments, setConfirmPaymets] = useState(false);
 
   const [addressOptions, setAddressOptions] = useState([]);
 
-  const apiKey = 'DFt7PndsFeTuDNGggyzQyLr0dzqU9Sf0hb0mMZX5'; // Replace with your Goong API key
+  const notificationMessage = (type, message) => {
+    toast.dismiss();
+    switch (type) {
+      case "success":
+        toast.success(message);
+        break;
+      case "error":
+        toast.error(message);
+        break;
+      case "info":
+        toast.info(message);
+        break;
+      case "warning":
+        toast.warn(message);
+        break;
+      default:
+        toast(message);
+        break;
+    }
+  };
+
+  const apiKey = "DFt7PndsFeTuDNGggyzQyLr0dzqU9Sf0hb0mMZX5"; // Replace with your Goong API key
   const originLat = 21.038059779392608;
   const originLng = 105.74668196761013;
   const [isShipping, setIsShipping] = useState(false);
@@ -232,8 +247,6 @@ const ShoppingCart = () => {
     }
   };
 
-
-
   const confirmPaymentShow = () => {
     setConfirmPaymets(true);
   };
@@ -270,26 +283,21 @@ const ShoppingCart = () => {
 
   const selectCustomer = async (payload) => {
     setCurrentCustomer(payload);
+
     console.log("Current customer:", payload);
     form.setFieldsValue({
       tenNguoiNhan: payload?.ten,
       sdt: payload?.sdt,
       email: payload?.email,
       address: payload?.diaChiStr,
-      // province: payload?.diaChi?.tinh,
-      // district: payload?.diaChi?.quan,
-      // ward: payload?.diaChi?.huyen,
     });
-    // calculateShippingCost(
-    //   payload?.diaChi?.tinh,
-    //   payload?.diaChi?.quan
-    // );
-
     if (isShipping && payload?.diaChiStr) {
       try {
         // Gọi API Goong để lấy tọa độ từ địa chỉ
         const response = await axios.get(
-          `https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(payload.diaChiStr)}`
+          `https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(
+            payload.diaChiStr
+          )}`
         );
 
         if (response.data.predictions && response.data.predictions.length > 0) {
@@ -299,7 +307,10 @@ const ShoppingCart = () => {
             `https://rsapi.goong.io/Place/Detail?place_id=${placeId}&api_key=${apiKey}`
           );
 
-          if (detailResponse.data.result && detailResponse.data.result.geometry) {
+          if (
+            detailResponse.data.result &&
+            detailResponse.data.result.geometry
+          ) {
             const { lat, lng } = detailResponse.data.result.geometry.location;
             // Gọi hàm tính phí vận chuyển với tọa độ
             calculateShippingCost(lat, lng);
@@ -315,7 +326,6 @@ const ShoppingCart = () => {
       setShip(0);
       setDiaChi(null);
     }
-
   };
 
   useEffect(() => {
@@ -324,7 +334,7 @@ const ShoppingCart = () => {
 
   const showModalKhachHang = () => {
     if (currentInvoice?.id == null) {
-      toast.warning("Vui lòng chọn hóa đơn !");
+      notificationMessage("warning", "Vui lòng chọn hóa đơn !");
       setIsShowModalKhachHang(false);
       return;
     }
@@ -407,38 +417,96 @@ const ShoppingCart = () => {
     }
   }, [activeTab]);
 
+  // const handleXacNhanThanhToan = async (id) => {
+  //   setLoading(true);
+  //   try {
+  //     if (!currentInvoice) {
+  //       setIsShow(true);
+  //       setConfirmPaymets(false);
+  //       notificationMessage("warning", "Vui lòng chọn hóa đơn");
+  //       return;
+  //     }
+
+  //     if (
+  //       Number(localStorage.getItem(currentInvoice?.id)) !==
+  //       currentInvoice.tienSauGiam
+  //     ) {
+  //       console.log();
+  //       setConfirmPaymets(false);
+  //       notificationMessage("warning", "Vui lòng thanh toán đơn hàng!");
+  //       return;
+  //     }
+
+  //     if (!isShipping) {
+  //       setShip(0);
+  //       setDiaChi(null);
+  //     }
+
+  //     const res = await confirmPayment(id, selectedMethod, diaChi, ship);
+  //     console.log(res);
+
+  //     if (res?.code === 200) {
+  //       localStorage.removeItem(currentInvoice?.id);
+
+  //       setInvoices((prevInvoices) => {
+  //         const newInvoices = prevInvoices.filter(
+  //           (invoice) => invoice.id !== id
+  //         );
+  //         if (newInvoices.length > 0 && newInvoices[0]?.id) {
+  //           setActiveTab(newInvoices[0]?.id);
+  //         } else {
+  //           setActiveTab("noInvoice");
+  //         }
+  //         return newInvoices;
+  //       });
+  //       notificationMessage("success", "Thanh toán hóa đơn thành công!");
+  //       setShip(0);
+  //       setDiaChi(null);
+  //       setConfirmPaymets(false);
+  //       setPartialPayment(0);
+  //       console.log("Data: ", res?.code);
+  //     }
+  //     if(res?.code === 1041) {
+  //       notificationMessage('warning', "Voucher da het han");
+  //       return;
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     notificationMessage("error", "Số lương voucher đã hết !");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleXacNhanThanhToan = async (id) => {
     setLoading(true);
     try {
       if (!currentInvoice) {
         setIsShow(true);
         setConfirmPaymets(false);
-        toast.warning("Vui lòng chọn hóa đơn");
+        notificationMessage("warning", "Vui lòng chọn hóa đơn");
         return;
       }
-
+  
       if (
         Number(localStorage.getItem(currentInvoice?.id)) !==
         currentInvoice.tienSauGiam
       ) {
-        console.log();
         setConfirmPaymets(false);
-        toast.warning("Vui lòng thanh toán đơn hàng!");
+        notificationMessage("warning", "Vui lòng thanh toán đơn hàng!");
         return;
       }
-
+  
       if (!isShipping) {
         setShip(0);
         setDiaChi(null);
       }
-
+  
       const res = await confirmPayment(id, selectedMethod, diaChi, ship);
       console.log(res);
-
+  
       if (res?.code === 200) {
-        // Xóa thông tin hóa đơn khỏi localStorage khi thanh toán thành công
         localStorage.removeItem(currentInvoice?.id);
-
+  
         setInvoices((prevInvoices) => {
           const newInvoices = prevInvoices.filter(
             (invoice) => invoice.id !== id
@@ -450,19 +518,64 @@ const ShoppingCart = () => {
           }
           return newInvoices;
         });
-        toast.success("Thanh toán hóa đơn thành công!");
+        notificationMessage("success", "Thanh toán hóa đơn thành công!");
+        setShip(0);
+        setDiaChi(null);
         setConfirmPaymets(false);
         setPartialPayment(0);
+        console.log("Data: ", res?.code);
       }
+  
+      // Xử lý khi voucher hết hạn (code 1041)
+      if (res?.code === 1041) {
+        notificationMessage('warning', "Voucher đã hết hạn");
+        return; // Kết thúc hàm nếu voucher hết hạn
+      }
+  
     } catch (error) {
       console.log(error);
-      toast.error("Số lương voucher đã hết !");
+      notificationMessage('warning', "Voucher đã dừng áp dụng !");
     } finally {
       setLoading(false);
     }
   };
+  
+  const handleAddressSearch = debounce(async (value) => {
+    if (value.length > 2) {
+      try {
+        const response = await axios.get(
+          `https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(
+            value
+          )}`
+        );
+        if (response.data.predictions) {
+          setAddressOptions(
+            response.data.predictions.map((prediction) => ({
+              value: prediction.description,
+              label: prediction.description,
+              place_id: prediction.place_id,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching address suggestions:", error);
+      }
+    }
+  }, 300);
 
-  const [shipping, setShipping] = useState(false);
+  const handleAddressSelect = async (value, option) => {
+    try {
+      const detailResponse = await axios.get(
+        `https://rsapi.goong.io/Place/Detail?place_id=${option.place_id}&api_key=${apiKey}`
+      );
+      if (detailResponse.data.result && detailResponse.data.result.geometry) {
+        const { lat, lng } = detailResponse.data.result.geometry.location;
+        calculateShippingCost(lat, lng);
+      }
+    } catch (error) {
+      console.error("Error fetching place details:", error);
+    }
+  };
   const [partialPayment, setPartialPayment] = useState(0);
   const [modalPaymentAmount, setModalPaymentAmount] = useState(0);
   const showModalThanhToan = () => setIsModalVisible(true);
@@ -615,7 +728,7 @@ const ShoppingCart = () => {
     const data = JSON.parse(decodedText);
 
     if (!currentInvoice) {
-      toast.warning("Vui lòng chọn hóa đơn!");
+      notificationMessage("warning", "Vui lòng chọn hóa đơn!");
       return;
     }
 
@@ -632,10 +745,10 @@ const ShoppingCart = () => {
       await fetchDataSpct();
       await getOrderById(currentInvoice.id);
 
-      toast.success("Đã thêm sản phẩm vào hóa đơn!");
+      notificationMessage("success", "Đã thêm sản phẩm vào hóa đơn!");
     } catch (error) {
       console.error(error);
-      toast.error("Số lượng vượt quá trong kho.");
+      notificationMessage("error", "Số lượng vượt quá trong kho.");
       setQuantity(1);
     } finally {
       setLoading(false);
@@ -661,7 +774,6 @@ const ShoppingCart = () => {
       idChatLieuVai,
       idChatLieuDe,
       idSanPham,
-
     };
     try {
       const res = await getAllSanPhamChiTietBanApi(params);
@@ -676,11 +788,7 @@ const ShoppingCart = () => {
     } catch (error) {
       console.error("Failed to fetch product details:", error);
     }
-  }, [idDanhMuc,
-    idThuongHieu,
-    idChatLieuVai,
-    idChatLieuDe,
-    idSanPham,]);
+  }, [idDanhMuc, idThuongHieu, idChatLieuVai, idChatLieuDe, idSanPham]);
 
   useEffect(() => {
     fetchDataDanhMuc();
@@ -713,25 +821,21 @@ const ShoppingCart = () => {
     fetchData();
   }, []);
 
-  // useEffect(() => {
-  //   const intervalId = setInterval(() => {
-  //     fetchData();
-  //   }, 1000);
-  //   return () => clearInterval(intervalId);
-  // }, []);
-
   const handleCreateNewOrder = async () => {
     try {
       if (invoices.length >= 5) {
-        toast.warning("Đã đạt giới hạn 5 hóa đơn! Không thể tạo hóa đơn mới.");
+        notificationMessage(
+          "warning",
+          "Đã đạt giới hạn 5 hóa đơn! Không thể tạo hóa đơn mới."
+        );
         return;
       }
       await createHoaDon();
-      toast.success("Tạo hóa đơn mới thành công !");
+      notificationMessage("success", "Tạo hóa đơn mới thành công !");
       await fetchData();
     } catch (error) {
       console.log(error);
-      toast.error("Tạo hóa đơn thất bại !");
+      notificationMessage("error", "Tạo hóa đơn thất bại !");
     }
   };
 
@@ -749,11 +853,11 @@ const ShoppingCart = () => {
           setInvoiceDetails(details.data);
           console.log(details.data);
         } else {
-          toast.error("Không tìm thấy chi tiết hóa đơn.");
+          notificationMessage("error", "Không tìm thấy chi tiết hóa đơn.");
         }
         console.log("Success");
       } else {
-        toast.error("Không tìm thấy hóa đơn.");
+        notificationMessage("error", "Không tìm thấy hóa đơn.");
       }
     } catch (error) {
       console.error("Error fetching order:", error);
@@ -852,20 +956,20 @@ const ShoppingCart = () => {
       if (response?.data) {
         const updatedData = Array.isArray(hoaDonChiTiet)
           ? hoaDonChiTiet.map((item) =>
-            item.id === record.id ? { ...item, ...response.data } : item
-          )
+              item.id === record.id ? { ...item, ...response.data } : item
+            )
           : [];
 
         setHoaDonChiTiet(updatedData);
         await getOrderById(currentInvoice?.id);
         await fetchDataSpct();
-        toast.success("Cập nhật số lượng thành công!");
+        notificationMessage("success", "Cập nhật số lượng thành công!");
       } else {
-        toast.error("Cập nhật thất bại!");
+        notificationMessage("error", "Cập nhật thất bại!");
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
-      toast.error("Số lượng vượt quá trong kho !.");
+      notificationMessage("error", "Số lượng vượt quá trong kho !.");
     }
   };
 
@@ -898,19 +1002,20 @@ const ShoppingCart = () => {
       if (response?.data) {
         const updatedData = Array.isArray(hoaDonChiTiet)
           ? hoaDonChiTiet.map((item) =>
-            item.id === record.id ? { ...item, ...response.data } : item
-          )
+              item.id === record.id ? { ...item, ...response.data } : item
+            )
           : [];
 
         setHoaDonChiTiet(updatedData);
         await getOrderById(currentInvoice?.id);
         await fetchDataSpct();
       } else {
-        toast.error("Cập nhật thất bại!");
+        notificationMessage("error", "Cập nhật thất bại!");
       }
     } catch (error) {
       if (!errorShown) {
-        toast.error(
+        notificationMessage(
+          "error",
           "Số lượng vượt quá trong kho, kiểm tra lại số lượng sản phẩm!"
         );
         setErrorShown(true);
@@ -938,10 +1043,10 @@ const ShoppingCart = () => {
       setCurrentInvoice(updatedInvoice);
       getOrderById(currentInvoice?.id);
       await fetchDataSpct();
-      toast.success("Xóa hóa đơn chi tiết thành công!");
+      notificationMessage("success", "Xóa hóa đơn chi tiết thành công!");
     } catch (error) {
       console.error("Error deleting invoice detail:", error);
-      toast.error("Có lỗi xảy ra khi xóa hóa đơn chi tiết.");
+      notificationMessage("error", "Có lỗi xảy ra khi xóa hóa đơn chi tiết.");
     }
   };
 
@@ -951,7 +1056,7 @@ const ShoppingCart = () => {
     console.log(product);
     if (currentInvoice?.id == null) {
       setIsModalOpen(false);
-      toast.warning("Vui lòng chọn hóa đơn !");
+      notificationMessage("warning", "Vui lòng chọn hóa đơn !");
       return;
     }
     setSelectedSpct(product);
@@ -959,11 +1064,11 @@ const ShoppingCart = () => {
 
   const addSpctToHoaDon = async () => {
     if (!currentInvoice) {
-      toast.warning("Vui lòng chọn hóa đơn!");
+      notificationMessage("warning", "Vui lòng chọn hóa đơn!");
       return;
     }
     if (!selectedSpct) {
-      toast.warning("Vui lòng chọn sản phẩm!");
+      notificationMessage("warning", "Vui lòng chọn sản phẩm!");
       return;
     }
 
@@ -979,10 +1084,10 @@ const ShoppingCart = () => {
       await fetchDataSpct();
       await getOrderById(currentInvoice.id);
 
-      toast.success("Đã thêm sản phẩm vào hóa đơn!");
+      notificationMessage("success", "Đã thêm sản phẩm vào hóa đơn!");
     } catch (error) {
       console.error(error);
-      toast.error("Số lượng vượt quá trong kho.");
+      notificationMessage("error", "Số lượng vượt quá trong kho.");
       setQuantity(1);
     } finally {
       setLoading(false);
@@ -1006,7 +1111,7 @@ const ShoppingCart = () => {
 
     if (res?.data) {
       await fetchDataKhachHang();
-      toast.success("Thêm khách hàng thành công !");
+      notificationMessage("success", "Thêm khách hàng thành công !");
       setIsCreateCustomer(false);
     }
   };
@@ -1018,14 +1123,7 @@ const ShoppingCart = () => {
 
   const navigate = useNavigate();
 
-  const [provinces, setProvinces] = useState([]);
-  const [districts, setDistricts] = useState([]);
-  const [wards, setWards] = useState([]);
-
   const [loading, setLoading] = useState(true);
-  const [provincesLoading, setProvincesLoading] = useState(false);
-  const [districtsLoading, setDistrictsLoading] = useState(false);
-  const [wardsLoading, setWardsLoading] = useState(false);
   const [shippingLoading, setShippingLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
@@ -1083,10 +1181,17 @@ const ShoppingCart = () => {
   const calculateShippingCost = async (lat, lng) => {
     setShippingLoading(true);
     try {
-      const distanceResponse = await axios.get(`https://rsapi.goong.io/DistanceMatrix?origins=${originLat},${originLng}&destinations=${lat},${lng}&api_key=${apiKey}`);
+      const distanceResponse = await axios.get(
+        `https://rsapi.goong.io/DistanceMatrix?origins=${originLat},${originLng}&destinations=${lat},${lng}&api_key=${apiKey}`
+      );
 
-      if (distanceResponse.data.rows && distanceResponse.data.rows[0].elements && distanceResponse.data.rows[0].elements[0].distance) {
-        const distanceKm = distanceResponse.data.rows[0].elements[0].distance.value / 1000;
+      if (
+        distanceResponse.data.rows &&
+        distanceResponse.data.rows[0].elements &&
+        distanceResponse.data.rows[0].elements[0].distance
+      ) {
+        const distanceKm =
+          distanceResponse.data.rows[0].elements[0].distance.value / 1000;
         let shippingCost;
 
         if (distanceKm < 40) {
@@ -1103,45 +1208,18 @@ const ShoppingCart = () => {
 
         setShip(shippingCost);
       } else {
-        throw new Error('Unable to calculate distance');
+        throw new Error("Unable to calculate distance");
       }
     } catch (err) {
-      console.error('Error calculating shipping cost:', err);
-      message.error('Không thể tính phí vận chuyển. Vui lòng thử lại.');
+      console.error("Error calculating shipping cost:", err);
+      message.error("Không thể tính phí vận chuyển. Vui lòng thử lại.");
     } finally {
       setShippingLoading(false);
     }
   };
 
-  const handleAddressSearch = debounce(async (value) => {
-    if (value.length > 2) {
-      try {
-        const response = await axios.get(`https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(value)}`);
-        if (response.data.predictions) {
-          setAddressOptions(response.data.predictions.map(prediction => ({
-            value: prediction.description,
-            label: prediction.description,
-            place_id: prediction.place_id
-          })));
-        }
-      } catch (error) {
-        console.error('Error fetching address suggestions:', error);
-      }
-    }
-  }, 300);
 
-  const handleAddressSelect = async (value, option) => {
-    try {
-      const detailResponse = await axios.get(`https://rsapi.goong.io/Place/Detail?place_id=${option.place_id}&api_key=${apiKey}`);
-      if (detailResponse.data.result && detailResponse.data.result.geometry) {
-        const { lat, lng } = detailResponse.data.result.geometry.location;
-        calculateShippingCost(lat, lng);
-        setDiaChi(value);
-      }
-    } catch (error) {
-      console.error('Error fetching place details:', error);
-    }
-  };
+
 
   // useEffect(() => {
   //   getOrderById(currentInvoice?.id);
@@ -1151,14 +1229,6 @@ const ShoppingCart = () => {
   const handleSubmit = async (values) => {
     setCheckoutLoading(true);
     try {
-      const selectedProvince = provinces.find(
-        (province) => province.code === values.province
-      );
-      const selectedDistrict = districts.find(
-        (district) => district.code === values.district
-      );
-      const selectedWard = wards.find((ward) => ward.code === values.ward);
-
       const hoaDonRequest = {
         idGioHang: values.idGioHang,
         tenNguoiNhan: values.tenNguoiNhan,
@@ -1205,6 +1275,7 @@ const ShoppingCart = () => {
             description: `Thanh toán thành công đơn hàng!`,
           });
           navigate(`/infor-order?maHoaDon=${maHoaDon}`);
+          // fetchCart();
         } else {
           throw new Error("Checkout failed");
         }
@@ -1216,7 +1287,6 @@ const ShoppingCart = () => {
       setCheckoutLoading(false);
     }
   };
-
 
   if (error) {
     return <div>Error: {error}</div>;
@@ -1327,7 +1397,7 @@ const ShoppingCart = () => {
       </p>
       <Divider />
       {currentInvoice?.tenKhachHang &&
-        currentInvoice.tenKhachHang !== "Khách lẻ" ? (
+      currentInvoice.tenKhachHang !== "Khách lẻ" ? (
         <div>
           <div>
             <span>Tên khách hàng</span>: {currentInvoice.tenKhachHang}
@@ -1376,156 +1446,159 @@ const ShoppingCart = () => {
           flexDirection: "column",
         }}
       >
-        
-          <Row className="flex justify-between">
-            <Col span={8}>
+        <Row className="flex justify-between">
+          <Col span={8}>
             <label className="text-sm block mb-2" htmlFor="">
-                Sản phẩm
-              </label>
-              <Select
-                showSearch
-                style={{
-                  width: "100%",
-                }}
-                placeholder="Tất cả sản phẩm"
-                optionFilterProp="label"
-                filterSort={(optionA, optionB) =>
-                  (optionA?.label ?? "")
-                    .toLowerCase()
-                    .localeCompare((optionB?.label ?? "").toLowerCase())
-                }
-                value={idSanPham}
-                onChange={(value) => {
-                  setIdSanPham(value);
-                }}
-                options={[
-                  { value: "", label: "Tất cả sản phẩm" },
-                  ...dataSanPham?.map((sanPham) => ({
-                    value: sanPham.id,
-                    label: sanPham.tenSanPham,
-                  })),
-                ]}
-              />
-            </Col>
+              Sản phẩm
+            </label>
+            <Select
+              showSearch
+              style={{
+                width: "100%",
+              }}
+              placeholder="Tất cả sản phẩm"
+              optionFilterProp="label"
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? "")
+                  .toLowerCase()
+                  .localeCompare((optionB?.label ?? "").toLowerCase())
+              }
+              value={idSanPham}
+              onChange={(value) => {
+                setIdSanPham(value);
+              }}
+              options={[
+                { value: "", label: "Tất cả sản phẩm" },
+                // eslint-disable-next-line no-unsafe-optional-chaining
+                ...dataSanPham?.map((sanPham) => ({
+                  value: sanPham.id,
+                  label: sanPham.tenSanPham,
+                })),
+              ]}
+            />
+          </Col>
 
-            <Col span={3}>
-              <label className="text-sm block mb-2" htmlFor="">
-                Thương hiệu
-              </label>
-              <Select
-                showSearch
-                style={{
-                  width: "100%",
-                }}
-                placeholder="Tất cả thương hiệu"
-                optionFilterProp="label"
-                filterSort={(optionA, optionB) =>
-                  (optionA?.label ?? "")
-                    .toLowerCase()
-                    .localeCompare((optionB?.label ?? "").toLowerCase())
-                }
-                value={idThuongHieu}
-                onChange={(value) => {
-                  setIdThuongHieu(value);
-                }}
-                options={[
-                  { value: "", label: "Tất cả thương hiệu" },
-                  ...dataThuongHieu?.map((thuongHieu) => ({
-                    value: thuongHieu.id,
-                    label: thuongHieu.tenThuongHieu,
-                  })),
-                ]}
-              />
-            </Col>
-            <Col span={3}>
-              <label className="text-sm block mb-2" htmlFor="">
-                Danh mục
-              </label>
-              <Select
-                showSearch
-                style={{
-                  width: "100%",
-                }}
-                value={idDanhMuc}
-                onChange={(value) => {
-                  setIdDanhMuc(value);
-                }}
-                placeholder="Tất cả danh mục"
-                optionFilterProp="label"
-                filterSort={(optionA, optionB) =>
-                  (optionA?.label ?? "")
-                    .toLowerCase()
-                    .localeCompare((optionB?.label ?? "").toLowerCase())
-                }
-                options={[
-                  { value: "", label: "Tất cả danh mục" },
-                  ...dataDanhMuc?.map((danhMuc) => ({
-                    value: danhMuc.id,
-                    label: danhMuc.tenDanhMuc,
-                  })),
-                ]}
-              />
-            </Col>
-            <Col span={3}>
-              <label className="text-sm block mb-2" htmlFor="">
-                Chất liệu vải
-              </label>
-              <Select
-                showSearch
-                style={{
-                  width: "100%",
-                }}
-                value={idChatLieuVai}
-                onChange={(value) => {
-                  setIdChatLieuVai(value);
-                }}
-                placeholder="Tất cả chất vải"
-                optionFilterProp="label"
-                filterSort={(optionA, optionB) =>
-                  (optionA?.label ?? "")
-                    .toLowerCase()
-                    .localeCompare((optionB?.label ?? "").toLowerCase())
-                }
-                options={[
-                  { value: "", label: "Tất cả chất vải" },
-                  ...dataChatLieuVai?.map((vai) => ({
-                    value: vai.id,
-                    label: vai.tenChatLieuVai,
-                  })),
-                ]}
-              />
-            </Col>
-            <Col span={3}>
-              <label className="text-sm block mb-2" htmlFor="">
-                Chất liệu đế
-              </label>
-              <Select
-                showSearch
-                style={{
-                  width: "100%",
-                }}
-                value={idChatLieuDe}
-                onChange={(value) => {
-                  setIdChatLieuDe(value);
-                }}
-                placeholder="Tất cả chất đế"
-                optionFilterProp="label"
-                filterSort={(optionA, optionB) =>
-                  (optionA?.label ?? "")
-                    .toLowerCase()
-                    .localeCompare((optionB?.label ?? "").toLowerCase())
-                }
-                options={[
-                  { value: "", label: "Tất cả chất đế" },
-                  ...dataChatLieuDe?.map((de) => ({
-                    value: de.id,
-                    label: de.tenChatLieu,
-                  })),
-                ]}
-              />
-            </Col>
-          </Row>
-        
+          <Col span={3}>
+            <label className="text-sm block mb-2" htmlFor="">
+              Thương hiệu
+            </label>
+            <Select
+              showSearch
+              style={{
+                width: "100%",
+              }}
+              placeholder="Tất cả thương hiệu"
+              optionFilterProp="label"
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? "")
+                  .toLowerCase()
+                  .localeCompare((optionB?.label ?? "").toLowerCase())
+              }
+              value={idThuongHieu}
+              onChange={(value) => {
+                setIdThuongHieu(value);
+              }}
+              options={[
+                { value: "", label: "Tất cả thương hiệu" },
+                // eslint-disable-next-line no-unsafe-optional-chaining
+                ...dataThuongHieu?.map((thuongHieu) => ({
+                  value: thuongHieu.id,
+                  label: thuongHieu.tenThuongHieu,
+                })),
+              ]}
+            />
+          </Col>
+          <Col span={3}>
+            <label className="text-sm block mb-2" htmlFor="">
+              Danh mục
+            </label>
+            <Select
+              showSearch
+              style={{
+                width: "100%",
+              }}
+              value={idDanhMuc}
+              onChange={(value) => {
+                setIdDanhMuc(value);
+              }}
+              placeholder="Tất cả danh mục"
+              optionFilterProp="label"
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? "")
+                  .toLowerCase()
+                  .localeCompare((optionB?.label ?? "").toLowerCase())
+              }
+              options={[
+                { value: "", label: "Tất cả danh mục" },
+                // eslint-disable-next-line no-unsafe-optional-chaining
+                ...dataDanhMuc?.map((danhMuc) => ({
+                  value: danhMuc.id,
+                  label: danhMuc.tenDanhMuc,
+                })),
+              ]}
+            />
+          </Col>
+          <Col span={3}>
+            <label className="text-sm block mb-2" htmlFor="">
+              Chất liệu vải
+            </label>
+            <Select
+              showSearch
+              style={{
+                width: "100%",
+              }}
+              value={idChatLieuVai}
+              onChange={(value) => {
+                setIdChatLieuVai(value);
+              }}
+              placeholder="Tất cả chất vải"
+              optionFilterProp="label"
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? "")
+                  .toLowerCase()
+                  .localeCompare((optionB?.label ?? "").toLowerCase())
+              }
+              options={[
+                { value: "", label: "Tất cả chất vải" },
+                // eslint-disable-next-line no-unsafe-optional-chaining
+                ...dataChatLieuVai?.map((vai) => ({
+                  value: vai.id,
+                  label: vai.tenChatLieuVai,
+                })),
+              ]}
+            />
+          </Col>
+          <Col span={3}>
+            <label className="text-sm block mb-2" htmlFor="">
+              Chất liệu đế
+            </label>
+            <Select
+              showSearch
+              style={{
+                width: "100%",
+              }}
+              value={idChatLieuDe}
+              onChange={(value) => {
+                setIdChatLieuDe(value);
+              }}
+              placeholder="Tất cả chất đế"
+              optionFilterProp="label"
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? "")
+                  .toLowerCase()
+                  .localeCompare((optionB?.label ?? "").toLowerCase())
+              }
+              options={[
+                { value: "", label: "Tất cả chất đế" },
+                // eslint-disable-next-line no-unsafe-optional-chaining
+                ...dataChatLieuDe?.map((de) => ({
+                  value: de.id,
+                  label: de.tenChatLieu,
+                })),
+              ]}
+            />
+          </Col>
+        </Row>
 
         <div
           style={{
@@ -1538,15 +1611,6 @@ const ShoppingCart = () => {
             dataSource={sanPhamChiTiet}
             rowKey="key"
             pagination={false}
-            // pagination={{
-            //   current: currentPage,
-            //   pageSize: pageSize,
-            //   total: totalItems,
-            //   onChange: (page, pageSize) => {
-            //     setCurrentPage(page);
-            //     setPageSize(pageSize);
-            //   },
-            // }}
             onRow={(record) => ({
               onClick: () => handleProductSelect(record),
             })}
@@ -1572,7 +1636,9 @@ const ShoppingCart = () => {
           <Button key="cancel" onClick={handleCancelThanhToan}>
             Hủy
           </Button>,
-          <Button key="confirm" type="primary" onClick={handleOkThanhToan}>
+          <Button key="confirm" 
+          type="primary" onClick={handleOkThanhToan}
+          >
             Xác nhận
           </Button>,
         ]}
@@ -1586,28 +1652,14 @@ const ShoppingCart = () => {
                   flex: 1,
                   borderRadius: "20px 0 0 20px",
                   backgroundColor:
-                    selectedMethod === "cash" ? "#3498db" : "#d9d9d9",
-                  color: selectedMethod === "cash" ? "#fff" : "#000",
-                  fontWeight: selectedMethod === "cash" ? "bold" : "normal",
+                    selectedMethod === "Tiền mặt" ? "#3498db" : "#d9d9d9",
+                  color: selectedMethod === "Tiền mặt" ? "#fff" : "#000",
+                  fontWeight: selectedMethod === "Tiền mặt" ? "bold" : "normal",
                   border: "none",
                 }}
-                onClick={() => handleButtonClick("cash")}
+                onClick={() => handleButtonClick("Tiền mặt")}
               >
                 Tiền mặt
-              </Button>
-              <Button
-                style={{
-                  flex: 1,
-                  borderRadius: "0 20px 20px 0",
-                  backgroundColor:
-                    selectedMethod === "transfer" ? "#3498db" : "#d9d9d9",
-                  color: selectedMethod === "transfer" ? "#fff" : "#000",
-                  fontWeight: selectedMethod === "transfer" ? "bold" : "normal",
-                  border: "none",
-                }}
-                onClick={() => handleButtonClick("transfer")}
-              >
-                Chuyển khoản
               </Button>
             </Button.Group>
           </Form.Item>
@@ -1616,11 +1668,12 @@ const ShoppingCart = () => {
               type="text"
               value={
                 currentInvoice?.tienSauGiam &&
-                  !isNaN(currentInvoice?.tienSauGiam)
-                  ? currentInvoice?.tienSauGiam.toLocaleString() + " VND"
+                !isNaN(currentInvoice?.tienSauGiam)
+                  ? (
+                      currentInvoice?.tienSauGiam + (ship || 0)
+                    ).toLocaleString() + " VND"
                   : "0.0 VND"
               }
-              // onChange={() => setModalPaymentAmount(localStorage.getItem(currentInvoice?.id))}
               placeholder="Nhập số tiền thanh toán"
             />
           </Form.Item>
@@ -1628,7 +1681,17 @@ const ShoppingCart = () => {
           <Divider />
           <Text strong>
             {/* Khách thanh toán: {partialPayment.toLocaleString()} VND */}
-            Khách thanh toán: {localStorage.getItem(currentInvoice?.id)} VND
+            Khách thanh toán:
+            {
+              // Check if the value is stored in localStorage and whether a shipping cost exists
+              localStorage.getItem(currentInvoice?.id) === null
+                ? "0.0 VND" // If no value in localStorage, show "0.0 VND"
+                : (
+                    (parseFloat(localStorage.getItem(currentInvoice?.id)) ||
+                      0) + (ship || 0)
+                  ) // Add ship if exists
+                    .toLocaleString() + " VND" // Format with commas and append " VND"
+            }
           </Text>
           <br />
           <Text strong style={{ color: "red" }}>
@@ -1645,14 +1708,21 @@ const ShoppingCart = () => {
           width: "100%",
         }}
       >
-        {currentInvoice?.loaiHoaDon === "ONLINE" && (
+        {/* {currentInvoice?.loaiHoaDon === "ONLINE" && (
           <div style={{ width: "48%", marginTop: "40px" }}>
             <Title level={3}>Thông tin giao hàng</Title>
+          
             <Form
               form={form}
               layout="vertical"
               className="space-y-4"
               initialValues={{
+                tenNguoiNhan: currentCustomer?.ten,
+                sdt: currentCustomer?.sdt,
+                email: currentCustomer?.email,
+              }}
+              onFinish={handleSubmit}
+            >
                 tenNguoiNhan: currentInvoice?.tenNguoiNhan,
                 sdt: currentInvoice?.sdt,
                 province: currentCustomer?.diaChi?.tinh,
@@ -1663,7 +1733,6 @@ const ShoppingCart = () => {
               }}
               onFinish={handleSubmit}
             >
-
               <Form.Item name="idGioHang" hidden>
                 <Input type="hidden" />
               </Form.Item>
@@ -1685,14 +1754,20 @@ const ShoppingCart = () => {
                 required
                 rules={[
                   { required: true, message: "Vui lòng nhập số điện thoại" },
+                  {
+                    pattern: /^(0|\+84)[3-9][0-9]{8}$/,
+                    message: "Số điện thoại không đúng định dạng!",
+                  },
                 ]}
               >
                 <Input size="large" />
               </Form.Item>
+
               <Form.Item
                 label="Địa chỉ"
                 name="address"
                 required
+                rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
                 rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
               >
                 <AutoComplete
@@ -1705,6 +1780,87 @@ const ShoppingCart = () => {
               </Form.Item>
 
 
+
+              <Form.Item label="Địa chỉ email (tùy chọn)" name="email">
+                <Input size="large" />
+              </Form.Item>
+
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">THÔNG TIN BỔ SUNG</h3>
+                <Form.Item label="Ghi chú đơn hàng (tùy chọn)" name="ghiChu">
+                  <TextArea
+                    rows={4}
+                    placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
+                  />
+                </Form.Item>
+              </div>
+            </Form>
+          </div>
+        )} */}
+
+        {currentInvoice?.loaiHoaDon === "ONLINE" && (
+          <div style={{ width: "48%", marginTop: "40px" }}>
+            <Title level={3}>Thông tin giao hàng</Title>
+
+            <Form
+              form={form}
+              layout="vertical"
+              className="space-y-4"
+              initialValues={{
+                tenNguoiNhan: currentCustomer?.ten,
+                sdt: currentCustomer?.sdt,
+                email: currentCustomer?.email,
+                province: currentCustomer?.diaChi?.tinh,
+                district: currentCustomer?.diaChi?.quan,
+                ward: currentCustomer?.diaChi?.huyen,
+              }}
+              onFinish={handleSubmit}
+            >
+              <Form.Item name="idGioHang" hidden>
+                <Input type="hidden" />
+              </Form.Item>
+              <Form.Item name="idKhachHang" hidden>
+                <Input type="hidden" />
+              </Form.Item>
+
+              <Form.Item
+                label="Tên"
+                name="tenNguoiNhan"
+                required
+                rules={[{ required: true, message: "Vui lòng nhập tên" }]}
+              >
+                <Input size="large" />
+              </Form.Item>
+
+              <Form.Item
+                label="Số điện thoại"
+                name="sdt"
+                required
+                rules={[
+                  { required: true, message: "Vui lòng nhập số điện thoại" },
+                  {
+                    pattern: /^(0|\+84)[3-9][0-9]{8}$/,
+                    message: "Số điện thoại không đúng định dạng!",
+                  },
+                ]}
+              >
+                <Input size="large" />
+              </Form.Item>
+
+              <Form.Item
+                label="Địa chỉ"
+                name="address"
+                required
+                rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
+              >
+                <AutoComplete
+                  options={addressOptions}
+                  onSearch={handleAddressSearch}
+                  onSelect={handleAddressSelect}
+                  placeholder="Nhập địa chỉ"
+                  size="large"
+                />
+              </Form.Item>
 
               <Form.Item label="Địa chỉ email (tùy chọn)" name="email">
                 <Input size="large" />
@@ -1744,9 +1900,12 @@ const ShoppingCart = () => {
                     {/* <Text strong>{partialPayment.toLocaleString()} VND</Text> */}
                     <Text strong>
                       {localStorage.getItem(currentInvoice?.id)
-                        ? parseFloat(
-                          localStorage.getItem(currentInvoice?.id)
-                        ).toLocaleString()
+                        ? (
+                            (parseFloat(
+                              localStorage.getItem(currentInvoice?.id)
+                            ) || 0) + (ship || 0)
+                          ) // Add ship if exists
+                            .toLocaleString()
                         : "0"}{" "}
                       VND
                     </Text>
@@ -1799,35 +1958,50 @@ const ShoppingCart = () => {
                             )}`
                           );
 
-                          if (response.data.predictions && response.data.predictions.length > 0) {
-                            const placeId = response.data.predictions[0].place_id;
+                          if (
+                            response.data.predictions &&
+                            response.data.predictions.length > 0
+                          ) {
+                            const placeId =
+                              response.data.predictions[0].place_id;
 
                             const detailResponse = await axios.get(
                               `https://rsapi.goong.io/Place/Detail?place_id=${placeId}&api_key=${apiKey}`
                             );
 
-                            if (detailResponse.data.result && detailResponse.data.result.geometry) {
-                              const { lat, lng } = detailResponse.data.result.geometry.location;
+                            if (
+                              detailResponse.data.result &&
+                              detailResponse.data.result.geometry
+                            ) {
+                              const { lat, lng } =
+                                detailResponse.data.result.geometry.location;
                               calculateShippingCost(lat, lng); // Gọi hàm tính phí ship
                               setDiaChi(currentCustomer.diaChiStr);
                             }
                           }
                         } catch (error) {
-                          console.error("Error calculating shipping cost:", error);
-                          message.error("Không thể tính phí vận chuyển. Vui lòng thử lại.");
+                          console.error(
+                            "Error calculating shipping cost:",
+                            error
+                          );
+                          message.error(
+                            "Không thể tính phí vận chuyển. Vui lòng thử lại."
+                          );
                         }
                       } else {
-                        message.error("Vui lòng chọn địa chỉ khách hàng trước.");
+                        message.error(
+                          "Vui lòng chọn địa chỉ khách hàng trước."
+                        );
                       }
                     } else {
                       setShip(0);
                       setDiaChi("");
                     }
 
-                    changeType(currentInvoice?.id, newLoaiHoaDon); // Giả sử `changeType` là hàm cập nhật loại hóa đơn
+                    changeType(currentInvoice?.id, newLoaiHoaDon); 
                   }}
                 />
-              </Form.Item>;
+              </Form.Item>
               <Form.Item label="Tiền hàng">
                 <Text>
                   <strong>
@@ -1840,7 +2014,7 @@ const ShoppingCart = () => {
               <Form.Item label="Giảm giá">
                 <Text>
                   {currentInvoice?.soTienGiam &&
-                    !isNaN(currentInvoice.soTienGiam)
+                  !isNaN(currentInvoice.soTienGiam)
                     ? currentInvoice.soTienGiam.toLocaleString() + " VND"
                     : "0.0 VND"}
                 </Text>
@@ -1854,13 +2028,12 @@ const ShoppingCart = () => {
                   </Text>
                 </Form.Item>
               )}
-
               <Form.Item label="Tổng tiền">
                 <Title level={4} style={{ color: "red" }}>
                   {currentInvoice?.tienSauGiam + ship &&
-                    !isNaN(currentInvoice.tienSauGiam + ship)
+                  !isNaN(currentInvoice.tienSauGiam + ship)
                     ? (currentInvoice.tienSauGiam + ship).toLocaleString() +
-                    " VND"
+                      " VND"
                     : "0.0 VND"}
                 </Title>
               </Form.Item>
@@ -1934,12 +2107,15 @@ const ShoppingCart = () => {
               open={isModalOpen}
               onOk={() => {
                 if (quantity < 1) {
-                  toast.error("Số lượng phải lớn hơn hoặc bằng 1 !");
+                  notificationMessage(
+                    "error",
+                    "Số lượng phải lớn hơn hoặc bằng 1 !"
+                  );
                   setIsModalOpen(false);
                   setQuantity(1);
                   return;
                 } else if (quantity > sanPhamChiTiet?.soLuong) {
-                  toast.error("Số lượng vượt quá trong kho !");
+                  notificationMessage("error", "Số lượng vượt quá trong kho !");
                   setIsModalOpen(false);
                   setQuantity(1);
                 }

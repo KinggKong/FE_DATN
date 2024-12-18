@@ -123,20 +123,32 @@ const TableNhanVien = () => {
   const handleConfirmEdit = async (id, updatedNhanVien, avatarFile) => {
     setLoading(true);
     try {
-      // Kiểm tra xem email hoặc số điện thoại có bị trùng với nhân viên khác không (ngoại trừ bản ghi này)
-      const existingNhanVien = dataSource.find(
-        (item) => 
-          (item.id !== id && item.email === updatedNhanVien.email) || 
-          (item.id !== id && item.sdt === updatedNhanVien.sdt)
+      // Kiểm tra trùng email
+      const existingEmail = dataSource.find(
+        (item) => item.id !== id && item.email === updatedNhanVien.email
       );
   
-      if (existingNhanVien) {
-        // Nếu có nhân viên nào trùng email hoặc SĐT thì thông báo lỗi
+      if (existingEmail) {
+        // Thông báo lỗi nếu email đã tồn tại
         notification.error({
           message: "Lỗi",
-          description: "Email hoặc SĐT không được trùng nhau với nhân viên khác",
+          description: "Email này đã tồn tại!",
         });
-        return; // Dừng việc cập nhật
+        return; // Dừng việc cập nhật nếu trùng email
+      }
+  
+      // Kiểm tra trùng số điện thoại
+      const existingSdt = dataSource.find(
+        (item) => item.id !== id && item.sdt === updatedNhanVien.sdt
+      );
+  
+      if (existingSdt) {
+        // Thông báo lỗi nếu số điện thoại đã tồn tại
+        notification.error({
+          message: "Lỗi",
+          description: "Số điện thoại này đã tồn tại!",
+        });
+        return; // Dừng việc cập nhật nếu trùng số điện thoại
       }
   
       // Tiến hành cập nhật nhân viên nếu không có trùng lặp
@@ -166,6 +178,7 @@ const TableNhanVien = () => {
     }
   };
   
+  
 
   const handleAdd = () => {
     setIsModalAddOpen(true);
@@ -174,24 +187,38 @@ const TableNhanVien = () => {
   const handleConfirmAdd = async (newNhanVien, avatarFile) => {
     setLoading(true);
     try {
-      // Kiểm tra xem email hoặc số điện thoại có bị trùng với nhân viên khác không
-      const existingNhanVien = dataSource.find(
-        (item) => item.email === newNhanVien.email || item.sdt === newNhanVien.sdt
+      // Kiểm tra trùng email
+      const existingEmail = dataSource.find(
+        (item) => item.email === newNhanVien.email
       );
   
-      if (existingNhanVien) {
-        // Nếu có nhân viên nào trùng email hoặc SĐT thì thông báo lỗi
+      if (existingEmail) {
+        // Nếu email đã tồn tại
         notification.error({
           message: "Lỗi",
-          description: "Email hoặc SĐT không được trùng nhau với nhân viên khác",
+          description: "Email này đã tồn tại!",
         });
-        return; // Dừng việc thêm mới nhân viên
+        return; // Dừng việc thêm mới nếu trùng email
+      }
+  
+      // Kiểm tra trùng số điện thoại
+      const existingSdt = dataSource.find(
+        (item) => item.sdt === newNhanVien.sdt
+      );
+  
+      if (existingSdt) {
+        // Nếu số điện thoại đã tồn tại
+        notification.error({
+          message: "Lỗi",
+          description: "Số điện thoại này đã tồn tại!",
+        });
+        return; // Dừng việc thêm mới nếu trùng số điện thoại
       }
   
       // Tiến hành thêm mới nhân viên nếu không có trùng lặp
       let avatarUrl = '';
       if (avatarFile) {
-        avatarUrl = await uploadImageToFirebase(avatarFile);
+        avatarUrl = await uploadImageToFirebase(avatarFile); // Tải ảnh lên Firebase
       }
   
       const newNhanVienWithAvatar = { ...newNhanVien, avatar: avatarUrl };
@@ -214,6 +241,7 @@ const TableNhanVien = () => {
       setLoading(false);
     }
   };
+  
   
 
 
