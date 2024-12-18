@@ -1,4 +1,9 @@
+
 import { Menu, Modal } from "antd";
+
+import { useState,useEffect } from "react";
+
+
 import {
   AreaChartOutlined,
   UserOutlined,
@@ -27,6 +32,7 @@ import { FaFileInvoice } from "react-icons/fa";
 import { useState } from "react";
 
 const MenuList = ({ darkTheme }) => {
+
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { confirm } = Modal;
@@ -51,6 +57,19 @@ const MenuList = ({ darkTheme }) => {
     });
 
   };
+
+  const [userInfo, setUserInfo] = useState(null);
+
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem("userInfo");
+    if (storedUserInfo) {
+      const parsedUserInfo = JSON.parse(storedUserInfo);
+      setUserInfo(parsedUserInfo);
+    }
+  }, []);
+
+  const isStaff = userInfo?.vaiTro === "ROLE_STAFF";
+
   return (
     <div>
       <Menu
@@ -129,18 +148,18 @@ const MenuList = ({ darkTheme }) => {
           icon={<BiSolidDiscount />}
           title="Giảm giá"
         >
-          <Menu.Item key="sub3-t1" icon={<MdDiscount />}>
-            <Link to={"giamgia"}>Phiếu giảm giá</Link>
+
+           <Menu.Item key="sub3-t1" icon={<MdDiscount />} >
+          <Link to={"giamgia"}>Phiếu giảm giá</Link>
+
           </Menu.Item>
           <Menu.Item key="sub3-t2" icon={<CiDiscount1 />}>
             <Link to={"sale"}>Đợt giảm giá</Link>
           </Menu.Item>
-        </Menu.SubMenu>
-
-
-        
+        </Menu.SubMenu>       
         <Menu.Item key="exit" icon={<IoExitOutline />} onClick={handleLogout}>
           Đăng xuất
+
         </Menu.Item>
       </Menu>
     </div>

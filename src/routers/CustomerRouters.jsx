@@ -9,56 +9,74 @@ import GioiThieu from "../customer/component/gioithieu/GioiThieu";
 import FailedPay from "../customer/component/shopon/FailedPay";
 import HandlePayment from "../customer/component/shopon/HandlePayment"
 import AccountInfo from "../customer/component/profile/AccountInfo";
-import BillHistoryPage from "../customer/component/shopon/BillHistoryPage";
+import { Navigate } from "react-router-dom";
+
+const getRole = () => {
+  const storedUserInfo = localStorage.getItem("userInfo");
+  if (storedUserInfo) {
+    const parsedUserInfo = JSON.parse(storedUserInfo);
+    return parsedUserInfo?.vaiTro || null;
+  }
+  return null;
+};
+
+const RoleRedirect = ({ element }) => {
+  const role = getRole();
+
+  if (role === "ROLE_ADMIN" || role === "ROLE_STAFF") {
+    return <Navigate to="/admin/tong-quan" replace />;
+  }
+  return element;
+};
 
 const CustomerRouters = {
   path: "/",
   element: <HomePage />,
   children: [
     {
-      index: true, 
-      element: <TrangChu />
+      index: true,
+      element: <RoleRedirect element={<TrangChu />} />,
     },
     {
       path: "sanpham",
-      element: <TrangChu />,
+      element: <RoleRedirect element={<TrangChu />} />,
     },
     {
       path: "filter",
-      element: <FilterProduct />,
+      element: <RoleRedirect element={<FilterProduct />} />,
     },
     {
       path: "detail/:id",
-      element: <ProductDetail />,
+      element: <RoleRedirect element={<ProductDetail />} />,
     },
     {
       path: "payment",
-      element: <PreCheckout />,
+      element: <RoleRedirect element={<PreCheckout />} />,
     },
     {
       path: "infor-order",
-      element: <OrderConfirmation />,
+      element: <RoleRedirect element={<OrderConfirmation />} />,
     },
     {
       path: "invoice-lookup",
-      element: <InvoiceLookup />,
+      element: <RoleRedirect element={<InvoiceLookup />} />,
     },
     {
       path: "about",
-      element: <GioiThieu />,
+      element: <RoleRedirect element={<GioiThieu />} />,
     },
     {
       path: "failed-pay",
-      element: <FailedPay/>,
-    },  
+      element: <RoleRedirect element={<FailedPay />} />,
+    },
     {
       path: "hanlde-result-payment",
-      element: <HandlePayment/>,
+      element: <RoleRedirect element={<HandlePayment />} />,
     },
     {
       path: "profile",
-      element: <AccountInfo />,
-    }
+      element: <RoleRedirect element={<AccountInfo />} />,
+    },
   ],
 };
 

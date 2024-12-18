@@ -1241,40 +1241,43 @@ const ShoppingCart = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!userInfo || !userInfo.id) {
-        console.log("User info not available yet");
-        return;
-      }
-      // setLoading(true);
-      try {
-        const response = await axios.get(
-          `http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userInfo.id}`
-        );
-        if (response.data.code === 1000) {
-          if (
-            !response.data.data ||
-            !response.data.data?.gioHangChiTietList ||
-            response.data.data?.gioHangChiTietList.length === 0
-          ) {
-            navigate("/");
-            return;
-          }
-          setCheckoutData(response.data.data);
-        } else {
-          throw new Error("Failed to fetch data");
-        }
-      } catch (err) {
-        setError("An error occurred while fetching data");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     if (!userInfo || !userInfo.id) {
+  //       console.log("User info not available yet");
+  //       return;
+  //     }
+  //     // setLoading(true);
+  //     try {
+  //       const response = await axios.get(
+  //         `http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userInfo.id}`
+  //       );
+  //       if (response.data.code === 1000) {
+  //         if (
+  //           !response.data.data ||
+  //           !response.data.data?.gioHangChiTietList ||
+  //           response.data.data?.gioHangChiTietList.length === 0
+  //         ) {
+  //           navigate("/");
+  //           return;
+  //         }
+  //         setCheckoutData(response.data.data);
+  //       } else {
+  //         throw new Error("Failed to fetch data");
+  //       }
+  //     } catch (err) {
+  //       setError("An error occurred while fetching data");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchData();
-    // fetchProvinces();
-  }, [userInfo]);
+  //   fetchData();
+  //   // fetchProvinces();
+  // }, [userInfo]);
+
+
+
 
   // lấy địa chi
 
@@ -1319,6 +1322,7 @@ const ShoppingCart = () => {
   };
 
 
+
   const handleAddressSearch = debounce(async (value) => {
     if (value.length > 2) {
       try {
@@ -1348,6 +1352,7 @@ const ShoppingCart = () => {
       console.error('Error fetching place details:', error);
     }
   };
+
 
 
   // useEffect(() => {
