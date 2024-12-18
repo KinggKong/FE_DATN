@@ -26,7 +26,7 @@ const ResetPassword = () => {
       );
       console.log("Change password: Success:", response.data);
       message.success("Password changed successfully!");
-      navigate("/auth/login");
+      // navigate("/auth/login");
     } catch (error) {
       console.error("Error during change password:", error);
       if (error.response && error.response.data) {
