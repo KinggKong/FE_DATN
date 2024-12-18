@@ -302,7 +302,7 @@ const TableSanPham = () => {
         duration: 4,
         pauseOnHover: false,
         showProgress: true,
-        description: "Failed to create sản phẩm",
+        description: "Tên sản phẩm không được trùng",
       });
     } finally {
       setLoading(false);

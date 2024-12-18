@@ -282,12 +282,18 @@ const AccountInfo = () => {
                                     label="Email"
                                     rules={[{ required: true, type: "email", message: "Email không hợp lệ!" }]}
                                 >
-                                    <Input placeholder="Nhập email" />
+                                    <Input placeholder="Nhập email"  readOnly  />
                                 </Form.Item>
                                 <Form.Item
                                     name="phone"
                                     label="Số điện thoại"
-                                    rules={[{ required: true, message: "Vui lòng nhập số điện thoại!" }]}
+                                    rules={[
+                                        { required: true, message: "Vui lòng nhập số điện thoại!" },
+                                        {
+                                          pattern: /^(0?)(3|5|7|8|9)\d{8}$/,
+                                          message: "Số điện thoại không hợp lệ!",
+                                        },
+                                      ]}
                                 >
                                     <Input placeholder="Nhập số điện thoại" />
                                 </Form.Item>

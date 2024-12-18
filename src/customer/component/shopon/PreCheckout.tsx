@@ -5,6 +5,8 @@ import { CreditCard, Truck, Tag } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import useCartStore from "../cart/useCartStore";
 import debounce from 'lodash/debounce';
+import { getKhachHangByIdApi } from '../../../api/KhachHangApi';
+import { set } from '@ant-design/plots/es/core/utils';
 
 const { TextArea } = Input;
 
@@ -29,18 +31,69 @@ const PreCheckout = () => {
     const apiKey = 'DFt7PndsFeTuDNGggyzQyLr0dzqU9Sf0hb0mMZX5'; // Replace with your Goong API key
     const originLat = 21.038059779392608;
     const originLng = 105.74668196761013;
+    const [address, setAddress] = useState(null);
+
+
+    // const fetchAddressUser = useCallback(async (id) => {
+    //     try {
+    //         const response = await getKhachHangByIdApi(id);
+    //         console.log('Address user:', response.data);
+    //         if (response.data.code === 1000) {
+    //             setAddress(response.data.data);
+
+    //         } else {
+    //             throw new Error('Failed to fetch address user');
+    //         }
+    //     } catch (err) {
+    //         setError('An error occurred while fetching address user');
+    //         console.error('Error:', err);
+    //     }
+    // }, [userInfo]);
+
 
     const fetchData = useCallback(async (userId) => {
         setLoading(true);
         try {
             console.log('Fetching data for userId:', userId);
             const response = await axios.get(`http://localhost:8080/api/v1/shop-on/confirm?idKhachHang=${userId}`);
+            console.log('Checkout data:', response.data);
             if (response.data.code === 1000) {
                 if (!response.data.data || !response.data.data.gioHangChiTietList || response.data.data.gioHangChiTietList.length === 0) {
                     navigate('/');
                     return;
                 }
                 setCheckoutData(response.data.data);
+                if (response.data.data.gioHangChiTietList[0].gioHang.khachHang?.diaChi) {
+                    try {
+                        // Gọi API để tính phí vận chuyển
+                        const response1 = await axios.get(
+                            `https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(
+                                response.data.data.gioHangChiTietList[0].gioHang.khachHang.diaChi
+                            )}`
+                        );
+
+                        if (response1.data.predictions && response1.data.predictions.length > 0) {
+                            const placeId = response1.data.predictions[0].place_id;
+
+                            const detailResponse = await axios.get(
+                                `https://rsapi.goong.io/Place/Detail?place_id=${placeId}&api_key=${apiKey}`
+                            );
+
+                            if (detailResponse.data.result && detailResponse.data.result.geometry) {
+                                const { lat, lng } = detailResponse.data.result.geometry.location;
+                                calculateShippingCost(lat, lng); // Gọi hàm tính phí ship
+                                setAddress(response.data.data.gioHangChiTietList[0].gioHang.khachHang.diaChi);
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Error calculating shipping cost:", error);
+                        message.error("Không thể tính phí vận chuyển. Vui lòng thử lại.");
+                    }
+                } else {
+                    message.error("Vui lòng chọn địa chỉ khách hàng trước.");
+                    setShip(0);
+
+                }
             } else {
                 throw new Error('Failed to fetch data');
             }
@@ -59,10 +112,13 @@ const PreCheckout = () => {
             setUserInfo(parsedUserInfo);
             console.log('Stored user info:', storedUserInfo);
             console.log('Parsed user info:', parsedUserInfo);
+
             fetchData(parsedUserInfo?.id);
+
         } else {
             console.log('No stored user info, using default userId: 1');
             fetchData(1);
+
         }
     }, [fetchData]);
 
@@ -135,6 +191,7 @@ const PreCheckout = () => {
             const response = await axios.get(`http://localhost:8080/api/v1/vouchers/can-use?tongTien=${totalAmount}`);
             if (response.data.code === 1000) {
                 setVouchers(response.data.data);
+                console.log("data vourcher",response.data.data)
             }
         } catch (error) {
             console.error('Error fetching vouchers:', error);
@@ -146,11 +203,11 @@ const PreCheckout = () => {
         try {
             const selectedVoucher = vouchers.find(v => v.id === values.idVoucher);
             let discountAmount = 0;
-
+    
             if (selectedVoucher) {
                 const totalBeforeDiscount = checkoutData.totalPrice + ship;
-
-                if (selectedVoucher.hinhThucGiam === 'VND') {
+    
+                if (selectedVoucher.hinhThucGiam === 'VNĐ') {
                     discountAmount = selectedVoucher.giaTriGiam;
                 } else if (selectedVoucher.hinhThucGiam === '%') {
                     discountAmount = Math.min(
@@ -158,11 +215,11 @@ const PreCheckout = () => {
                         selectedVoucher.giaTriGiamToiDa
                     );
                 }
-
+    
                 // Ensure the discount doesn't exceed the total amount
                 discountAmount = Math.min(discountAmount, totalBeforeDiscount);
             }
-
+    
             const hoaDonRequest = {
                 idGioHang: values.idGioHang,
                 tenNguoiNhan: values.tenNguoiNhan,
@@ -178,14 +235,14 @@ const PreCheckout = () => {
                 hinhThucThanhToan: paymentMethod,
                 soTienGiam: discountAmount
             };
-
+    
             let response;
             if (paymentMethod === 'VNPAY') {
                 response = await axios.post('http://localhost:8080/api/payment/submitOrder', hoaDonRequest);
                 if (response.data.code === 1000) {
                     window.location.href = response.data.data;
                 } else {
-                    throw new Error('VNPay payment initiation failed');
+                    throw new Error(response.data.message || 'VNPay payment initiation failed');
                 }
             } else {
                 response = await axios.post('http://localhost:8080/api/v1/shop-on/checkout', hoaDonRequest);
@@ -201,17 +258,22 @@ const PreCheckout = () => {
                     navigate(`/infor-order?maHoaDon=${maHoaDon}`);
                     fetchCart();
                 } else {
-                    message.error(response.data.message);
-                    // throw new Error('Checkout failed');
+                    throw new Error(response.data.message || 'Checkout failed');
                 }
             }
         } catch (err) {
-            message.error('Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.');
-            console.log(err);
+            // Lấy thông tin lỗi từ API
+            const errorMessage =
+                err.response?.data?.message || // Thông báo lỗi từ server
+                err.message || // Thông báo lỗi từ client
+                'Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.'; // Thông báo mặc định nếu không có thông tin lỗi
+            message.error(errorMessage);
+            console.log('Error details:', err);
         } finally {
             setCheckoutLoading(false);
         }
     };
+    
 
     if (loading) {
         return <Spin size="large" />;
@@ -239,6 +301,7 @@ const PreCheckout = () => {
                                 idKhachHang: checkoutData.gioHangChiTietList[0].gioHang.khachHang.id,
                                 email: checkoutData.gioHangChiTietList[0].gioHang.khachHang.email,
                                 idGioHang: checkoutData.idGioHang,
+                                address: address,
                             }}
                             onFinish={handleSubmit}
                         >
@@ -279,6 +342,7 @@ const PreCheckout = () => {
                                 rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
                             >
                                 <AutoComplete
+                                    
                                     options={addressOptions}
                                     onSearch={handleAddressSearch}
                                     onSelect={handleAddressSelect}
@@ -322,9 +386,9 @@ const PreCheckout = () => {
                                         ...vouchers.map(v => ({
                                             value: v.id,
                                             label: (
-                                                <Tooltip title={`${v.tenVoucher} - Giảm ${v.giaTriGiam}${v.hinhThucGiam === 'VND' ? 'đ' : '%'} - Đơn tối thiểu ${v.giaTriDonHangToiThieu.toLocaleString()}đ`}>
+                                                <Tooltip title={`${v.tenVoucher} - Giảm ${v.giaTriGiam}${v.hinhThucGiam === 'VNĐ' ? 'đ' : '%'} - Đơn tối thiểu ${v.giaTriDonHangToiThieu.toLocaleString()}đ`}>
                                                     <span>
-                                                        {v.tenVoucher} - Giảm {v.giaTriGiam}{v.hinhThucGiam === 'VND' ? 'đ' : '%'}
+                                                        {v.tenVoucher} - Giảm {v.giaTriGiam}{v.hinhThucGiam === 'VNĐ' ? 'đ' : '%'}
                                                         {v.hinhThucGiam === '%' ? ` (tối đa ${v.giaTriGiamToiDa.toLocaleString()}đ)` : ''}
                                                     </span>
                                                 </Tooltip>
@@ -390,7 +454,7 @@ const PreCheckout = () => {
                                         let discountAmount = 0;
                                         const totalBeforeDiscount = totalPrice + ship;
 
-                                        if (selectedVoucher.hinhThucGiam === 'VND') {
+                                        if (selectedVoucher.hinhThucGiam === 'VNĐ') {
                                             discountAmount = selectedVoucher.giaTriGiam;
                                         } else if (selectedVoucher.hinhThucGiam === '%') {
                                             discountAmount = Math.min(
@@ -414,7 +478,7 @@ const PreCheckout = () => {
                                         const totalBeforeDiscount = totalPrice + ship;
 
                                         if (selectedVoucher) {
-                                            if (selectedVoucher.hinhThucGiam === 'VND') {
+                                            if (selectedVoucher.hinhThucGiam === 'VNĐ') {
                                                 discountAmount = selectedVoucher.giaTriGiam;
                                             } else if (selectedVoucher.hinhThucGiam === '%') {
                                                 discountAmount = Math.min(

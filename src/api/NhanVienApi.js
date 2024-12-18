@@ -36,6 +36,13 @@ const getAllNhanVienByTenApi = (params) => {
   return axiosClient.get(url, { params });
 };
 
+//get tai khoan by id owner
+const getTaiKhoanByIdOwner = (params) => {
+
+  const url = `/api/v1/taikhoans/getIDOwner`;
+  return axiosClient.get(url,{params});
+}
+
 export {
   getAllNhanVienApi,
   deleteNhanVienApi,
@@ -43,4 +50,5 @@ export {
   updateNhanVienApi,
   getNhanVienByIdApi,
   getAllNhanVienByTenApi,
+  getTaiKhoanByIdOwner
 };

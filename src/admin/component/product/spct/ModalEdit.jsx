@@ -1,4 +1,4 @@
-import { Modal, Row, Col, Input, Switch, Select, Form, Upload,Image } from "antd";
+import { Modal, Row, Col, Input, Switch, Select, Form, Upload,Image, message } from "antd";
 import { CheckOutlined, CloseOutlined,PlusOutlined } from "@ant-design/icons";
 
 import { FaEdit } from "react-icons/fa";
@@ -29,6 +29,7 @@ const ModalEdit = ({
         giaBan: Yup.number()
             .typeError("Giá bán phải là một số")
             .min(0, "Giá bán không được âm")
+            .max(500000000, "Giá bán phải nhỏ hơn 500 triệu!")
             .required("Giá bán là bắt buộc"),
 
     });
@@ -253,11 +254,19 @@ const ModalEdit = ({
                         listType="picture-card"
                         fileList={formik.values.hinhAnh}
                         onChange={handleUploadChange}
-                        
+                        multiple
                         onPreview={(file) => {
                             // Thiết lập ảnh xem trước
                             setPreviewImage(file.url || file.preview); // Sử dụng preview nếu không có url
                             setPreviewOpen(true);
+                        }}
+                        onRemove={(file) => {
+                            if (formik.values.hinhAnh.length <= 1) {
+                                message.error("Phải có ít nhất một ảnh. Bạn không thể xóa ảnh cuối cùng.");
+                                return false; // Ngăn không cho xóa
+                            }
+                            // Thực hiện hành động xóa
+                            return true;
                         }}
                     >
                         {formik.values.hinhAnh.length >= 6 ? null : uploadButton}

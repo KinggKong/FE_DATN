@@ -185,6 +185,7 @@ export default function OrderManagement() {
                 idHoaDon: selectedOrder.key,
                 status: nextStatus
             });
+    
             if (response.data.code === 1000) {
                 notification.success({
                     message: "Success",
@@ -192,15 +193,26 @@ export default function OrderManagement() {
                     pauseOnHover: false,
                     showProgress: true,
                     description: `Cập nhật trạng thái đơn hàng thành công`,
-                  });
+                });
                 fetchOrders(); 
             } else {
-                throw new Error(response.data.message);
+                // Nếu API trả về lỗi nhưng không ném exception
+                const errorMessage = response.data.message || 'Lỗi không xác định từ server';
+                throw new Error(errorMessage);
             }
         } catch (error) {
-            message.error('Không thể cập nhật trạng thái đơn hàng: ' + error.message);
+            // Lấy thông báo lỗi từ API hoặc mặc định
+            const errorMessage =
+                error.response?.data?.message || // Thông báo từ server
+                error.message || // Thông báo lỗi từ client
+                'Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại.'; // Thông báo mặc định
+    
+            // Hiển thị thông báo lỗi
+            message.error(`Không thể cập nhật trạng thái đơn hàng: ${errorMessage}`);
+            console.error('Error details:', error); // Log lỗi chi tiết để debug
         }
     };
+    
 
     const handleCancel = () => {
         setIsModalVisible(false);

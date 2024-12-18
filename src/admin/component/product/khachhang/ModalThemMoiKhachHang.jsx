@@ -102,6 +102,7 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
     setAddressOptions([]); // Reset các options địa chỉ
   };
 
+
   // Xử lý thay đổi tệp tải lên
   const handleChange = ({ fileList: newFileList }) => setFileList(newFileList);
 
@@ -313,6 +314,11 @@ const ModalThemMoiKhachHang = ({ isOpen, handleClose, title, handleSubmit }) => 
 
     </Modal>
   );
-};
+
+
+}
+
+
+
 
 export default ModalThemMoiKhachHang;

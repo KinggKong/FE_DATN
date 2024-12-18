@@ -89,7 +89,7 @@ const useCartStore = create((set) => ({
                 const response = await axios.post("http://localhost:8080/api/v1/gio-hang-ct", {
                     idGioHang: userInfo.idGioHang, // ID giỏ hàng, thay bằng ID của người dùng hiện tại
                     idSanPhamChiTiet: product.id,
-                    soLuong: product.quantity || 1,
+                    soLuong: product.soLuong || 1,
                     giaTien: productWithPrice.giaTien,
                     thoiGianGiamGia: product.thoiGianGiamGia
                         ? new Date(product.thoiGianGiamGia).toISOString()
@@ -115,7 +115,7 @@ const useCartStore = create((set) => ({
                 const response = await axios.post("http://localhost:8080/api/v1/gio-hang-ct", {
                     idGioHang: 1, // ID giỏ hàng, thay bằng ID của người dùng hiện tại
                     idSanPhamChiTiet: product.id,
-                    soLuong: product.quantity || 1,
+                    soLuong: product.soLuong || 1,
                     giaTien: productWithPrice.giaTien,
                     thoiGianGiamGia: product.thoiGianGiamGia
                         ? new Date(product.thoiGianGiamGia).toISOString()

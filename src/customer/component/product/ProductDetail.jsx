@@ -164,6 +164,7 @@ const ProductDetail = () => {
   const fetchProduct = async () => {
     try {
       const res = await getSanPhamByIdApi(id);
+      console.log("ds spct:",res.data)
       setProductDetail(res.data);
       const firstItem = res.data.sanPhamChiTietList?.[0];
       setDetail(firstItem);
