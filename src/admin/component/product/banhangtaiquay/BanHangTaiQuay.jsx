@@ -77,6 +77,34 @@ const ShoppingCart = () => {
 
   const [addressOptions, setAddressOptions] = useState([]);
 
+  const [paymentAmount, setPaymentAmount] = useState(
+    localStorage.getItem(currentInvoice?.id) || "0.0"
+  );
+
+  const formatCurrency = (value) => {
+    const number = parseFloat(value);
+    if (isNaN(number)) return "0.0 VND"; // Trả về 0.0 VND nếu giá trị không hợp lệ
+    return number.toLocaleString("vi-VN") + " VND"; // Định dạng tiền theo kiểu Việt Nam
+  };
+
+  const handlePaymentChange = (value) => {
+    // Loại bỏ ký tự không phải là số và cập nhật lại giá trị
+    const formattedValue = value.replace(/[^\d]/g, "");
+    setPaymentAmount(formattedValue);
+    localStorage.setItem(currentInvoice?.id, formattedValue);
+  };
+
+  useEffect(() => {
+    // Cập nhật giá trị từ localStorage khi currentInvoice thay đổi
+    if (currentInvoice?.id && localStorage.getItem(currentInvoice?.id)) {
+      setPaymentAmount(localStorage.getItem(currentInvoice?.id));
+    }
+  }, [currentInvoice]);
+
+  // useEffect(() => {
+  //   setPaymentAmount(currentInvoice?.tienSauGiam);
+  // }, [currentInvoice]);
+
   const notificationMessage = (type, message) => {
     toast.dismiss();
     switch (type) {
@@ -417,66 +445,6 @@ const ShoppingCart = () => {
     }
   }, [activeTab]);
 
-  // const handleXacNhanThanhToan = async (id) => {
-  //   setLoading(true);
-  //   try {
-  //     if (!currentInvoice) {
-  //       setIsShow(true);
-  //       setConfirmPaymets(false);
-  //       notificationMessage("warning", "Vui lòng chọn hóa đơn");
-  //       return;
-  //     }
-
-  //     if (
-  //       Number(localStorage.getItem(currentInvoice?.id)) !==
-  //       currentInvoice.tienSauGiam
-  //     ) {
-  //       console.log();
-  //       setConfirmPaymets(false);
-  //       notificationMessage("warning", "Vui lòng thanh toán đơn hàng!");
-  //       return;
-  //     }
-
-  //     if (!isShipping) {
-  //       setShip(0);
-  //       setDiaChi(null);
-  //     }
-
-  //     const res = await confirmPayment(id, selectedMethod, diaChi, ship);
-  //     console.log(res);
-
-  //     if (res?.code === 200) {
-  //       localStorage.removeItem(currentInvoice?.id);
-
-  //       setInvoices((prevInvoices) => {
-  //         const newInvoices = prevInvoices.filter(
-  //           (invoice) => invoice.id !== id
-  //         );
-  //         if (newInvoices.length > 0 && newInvoices[0]?.id) {
-  //           setActiveTab(newInvoices[0]?.id);
-  //         } else {
-  //           setActiveTab("noInvoice");
-  //         }
-  //         return newInvoices;
-  //       });
-  //       notificationMessage("success", "Thanh toán hóa đơn thành công!");
-  //       setShip(0);
-  //       setDiaChi(null);
-  //       setConfirmPaymets(false);
-  //       setPartialPayment(0);
-  //       console.log("Data: ", res?.code);
-  //     }
-  //     if(res?.code === 1041) {
-  //       notificationMessage('warning', "Voucher da het han");
-  //       return;
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //     notificationMessage("error", "Số lương voucher đã hết !");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const handleXacNhanThanhToan = async (id) => {
     setLoading(true);
     try {
@@ -486,27 +454,27 @@ const ShoppingCart = () => {
         notificationMessage("warning", "Vui lòng chọn hóa đơn");
         return;
       }
-  
+
       if (
-        Number(localStorage.getItem(currentInvoice?.id)) !==
+        Number(localStorage.getItem(currentInvoice?.id)) <
         currentInvoice.tienSauGiam
       ) {
         setConfirmPaymets(false);
         notificationMessage("warning", "Vui lòng thanh toán đơn hàng!");
         return;
       }
-  
+
       if (!isShipping) {
         setShip(0);
         setDiaChi(null);
       }
-  
+
       const res = await confirmPayment(id, selectedMethod, diaChi, ship);
       console.log(res);
-  
+
       if (res?.code === 200) {
         localStorage.removeItem(currentInvoice?.id);
-  
+
         setInvoices((prevInvoices) => {
           const newInvoices = prevInvoices.filter(
             (invoice) => invoice.id !== id
@@ -523,23 +491,24 @@ const ShoppingCart = () => {
         setDiaChi(null);
         setConfirmPaymets(false);
         setPartialPayment(0);
+        setCurrentInvoice(null);
+        setPaymentAmount(0);
         console.log("Data: ", res?.code);
       }
-  
+
       // Xử lý khi voucher hết hạn (code 1041)
       if (res?.code === 1041) {
-        notificationMessage('warning', "Voucher đã hết hạn");
+        notificationMessage("warning", "Voucher đã hết hạn");
         return; // Kết thúc hàm nếu voucher hết hạn
       }
-  
     } catch (error) {
       console.log(error);
-      notificationMessage('warning', "Voucher đã dừng áp dụng !");
+      notificationMessage("warning", "Voucher đã dừng áp dụng !");
     } finally {
       setLoading(false);
     }
   };
-  
+
   const handleAddressSearch = debounce(async (value) => {
     if (value.length > 2) {
       try {
@@ -583,7 +552,7 @@ const ShoppingCart = () => {
   const handleOkThanhToan = () => {
     setPartialPayment(currentInvoice?.tienSauGiam);
     console.log(modalPaymentAmount);
-    localStorage.setItem(`${currentInvoice.id}`, currentInvoice?.tienSauGiam);
+    localStorage.setItem(`${currentInvoice.id}`, paymentAmount);
     setIsModalVisible(false);
   };
 
@@ -1627,12 +1596,10 @@ const ShoppingCart = () => {
         visible={isModalVisible}
         onCancel={handleCancel}
         footer={[
-          <Button key="cancel" onClick={handleCancelThanhToan}>
-            Hủy
-          </Button>,
-          <Button key="confirm" 
-          type="primary" onClick={handleOkThanhToan}
-          >
+          // <Button key="cancel" onClick={handleCancelThanhToan}>
+          //   Hủy
+          // </Button>,
+          <Button key="confirm" type="primary" onClick={handleOkThanhToan}>
             Xác nhận
           </Button>,
         ]}
@@ -1657,39 +1624,43 @@ const ShoppingCart = () => {
               </Button>
             </Button.Group>
           </Form.Item>
+
+          {/* Số tiền khách thanh toán */}
           <Form.Item label="Số tiền khách thanh toán">
             <Input
               type="text"
-              value={
-                currentInvoice?.tienSauGiam &&
-                !isNaN(currentInvoice?.tienSauGiam)
-                  ? (
-                      currentInvoice?.tienSauGiam + (ship || 0)
-                    ).toLocaleString() + " VND"
-                  : "0.0 VND"
-              }
+              value={formatCurrency(paymentAmount)} // Format giá trị khi hiển thị
+              onChange={(e) => handlePaymentChange(e.target.value)} // Cập nhật giá trị khi người dùng thay đổi
               placeholder="Nhập số tiền thanh toán"
             />
           </Form.Item>
+
           <Divider />
-          <Divider />
+
           <Text strong>
-            {/* Khách thanh toán: {partialPayment.toLocaleString()} VND */}
-            Khách thanh toán:
-            {
+            Số tiền: 
+            {/* {
               // Check if the value is stored in localStorage and whether a shipping cost exists
               localStorage.getItem(currentInvoice?.id) === null
                 ? "0.0 VND" // If no value in localStorage, show "0.0 VND"
                 : (
                     (parseFloat(localStorage.getItem(currentInvoice?.id)) ||
                       0) + (ship || 0)
-                  ) // Add ship if exists
-                    .toLocaleString() + " VND" // Format with commas and append " VND"
-            }
+                  ).toLocaleString() + " VND" // Add ship if exists
+            } */}
+            {formatCurrency(currentInvoice?.tienSauGiam + (ship || 0))}
           </Text>
           <br />
+          <br />
           <Text strong style={{ color: "red" }}>
-            {/* Tiền thiếu: {remainingAmount.toLocaleString()} VND */}
+            {/* Kiểm tra số tiền trả lại khách có âm hay không */}
+            {paymentAmount - currentInvoice?.tienSauGiam + (ship || 0) < 0
+              ? `Tiền khách thiếu: ${Math.abs(
+                  paymentAmount - currentInvoice?.tienSauGiam + (ship || 0)
+                ).toLocaleString()} VND` // Nếu là âm, hiển thị "Tiền khách thiếu"
+              : `Tiền trả lại khách: ${Math.abs(
+                  paymentAmount - currentInvoice?.tienSauGiam + (ship || 0)
+                ).toLocaleString()} VND`}
           </Text>
         </Form>
       </Modal>
@@ -1702,96 +1673,6 @@ const ShoppingCart = () => {
           width: "100%",
         }}
       >
-        {/* {currentInvoice?.loaiHoaDon === "ONLINE" && (
-          <div style={{ width: "48%", marginTop: "40px" }}>
-            <Title level={3}>Thông tin giao hàng</Title>
-          
-            <Form
-              form={form}
-              layout="vertical"
-              className="space-y-4"
-              initialValues={{
-                tenNguoiNhan: currentCustomer?.ten,
-                sdt: currentCustomer?.sdt,
-                email: currentCustomer?.email,
-              }}
-              onFinish={handleSubmit}
-            >
-                tenNguoiNhan: currentInvoice?.tenNguoiNhan,
-                sdt: currentInvoice?.sdt,
-                province: currentCustomer?.diaChi?.tinh,
-                email: currentInvoice?.email,
-                district: currentCustomer?.diaChi?.quan,
-                ward: currentCustomer?.diaChi?.huyen,
-
-              }}
-              onFinish={handleSubmit}
-            >
-              <Form.Item name="idGioHang" hidden>
-                <Input type="hidden" />
-              </Form.Item>
-              <Form.Item name="idKhachHang" hidden>
-                <Input type="hidden" />
-              </Form.Item>
-              <Form.Item
-                label="Tên"
-                name="tenNguoiNhan"
-                required
-                rules={[{ required: true, message: "Vui lòng nhập tên" }]}
-              >
-                <Input size="large" />
-              </Form.Item>
-
-              <Form.Item
-                label="Số điện thoại"
-                name="sdt"
-                required
-                rules={[
-                  { required: true, message: "Vui lòng nhập số điện thoại" },
-                  {
-                    pattern: /^(0|\+84)[3-9][0-9]{8}$/,
-                    message: "Số điện thoại không đúng định dạng!",
-                  },
-                ]}
-              >
-                <Input size="large" />
-              </Form.Item>
-
-              <Form.Item
-                label="Địa chỉ"
-                name="address"
-                required
-                rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
-                rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
-              >
-                <AutoComplete
-                  options={addressOptions}
-                  onSearch={handleAddressSearch}
-                  onSelect={handleAddressSelect}
-                  placeholder="Nhập địa chỉ"
-                  size="large"
-                />
-              </Form.Item>
-
-
-
-              <Form.Item label="Địa chỉ email (tùy chọn)" name="email">
-                <Input size="large" />
-              </Form.Item>
-
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold">THÔNG TIN BỔ SUNG</h3>
-                <Form.Item label="Ghi chú đơn hàng (tùy chọn)" name="ghiChu">
-                  <TextArea
-                    rows={4}
-                    placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
-                  />
-                </Form.Item>
-              </div>
-            </Form>
-          </div>
-        )} */}
-
         {currentInvoice?.loaiHoaDon === "ONLINE" && (
           <div style={{ width: "48%", marginTop: "40px" }}>
             <Title level={3}>Thông tin giao hàng</Title>
@@ -1891,17 +1772,8 @@ const ShoppingCart = () => {
                     />
                   </Col>
                   <Col style={{ paddingLeft: "8px" }}>
-                    {/* <Text strong>{partialPayment.toLocaleString()} VND</Text> */}
                     <Text strong>
-                      {localStorage.getItem(currentInvoice?.id)
-                        ? (
-                            (parseFloat(
-                              localStorage.getItem(currentInvoice?.id)
-                            ) || 0) + (ship || 0)
-                          ) // Add ship if exists
-                            .toLocaleString()
-                        : "0"}{" "}
-                      VND
+                      {localStorage.getItem(currentInvoice?.id) < (currentInvoice?.tienSauGiam + (ship || 0)) ? <Tag color="red">Thanh toán thất bại</Tag> : <Tag color="success">Thanh toán thành công</Tag>}
                     </Text>
                   </Col>
                 </Row>
@@ -1919,18 +1791,6 @@ const ShoppingCart = () => {
                   </Col>
                 </Row>
               </Form.Item>
-              {/* <Form.Item label="Giao Hàng">
-                <Switch
-                  checked={currentInvoice?.loaiHoaDon !== "OFFLINE"} // Bật nếu loại hóa đơn không phải OFFLINE
-                  onChange={() => {
-                    const newLoaiHoaDon =
-                      currentInvoice?.loaiHoaDon === "OFFLINE"
-                        ? "ONLINE"
-                        : "OFFLINE"; // Đảo ngược trạng thái loại hóa đơn
-                    changeType(currentInvoice?.id, newLoaiHoaDon); // Giả sử `changeType` là hàm cập nhật lại loại hóa đơn
-                  }}
-                />
-              </Form.Item> */}
               <Form.Item label="Giao Hàng">
                 <Switch
                   checked={currentInvoice?.loaiHoaDon !== "OFFLINE"} // Bật nếu loại hóa đơn không phải OFFLINE
@@ -1992,7 +1852,7 @@ const ShoppingCart = () => {
                       setDiaChi("");
                     }
 
-                    changeType(currentInvoice?.id, newLoaiHoaDon); 
+                    changeType(currentInvoice?.id, newLoaiHoaDon);
                   }}
                 />
               </Form.Item>
