@@ -1920,7 +1920,9 @@ const ShoppingCart = () => {
                 required
                 rules={[{ required: true, message: "Vui lòng nhập tên" }]}
               >
-                <Input size="large" />
+                <Input size="large"
+                 onChange={(e) => setTenKhachHang(e.target.value)}
+                />
               </Form.Item>
 
               <Form.Item
@@ -1935,7 +1937,9 @@ const ShoppingCart = () => {
                   },
                 ]}
               >
-                <Input size="large" />
+                <Input size="large"
+                 onChange={(e) => setSdt(e.target.value)}
+                />
               </Form.Item>
 
               <Form.Item
@@ -1963,6 +1967,7 @@ const ShoppingCart = () => {
                   <TextArea
                     rows={4}
                     placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
+                    onChange={(e) => setGhiChu(e.target.value)}
                   />
                 </Form.Item>
               </div>
