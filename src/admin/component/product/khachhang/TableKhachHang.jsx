@@ -133,11 +133,21 @@ const TableKhachHang = () => {
   const handleConfirmEdit = async (id, updatedKhachHang, avatarFile) => {
     setLoading(true);
     try {
+
+      // Kiểm tra tên khách hàng không được để trống
+      if (!updatedKhachHang.ten.trim()) {
+        notification.error({
+          message: "Lỗi",
+          description: "Tên khách hàng không được để trống!",
+        });
+        return;
+      }
+
       // Kiểm tra trùng email
       const existingEmail = dataSource.find(
         (item) => item.id !== id && item.email === updatedKhachHang.email
       );
-  
+
       if (existingEmail) {
         notification.error({
           message: "Lỗi",
@@ -145,12 +155,12 @@ const TableKhachHang = () => {
         });
         return; // Dừng việc cập nhật nếu trùng email
       }
-  
+
       // Kiểm tra trùng số điện thoại
       const existingSdt = dataSource.find(
         (item) => item.id !== id && item.sdt === updatedKhachHang.sdt
       );
-  
+
       if (existingSdt) {
         notification.error({
           message: "Lỗi",
@@ -158,24 +168,24 @@ const TableKhachHang = () => {
         });
         return; // Dừng việc cập nhật nếu trùng số điện thoại
       }
-  
+
       // Nếu có ảnh mới, tải lên Firebase và lấy URL
       let avatarUrl = updatedKhachHang.avatar;
       if (avatarFile) {
         avatarUrl = await uploadImageToFirebase(avatarFile); // Tải lên Firebase và lấy URL
       }
-  
+
       // Cập nhật thông tin khách hàng
       const updatedKhachHangWithAvatar = { ...updatedKhachHang, avatar: avatarUrl };
-  
+
       // Gửi dữ liệu lên API để cập nhật khách hàng
       await updateKhachHangApi(id, updatedKhachHangWithAvatar);
-  
+
       notification.success({
         message: "Thành công",
         description: `Cập nhật khách hàng ${updatedKhachHang.ten} thành công!`,
       });
-  
+
       setIsModalEditOpen(false);
       await fetchData();
     } catch (error) {
@@ -188,7 +198,7 @@ const TableKhachHang = () => {
       setLoading(false);
     }
   };
-  
+
 
 
   const handleAdd = () => {
@@ -198,11 +208,21 @@ const TableKhachHang = () => {
   const handleConfirmAdd = async (newKhachHang, avatarFile) => {
     setLoading(true);
     try {
+
+      // Kiểm tra tên khách hàng không được để trống
+      if (!updatedKhachHang.ten.trim()) {
+        notification.error({
+          message: "Lỗi",
+          description: "Tên khách hàng không được để trống!",
+        });
+        return; // Dừng việc cập nhật nếu tên khách hàng trống
+      }
+
       // Kiểm tra trùng email
       const existingEmail = dataSource.find(
         (item) => item.email === newKhachHang.email
       );
-  
+
       if (existingEmail) {
         // Thông báo lỗi nếu email đã tồn tại
         notification.error({
@@ -211,12 +231,12 @@ const TableKhachHang = () => {
         });
         return; // Dừng việc thêm mới nếu trùng email
       }
-  
+
       // Kiểm tra trùng số điện thoại
       const existingSdt = dataSource.find(
         (item) => item.sdt === newKhachHang.sdt
       );
-  
+
       if (existingSdt) {
         // Thông báo lỗi nếu số điện thoại đã tồn tại
         notification.error({
@@ -225,24 +245,24 @@ const TableKhachHang = () => {
         });
         return; // Dừng việc thêm mới nếu trùng số điện thoại
       }
-  
+
       // Tải ảnh lên Firebase (nếu có file ảnh)
       let avatarUrl = '';
       if (avatarFile) {
         avatarUrl = await uploadImageToFirebase(avatarFile); // Tải lên Firebase và lấy URL
       }
-  
+
       // Tạo đối tượng khách hàng mới
       const newKhachHangWithAvatar = { ...newKhachHang, avatar: avatarUrl };
-  
+
       // Gửi dữ liệu lên API tạo khách hàng mới
       await createKhachHangApi(newKhachHangWithAvatar);
-  
+
       notification.success({
         message: "Thành công",
         description: `Đã thêm khách hàng ${newKhachHang.ten} thành công!`,
       });
-  
+
       setIsModalAddOpen(false); // Đóng modal
       await fetchData(); // Cập nhật dữ liệu sau khi thêm
     } catch (error) {
@@ -255,7 +275,7 @@ const TableKhachHang = () => {
       setLoading(false); // Kết thúc trạng thái loading
     }
   };
-  
+
 
 
 

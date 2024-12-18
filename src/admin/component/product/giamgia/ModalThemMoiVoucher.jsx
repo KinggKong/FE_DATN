@@ -65,25 +65,15 @@ const ModalThemMoi = ({ isOpen, handleClose, title, handleSubmit }) => {
       return;
     }
 
-
-
-    // Kiểm tra ngày bắt đầu và ngày kết thúc phải lớn hơn ngày hiện tại
-    const currentDate = moment();
-
-    //  if (ngayBatDau && ngayBatDau.isBefore(currentDate, 'day')) {
-    //    notification.error({
-    //      message: "Lỗi",
-    //      description: "Ngày bắt đầu phải lớn hơn hoặc bằng ngày hiện tại!",
-    //    });
-    //    return;
-    //  }
-
-    if (ngayBatDau && ngayKetThuc && moment(ngayKetThuc).isBefore(moment(ngayBatDau), 'day')) {
-      notification.error({
-        message: "Lỗi",
-        description: "Ngày kết thúc phải lớn hơn ngày bắt đầu!",
-      });
-      return;
+    if (ngayBatDau && ngayKetThuc) {
+      const diffInHours = ngayKetThuc.diff(ngayBatDau, 'hours');
+      if (diffInHours < 24) {
+        notification.error({
+          message: "Lỗi",
+          description: "Ngày kết thúc phải lớn hơn ngày bắt đầu!",
+        });
+        return;
+      }
     }
 
     handleSubmit({
